@@ -1,20 +1,67 @@
-# Quarkus Openfga
+# Quarkus OpenFGA Client
 
 [![Version](https://img.shields.io/maven-central/v/io.quarkiverse.openfga/quarkus-openfga?logo=apache-maven&style=flat-square)](https://search.maven.org/artifact/io.quarkiverse.openfga/quarkus-openfga)
 
-## Welcome to Quarkiverse!
+## Overview
 
-Congratulations and thank you for creating a new Quarkus extension project in Quarkiverse!
+The **Quarkus OpenFGA Client** extension provides a reactive client for accessing [OpenFGA](https://openfga.dev)
+instances. Additionally, it is the client that powers the
+[Quarkus Zanzibar - OpenFGA Connector](https://github.com/quarkiverse/quarkus-zanzibar#OpenFGA-Connector) to provide 
+Find Grained Authorization for Quarkus applications.
 
-Feel free to replace this content with the proper description of your new project and necessary instructions how to use and contribute to it.
+## Usage
 
-You can find the basic info, Quarkiverse policies and conventions in [the Quarkiverse wiki](https://github.com/quarkiverse/quarkiverse/wiki).
+Adding the `quarkus-openfga-client` extension to your project defines an `OpenFGAClient` bean that is configured to
+access the OpenFGA instance configured in `application.properties`.
 
-In case you are creating a Quarkus extension project for the first time, please follow [Building My First Extension](https://quarkus.io/guides/building-my-first-extension) guide.
 
-Other useful articles related to Quarkus extension development can be found under the [Writing Extensions](https://quarkus.io/guides/#writing-extensions) guide category on the [Quarkus.io](https://quarkus.io) website.
+### Dependency
 
-Thanks again, good luck and have fun!
+Add the `quarkus-openfga-client` extension to your Quarkus project in your `pom.xml` for Maven or `build.gradle(.kts)` for Gradle.
+
+#### Maven
+
+```xml
+<dependency>
+    <groupId>io.quarkiverse.openfga</groupId>
+    <artifactId>quarkus-openfga-client</artifactId>
+    <version>${openfga.version}</version>
+</dependency>
+```
+
+#### Gradle
+
+```kotlin
+implementation("io.quarkiverse.openfga:quarkus-openfga-client:${openfga.version}")
+```
+
+### Configuration
+
+The extension requires two configuration properties to be defined at startup to define what instance and store are
+targeted by the client. The `url` property selects the scheme, host and, optionally, the port of the OpenFGA instance.
+While `store-id` determines which authorization store is targeted.
+
+```properties
+quarkus.openfga.url=http://localhost:80
+quarkus.openfga.store-id=my-app-authz
+```
+
+#### DevServices
+
+The extension supports Quarkus's DevServices and will start and configure a local OpenFGA in `dev` and `test` if no
+`url` configuration property is provided. Additionally it will create automatically create and configure an authorization
+store in the server.
+
+In addition to starting and creating an authorization store, an authorization model can be initialized in the store
+by configuring the `quarkus.openfga.devservices.authorization-model` or
+`quarkus.openfga.devservices.authorization-model.lcation` property.
+
+### Clients
+
+The extension provides two injectable clients for accessing the configured instance and store.
+
+* `OpenFGAClient` (Injectable) - Main client for accessing the OpenFGA instance.
+* `StoreClient` (Injectable) - Provides access to the authorization store configured via `quarkus.openfga.store-id`
 
 ## Documentation
 
