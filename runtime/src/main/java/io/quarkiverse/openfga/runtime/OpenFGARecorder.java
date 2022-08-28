@@ -2,7 +2,7 @@ package io.quarkiverse.openfga.runtime;
 
 import io.quarkiverse.openfga.client.AuthorizationModelClient;
 import io.quarkiverse.openfga.client.StoreClient;
-import io.quarkiverse.openfga.client.StoresClient;
+import io.quarkiverse.openfga.client.OpenFGAClient;
 import io.quarkiverse.openfga.client.api.API;
 import io.quarkiverse.openfga.runtime.config.OpenFGAConfig;
 import io.quarkiverse.openfga.runtime.health.OpenFGAHealthCheck;
@@ -22,9 +22,9 @@ public class OpenFGARecorder {
         return new RuntimeValue<>(api);
     }
 
-    public RuntimeValue<StoresClient> createStoresClient(RuntimeValue<API> api) {
-        StoresClient storesClient = new StoresClient(api.getValue());
-        return new RuntimeValue<>(storesClient);
+    public RuntimeValue<OpenFGAClient> createClient(RuntimeValue<API> api) {
+        OpenFGAClient openFGAClient = new OpenFGAClient(api.getValue());
+        return new RuntimeValue<>(openFGAClient);
     }
 
     public RuntimeValue<StoreClient> createStoreClient(RuntimeValue<API> api, OpenFGAConfig config) {

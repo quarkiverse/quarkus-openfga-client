@@ -24,7 +24,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.quarkiverse.openfga.client.AuthorizationModelClient;
 import io.quarkiverse.openfga.client.StoreClient;
-import io.quarkiverse.openfga.client.StoresClient;
+import io.quarkiverse.openfga.client.OpenFGAClient;
 import io.quarkiverse.openfga.client.model.*;
 import io.quarkus.test.QuarkusUnitTest;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
@@ -37,7 +37,7 @@ public class AuthorizationModelClientTest {
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class));
 
     @Inject
-    StoresClient storesClient;
+    OpenFGAClient openFGAClient;
 
     Store store;
     StoreClient storeClient;
@@ -46,8 +46,8 @@ public class AuthorizationModelClientTest {
 
     @BeforeEach
     public void createTestStoreAndModel() {
-        store = storesClient.create("test").await().atMost(ofSeconds(10));
-        storeClient = storesClient.store(store.getId());
+        store = openFGAClient.create("test").await().atMost(ofSeconds(10));
+        storeClient = openFGAClient.store(store.getId());
 
         // ensure it has an auth model
         var documentTypeDef = new TypeDefinition("document", Map.of(

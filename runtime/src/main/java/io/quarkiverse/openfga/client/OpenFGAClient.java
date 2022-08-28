@@ -16,12 +16,12 @@ import io.quarkiverse.openfga.client.utils.PaginatedList;
 import io.smallrye.mutiny.Uni;
 
 @ApplicationScoped
-public class StoresClient {
+public class OpenFGAClient {
 
     private final API api;
 
     @Inject
-    public StoresClient(API api) {
+    public OpenFGAClient(API api) {
         this.api = api;
     }
 

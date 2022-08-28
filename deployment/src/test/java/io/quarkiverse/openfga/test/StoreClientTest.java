@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.quarkiverse.openfga.client.StoreClient;
-import io.quarkiverse.openfga.client.StoresClient;
+import io.quarkiverse.openfga.client.OpenFGAClient;
 import io.quarkiverse.openfga.client.model.*;
 import io.quarkus.test.QuarkusUnitTest;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
@@ -28,15 +28,15 @@ public class StoreClientTest {
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class));
 
     @Inject
-    StoresClient storesClient;
+    OpenFGAClient openFGAClient;
 
     Store store;
     StoreClient storeClient;
 
     @BeforeEach
     public void createTestStore() {
-        store = storesClient.create("test").await().atMost(ofSeconds(10));
-        storeClient = storesClient.store(store.getId());
+        store = openFGAClient.create("test").await().atMost(ofSeconds(10));
+        storeClient = openFGAClient.store(store.getId());
     }
 
     @AfterEach
@@ -62,7 +62,7 @@ public class StoreClientTest {
     @DisplayName("Can Delete Store")
     public void canDeleteStores() {
 
-        var preList = storesClient.listAll()
+        var preList = openFGAClient.listAll()
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
@@ -73,7 +73,7 @@ public class StoreClientTest {
                 .awaitItem()
                 .assertCompleted();
 
-        var postList = storesClient.listAll()
+        var postList = openFGAClient.listAll()
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();

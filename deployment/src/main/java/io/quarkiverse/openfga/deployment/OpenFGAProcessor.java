@@ -7,7 +7,7 @@ import javax.enterprise.context.ApplicationScoped;
 
 import io.quarkiverse.openfga.client.AuthorizationModelClient;
 import io.quarkiverse.openfga.client.StoreClient;
-import io.quarkiverse.openfga.client.StoresClient;
+import io.quarkiverse.openfga.client.OpenFGAClient;
 import io.quarkiverse.openfga.client.api.API;
 import io.quarkiverse.openfga.client.model.Store;
 import io.quarkiverse.openfga.runtime.OpenFGARecorder;
@@ -75,10 +75,10 @@ class OpenFGAProcessor {
                         .done());
 
         syntheticBeans.produce(
-                SyntheticBeanBuildItem.configure(StoresClient.class)
+                SyntheticBeanBuildItem.configure(OpenFGAClient.class)
                         .scope(ApplicationScoped.class)
                         .setRuntimeInit()
-                        .runtimeValue(recorder.createStoresClient(apiValue))
+                        .runtimeValue(recorder.createClient(apiValue))
                         .done());
 
         syntheticBeans.produce(
