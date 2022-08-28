@@ -1,0 +1,18 @@
+{
+  "type_definitions": [
+    {
+      "type": "thing",
+      "relations": {
+        "reader": {
+          "this": {}
+        },
+        "writer": {
+          "this": {}
+        },
+        "owner": {
+          "this": {}
+        }
+      }
+    }
+  ]
+}
