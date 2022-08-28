@@ -46,4 +46,8 @@ public class AuthorizationModelsClient {
         return new AuthorizationModelClient(api, storeId, authorizationModelId);
     }
 
+    public AuthorizationModelClient defaultModel() {
+        return new AuthorizationModelClient(api, storeId, null);
+    }
+
 }

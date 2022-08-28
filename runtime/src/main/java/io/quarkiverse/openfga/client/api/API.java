@@ -147,7 +147,7 @@ public class API {
                 WriteAuthorizationModelResponse.class);
     }
 
-    public Uni<ReadAuthorizationModelResponse> readAuthorizationModel(String storeId, String id) {
+    public Uni<ReadAuthorizationModelResponse> readAuthorizationModel(String storeId, @Nullable String id) {
         return execute(
                 request("Read Auth Model",
                         GET,
