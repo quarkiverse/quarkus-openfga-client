@@ -49,7 +49,7 @@ quarkus.openfga.store-id=my-app-authz
 #### DevServices
 
 The extension supports Quarkus's DevServices and will start and configure a local OpenFGA in `dev` and `test` if no
-`url` configuration property is provided. Additionally it will create automatically create and configure an authorization
+`url` configuration property is provided. Additionally it will automatically create and configure an authorization
 store in the server.
 
 In addition to starting and creating an authorization store, an authorization model can be initialized in the store
@@ -60,8 +60,36 @@ by configuring the `quarkus.openfga.devservices.authorization-model` or
 
 The extension provides two injectable clients for accessing the configured instance and store.
 
-* `OpenFGAClient` (Injectable) - Main client for accessing the OpenFGA instance.
-* `StoreClient` (Injectable) - Provides access to the authorization store configured via `quarkus.openfga.store-id`
+* `OpenFGAClient` - Main client for accessing the OpenFGA instance.
+* `StoreClient` - Provides access to the authorization store configured via `quarkus.openfga.store-id`
+
+### Examples
+
+#### Write a Relationship Tuple
+
+```java
+@Inject
+StoreClient storeClient;
+
+void write() {
+    var authModelClient = storeClient.authorizationModels().defaultModel();
+    authModelClient.write(TupleKey.of("thing:1", "reader", "me"));
+}
+```
+
+#### Check Access for a Relationship Tuple
+
+```java
+@Inject
+StoreClient storeClient;
+
+void write() {
+    var authModelClient = storeClient.authorizationModels().defaultModel();
+    if (authModelClient.check(TupleKey.of("thing:1", "reader", "me"))) {
+        print("Allowed!")
+    }
+}
+```
 
 ## Documentation
 
