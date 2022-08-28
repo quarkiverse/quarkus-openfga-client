@@ -6,8 +6,8 @@ import static io.quarkus.deployment.annotations.ExecutionTime.RUNTIME_INIT;
 import javax.enterprise.context.ApplicationScoped;
 
 import io.quarkiverse.openfga.client.AuthorizationModelClient;
-import io.quarkiverse.openfga.client.StoreClient;
 import io.quarkiverse.openfga.client.OpenFGAClient;
+import io.quarkiverse.openfga.client.StoreClient;
 import io.quarkiverse.openfga.client.api.API;
 import io.quarkiverse.openfga.client.model.Store;
 import io.quarkiverse.openfga.runtime.OpenFGARecorder;

@@ -14,8 +14,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import io.quarkiverse.openfga.client.StoreClient;
 import io.quarkiverse.openfga.client.OpenFGAClient;
+import io.quarkiverse.openfga.client.StoreClient;
 import io.quarkiverse.openfga.client.model.*;
 import io.quarkus.test.QuarkusUnitTest;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;

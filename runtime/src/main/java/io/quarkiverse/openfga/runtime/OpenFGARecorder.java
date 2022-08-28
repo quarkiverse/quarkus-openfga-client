@@ -1,8 +1,8 @@
 package io.quarkiverse.openfga.runtime;
 
 import io.quarkiverse.openfga.client.AuthorizationModelClient;
-import io.quarkiverse.openfga.client.StoreClient;
 import io.quarkiverse.openfga.client.OpenFGAClient;
+import io.quarkiverse.openfga.client.StoreClient;
 import io.quarkiverse.openfga.client.api.API;
 import io.quarkiverse.openfga.runtime.config.OpenFGAConfig;
 import io.quarkiverse.openfga.runtime.health.OpenFGAHealthCheck;

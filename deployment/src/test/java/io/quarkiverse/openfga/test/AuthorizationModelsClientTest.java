@@ -18,8 +18,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.quarkiverse.openfga.client.AuthorizationModelsClient;
-import io.quarkiverse.openfga.client.StoreClient;
 import io.quarkiverse.openfga.client.OpenFGAClient;
+import io.quarkiverse.openfga.client.StoreClient;
 import io.quarkiverse.openfga.client.model.Store;
 import io.quarkiverse.openfga.client.model.TypeDefinition;
 import io.quarkiverse.openfga.client.model.Userset;
