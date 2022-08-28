@@ -58,10 +58,11 @@ by configuring the `quarkus.openfga.devservices.authorization-model` or
 
 ### Clients
 
-The extension provides two injectable clients for accessing the configured instance and store.
+The extension provides three injectable clients for accessing the configured instance and store.
 
 * `OpenFGAClient` - Main client for accessing the OpenFGA instance.
-* `StoreClient` - Provides access to the authorization store configured via `quarkus.openfga.store-id`
+* `StoreClient` - Access authorization store configured via `quarkus.openfga.store-id`
+* `AuthorizationModelClient` - Access authorization model configured via `quarkus.openfga.authoriztion-id` or the default model if none is configured.
 
 ### Examples
 
@@ -81,11 +82,10 @@ void write() {
 
 ```java
 @Inject
-StoreClient storeClient;
+AuthorizationModelClient defaultAuthModelClient;
 
 void write() {
-    var authModelClient = storeClient.authorizationModels().defaultModel();
-    if (authModelClient.check(TupleKey.of("thing:1", "reader", "me"))) {
+    if (defaultAuthModelClient.check(TupleKey.of("thing:1", "reader", "me"))) {
         print("Allowed!")
     }
 }
