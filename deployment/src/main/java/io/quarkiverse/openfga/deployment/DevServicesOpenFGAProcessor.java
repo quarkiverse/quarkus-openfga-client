@@ -28,6 +28,7 @@ import io.quarkus.deployment.dev.devservices.GlobalDevServicesConfig;
 import io.quarkus.deployment.logging.LoggingSetupBuildItem;
 import io.quarkus.devservices.common.ContainerLocator;
 import io.quarkus.runtime.configuration.ConfigUtils;
+import io.quarkus.runtime.configuration.ConfigurationException;
 import io.quarkus.runtime.util.ClassPathUtils;
 
 public class DevServicesOpenFGAProcessor {
@@ -221,9 +222,23 @@ public class DevServicesOpenFGAProcessor {
         return openFGAContainerLocator
                 .locateContainer(devServicesConfig.serviceName, devServicesConfig.shared, launchMode.getLaunchMode())
                 .map(containerAddress -> {
+
                     var instanceURL = format("http://%s:%d", containerAddress.getHost(), containerAddress.getPort());
-                    return new RunningDevService(OpenFGAProcessor.FEATURE, containerAddress.getId(),
-                            null, URL_CONFIG_KEY, instanceURL);
+
+                    String storeId;
+                    try {
+                        storeId = new DevServicesStoreInitializer(instanceURL)
+                                .findStoreId(devServicesConfig.storeName)
+                                .orElseThrow(() -> new ConfigurationException(
+                                        format("Could not find store '%s' in shared DevServices instance",
+                                                devServicesConfig.storeName)));
+                    } catch (Throwable t) {
+                        throw new RuntimeException("Unable to connect to shared DevServices instance", t);
+                    }
+
+                    var config = Map.of(URL_CONFIG_KEY, instanceURL, STORE_ID_CONFIG_KEY, storeId);
+
+                    return new RunningDevService(OpenFGAProcessor.FEATURE, containerAddress.getId(), null, config);
                 })
                 .orElseGet(defaultOpenFGAInstanceSupplier);
     }
