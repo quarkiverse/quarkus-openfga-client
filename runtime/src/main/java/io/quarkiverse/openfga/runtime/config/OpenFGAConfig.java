@@ -31,6 +31,8 @@ public class OpenFGAConfig {
 
     /**
      * Shared authentication key.
+     * <p>
+     * If none provided unauthenticated access will be attempted.
      */
     @ConfigItem
     public Optional<String> sharedKey;
@@ -55,13 +57,13 @@ public class OpenFGAConfig {
     public OpenFGATLSConfig tls;
 
     /**
-     * Timeout to establish a connection with Vault.
+     * Timeout to establish a connection with OpenFGA.
      */
     @ConfigItem(defaultValue = DEFAULT_CONNECT_TIMEOUT)
     public Duration connectTimeout;
 
     /**
-     * Request timeout on Vault.
+     * Request timeout on OpenFGA.
      */
     @ConfigItem(defaultValue = DEFAULT_READ_TIMEOUT)
     public Duration readTimeout;
