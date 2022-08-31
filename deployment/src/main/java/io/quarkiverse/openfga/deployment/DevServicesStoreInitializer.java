@@ -6,11 +6,14 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.util.Optional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.quarkiverse.openfga.client.model.Store;
 import io.quarkiverse.openfga.client.model.dto.CreateStoreRequest;
 import io.quarkiverse.openfga.client.model.dto.CreateStoreResponse;
+import io.quarkiverse.openfga.client.model.dto.ListStoresResponse;
 import io.quarkiverse.openfga.client.model.dto.WriteAuthorizationModelResponse;
 
 public class DevServicesStoreInitializer {
@@ -38,12 +41,33 @@ public class DevServicesStoreInitializer {
 
         var httpResponse = httpClient.send(request, BodyHandlers.ofString());
         if (httpResponse.statusCode() != 201) {
-            throw new IOException("Failed to create store for devservices");
+            throw new IOException("Failed to create store for DevServices");
         }
 
         var response = objectMapper.readValue(httpResponse.body(), CreateStoreResponse.class);
 
         return response.getId();
+    }
+
+    public Optional<String> findStoreId(String name) throws Exception {
+
+        var url = instanceURL.resolve("/stores");
+
+        var request = HttpRequest.newBuilder(url)
+                .GET()
+                .header("Accept", "application/json")
+                .build();
+
+        var httpResponse = httpClient.send(request, BodyHandlers.ofString());
+        if (httpResponse.statusCode() != 200) {
+            throw new IOException("Failed to list stores for DevServices configuration");
+        }
+
+        var response = objectMapper.readValue(httpResponse.body(), ListStoresResponse.class);
+
+        return response.getStores().stream().filter(store -> store.getName().equals(name))
+                .findFirst()
+                .map(Store::getId);
     }
 
     public String createAuthorizationModel(String storeId, String modelJSON) throws Exception {
