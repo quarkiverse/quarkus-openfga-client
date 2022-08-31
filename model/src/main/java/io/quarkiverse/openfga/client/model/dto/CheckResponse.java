@@ -1,14 +1,19 @@
 package io.quarkiverse.openfga.client.model.dto;
 
+import static com.fasterxml.jackson.annotation.JsonCreator.Mode.PROPERTIES;
+
 import java.util.Objects;
 
 import javax.annotation.Nullable;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
 
 public final class CheckResponse {
     private final boolean allowed;
     @Nullable
     private final String resolution;
 
+    @JsonCreator(mode = PROPERTIES)
     public CheckResponse(boolean allowed, @Nullable String resolution) {
         this.allowed = allowed;
         this.resolution = resolution;

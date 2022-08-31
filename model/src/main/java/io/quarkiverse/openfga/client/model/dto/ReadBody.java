@@ -1,9 +1,12 @@
 package io.quarkiverse.openfga.client.model.dto;
 
+import static com.fasterxml.jackson.annotation.JsonCreator.Mode.PROPERTIES;
+
 import java.util.Objects;
 
 import javax.annotation.Nullable;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.quarkiverse.openfga.client.model.PartialTupleKey;
@@ -22,6 +25,7 @@ public final class ReadBody {
     @Nullable
     private final String continuationToken;
 
+    @JsonCreator(mode = PROPERTIES)
     public ReadBody(@JsonProperty("tuple_key") PartialTupleKey tupleKey,
             @JsonProperty("authorization_model_id") @Nullable String authorizationModelId,
             @JsonProperty("page_size") @Nullable Integer pageSize,

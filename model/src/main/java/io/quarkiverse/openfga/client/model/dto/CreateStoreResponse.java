@@ -1,8 +1,11 @@
 package io.quarkiverse.openfga.client.model.dto;
 
+import static com.fasterxml.jackson.annotation.JsonCreator.Mode.PROPERTIES;
+
 import java.time.OffsetDateTime;
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.quarkiverse.openfga.client.model.Store;
@@ -16,6 +19,7 @@ public final class CreateStoreResponse {
     @JsonProperty("updated_at")
     private final OffsetDateTime updatedAt;
 
+    @JsonCreator(mode = PROPERTIES)
     public CreateStoreResponse(String id, String name, @JsonProperty("created_at") OffsetDateTime createdAt,
             @JsonProperty("updated_at") OffsetDateTime updatedAt) {
         this.id = Preconditions.parameterNonNull(id, "id");

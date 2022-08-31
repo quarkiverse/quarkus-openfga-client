@@ -1,9 +1,12 @@
 package io.quarkiverse.openfga.client.model.dto;
 
+import static com.fasterxml.jackson.annotation.JsonCreator.Mode.PROPERTIES;
+
 import java.util.Objects;
 
 import javax.annotation.Nullable;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.quarkiverse.openfga.client.model.TupleKeys;
@@ -17,6 +20,7 @@ public final class WriteBody {
     @Nullable
     private final String authorizationModelId;
 
+    @JsonCreator(mode = PROPERTIES)
     public WriteBody(@Nullable TupleKeys writes, @Nullable TupleKeys deletes,
             @JsonProperty("authorization_model_id") @Nullable String authorizationModelId) {
         this.writes = writes;

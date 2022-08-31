@@ -1,9 +1,12 @@
 package io.quarkiverse.openfga.client.model.dto;
 
+import static com.fasterxml.jackson.annotation.JsonCreator.Mode.PROPERTIES;
+
 import java.util.Objects;
 
 import javax.annotation.Nullable;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.quarkiverse.openfga.client.model.TupleKey;
@@ -16,6 +19,7 @@ public final class ExpandBody {
     @Nullable
     private final String authorizationModelId;
 
+    @JsonCreator(mode = PROPERTIES)
     public ExpandBody(@JsonProperty("tuple_key") TupleKey tupleKey,
             @JsonProperty("authorization_model_id") @Nullable String authorizationModelId) {
         this.tupleKey = Preconditions.parameterNonNull(tupleKey, "tupleKey");

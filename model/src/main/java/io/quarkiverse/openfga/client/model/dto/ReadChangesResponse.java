@@ -1,7 +1,11 @@
 package io.quarkiverse.openfga.client.model.dto;
 
+import static com.fasterxml.jackson.annotation.JsonCreator.Mode.PROPERTIES;
+
 import java.util.List;
 import java.util.Objects;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
 
 import io.quarkiverse.openfga.client.model.TupleChange;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
@@ -9,6 +13,7 @@ import io.quarkiverse.openfga.client.model.utils.Preconditions;
 public final class ReadChangesResponse {
     private final List<TupleChange> changes;
 
+    @JsonCreator(mode = PROPERTIES)
     public ReadChangesResponse(List<TupleChange> changes) {
         this.changes = Preconditions.parameterNonNull(changes, "changes");
     }

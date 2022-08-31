@@ -1,7 +1,10 @@
 package io.quarkiverse.openfga.client.model.dto;
 
+import static com.fasterxml.jackson.annotation.JsonCreator.Mode.PROPERTIES;
+
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.quarkiverse.openfga.client.model.AuthorizationModel;
@@ -11,6 +14,7 @@ public final class ReadAuthorizationModelResponse {
     @JsonProperty("authorization_model")
     private final AuthorizationModel authorizationModel;
 
+    @JsonCreator(mode = PROPERTIES)
     public ReadAuthorizationModelResponse(@JsonProperty("authorization_model") AuthorizationModel authorizationModel) {
         this.authorizationModel = Preconditions.parameterNonNull(authorizationModel, "authorizationModel");
     }

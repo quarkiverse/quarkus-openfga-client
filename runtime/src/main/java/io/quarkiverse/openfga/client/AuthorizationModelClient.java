@@ -4,7 +4,6 @@ import static io.quarkiverse.openfga.client.utils.PaginatedList.collectAllPages;
 
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
 import javax.annotation.Nullable;
 
@@ -86,7 +85,7 @@ public class AuthorizationModelClient {
 
     public Uni<Map<String, Object>> write(@Nullable List<TupleKey> writes, @Nullable List<TupleKey> deletes) {
         return api.write(storeId, new WriteBody(TupleKeys.of(writes), TupleKeys.of(deletes), authorizationModelId))
-                .map(Function.identity());
+                .map(WriteResponse::getValues);
     }
 
 }
