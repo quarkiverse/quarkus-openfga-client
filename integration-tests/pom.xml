@@ -22,6 +22,10 @@
       <artifactId>quarkus-resteasy-reactive-jackson</artifactId>
     </dependency>
     <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-smallrye-health</artifactId>
+    </dependency>
+    <dependency>
       <groupId>io.quarkiverse.openfga</groupId>
       <artifactId>quarkus-openfga-client</artifactId>
       <version>${project.version}</version>

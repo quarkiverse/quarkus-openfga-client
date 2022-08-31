@@ -1,11 +1,19 @@
 package io.quarkiverse.openfga.test;
 
-import io.quarkiverse.openfga.client.AuthorizationModelClient;
-import io.quarkiverse.openfga.client.OpenFGAClient;
-import io.quarkiverse.openfga.client.StoreClient;
-import io.quarkiverse.openfga.client.model.*;
-import io.quarkus.test.QuarkusUnitTest;
-import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
+import static java.time.Duration.ofSeconds;
+import static java.time.OffsetDateTime.now;
+import static java.time.temporal.ChronoUnit.SECONDS;
+import static java.util.Collections.emptyList;
+import static org.exparity.hamcrest.date.OffsetDateTimeMatchers.within;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import javax.inject.Inject;
+
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.AfterEach;
@@ -14,18 +22,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import javax.inject.Inject;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import static java.time.Duration.ofSeconds;
-import static java.time.OffsetDateTime.now;
-import static java.time.temporal.ChronoUnit.SECONDS;
-import static java.util.Collections.emptyList;
-import static org.exparity.hamcrest.date.OffsetDateTimeMatchers.within;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import io.quarkiverse.openfga.client.AuthorizationModelClient;
+import io.quarkiverse.openfga.client.OpenFGAClient;
+import io.quarkiverse.openfga.client.StoreClient;
+import io.quarkiverse.openfga.client.model.*;
+import io.quarkus.test.QuarkusUnitTest;
+import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 
 public class DefaultAuthorizationModelClientTest {
 

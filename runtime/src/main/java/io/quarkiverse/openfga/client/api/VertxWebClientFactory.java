@@ -18,7 +18,7 @@ class VertxWebClientFactory {
 
         var url = config.url;
 
-        WebClientOptions options = new WebClientOptions()
+        var options = new WebClientOptions()
                 .setSsl("https".equals(url.getProtocol()))
                 .setDefaultHost(url.getHost())
                 .setDefaultPort(url.getPort() != -1 ? url.getPort() : url.getDefaultPort())

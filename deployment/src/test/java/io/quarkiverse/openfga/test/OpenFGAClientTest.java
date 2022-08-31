@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.quarkiverse.openfga.client.OpenFGAClient;
+import io.quarkiverse.openfga.client.api.API;
 import io.quarkiverse.openfga.client.model.Store;
 import io.quarkus.test.QuarkusUnitTest;
 import io.smallrye.mutiny.Multi;
@@ -31,12 +32,14 @@ public class OpenFGAClientTest {
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class));
 
     @Inject
-    OpenFGAClient openFGAClient;
+    API api;
+    @Inject
+    OpenFGAClient client;
 
     @BeforeEach
     public void deleteAllStores() {
-        for (var store : openFGAClient.listAll().await().indefinitely()) {
-            openFGAClient.store(store.getId()).delete().await().indefinitely();
+        for (var store : client.listAll().await().indefinitely()) {
+            client.store(store.getId()).delete().await().indefinitely();
         }
     }
 
@@ -44,7 +47,7 @@ public class OpenFGAClientTest {
     @DisplayName("Can Create Stores")
     public void canCreateStores() {
 
-        var store = openFGAClient.create("testing")
+        var store = client.create("testing")
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
@@ -61,7 +64,7 @@ public class OpenFGAClientTest {
     public void canListStoresWithoutPagination() {
 
         var createdStores = Multi.createFrom().items("testing1", "testing2")
-                .onItem().transformToUniAndConcatenate(name -> openFGAClient.create(name))
+                .onItem().transformToUniAndConcatenate(name -> client.create(name))
                 .collect().asList()
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
@@ -70,7 +73,7 @@ public class OpenFGAClientTest {
         assertThat(createdStores.stream().map(Store::getName).collect(Collectors.toList()),
                 containsInAnyOrder("testing1", "testing2"));
 
-        var list = openFGAClient.list(2, null)
+        var list = client.list(2, null)
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
@@ -83,7 +86,7 @@ public class OpenFGAClientTest {
     public void canListStoresWithPagination() {
 
         var createdStores = Multi.createFrom().items("testing1", "testing2", "testing3")
-                .onItem().transformToUniAndConcatenate(name -> openFGAClient.create(name))
+                .onItem().transformToUniAndConcatenate(name -> client.create(name))
                 .collect().asList()
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
@@ -92,7 +95,7 @@ public class OpenFGAClientTest {
         assertThat(createdStores.stream().map(Store::getName).collect(Collectors.toList()),
                 containsInAnyOrder("testing1", "testing2", "testing3"));
 
-        var list = openFGAClient.listAll(1)
+        var list = client.listAll(1)
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
@@ -104,27 +107,37 @@ public class OpenFGAClientTest {
     @DisplayName("Can Delete Stores")
     public void canDeleteStores() {
 
-        var store = openFGAClient.create("testing")
+        var store = client.create("testing")
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
 
-        var preList = openFGAClient.listAll(1)
+        var preList = client.listAll(1)
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
         assertThat(preList, hasSize(1));
 
-        openFGAClient.store(store.getId()).delete()
+        client.store(store.getId()).delete()
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .assertCompleted();
 
-        var postList = openFGAClient.listAll(1)
+        var postList = client.listAll(1)
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
         assertThat(postList, hasSize(0));
+    }
+
+    @Test
+    public void testHealthViaAPI() {
+
+        var healthzResponse = api.health()
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+        assertThat(healthzResponse.getStatus(), equalTo("SERVING"));
     }
 
 }

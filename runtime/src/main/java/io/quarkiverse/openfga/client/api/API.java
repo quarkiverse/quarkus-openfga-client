@@ -235,6 +235,17 @@ public class API {
                 WriteResponse.class);
     }
 
+    public Uni<HealthzResponse> health() {
+        return execute(
+                request(
+                        "Health Check",
+                        GET,
+                        HEALTH_URI,
+                        vars()),
+                ExpectedStatus.OK,
+                HealthzResponse.class);
+    }
+
     private <B, R> Uni<R> execute(HttpRequest<Buffer> request, B body, ExpectedStatus expectedStatus, Class<R> responseType) {
         return Uni.createFrom()
                 .deferred(supplier(() -> {
@@ -289,7 +300,7 @@ public class API {
     private HttpRequest<Buffer> request(String operationName, HttpMethod method, UriTemplate uriTemplate, Variables variables) {
         RequestOptions options = new RequestOptions()
                 .setURI(uriTemplate.expandToString(variables))
-                .setTraceOperation(format("FGA| %s", operationName.toUpperCase()));
+                .setTraceOperation(format("FGA | %s", operationName.toUpperCase()));
         return webClient.request(method, options);
     }
 
@@ -314,5 +325,6 @@ public class API {
     private static final UriTemplate READ_URI = UriTemplate.of("/stores/{store_id}/read");
     private static final UriTemplate WRITE_URI = UriTemplate.of("/stores/{store_id}/write");
     private static final UriTemplate READ_TUPLES_URI = UriTemplate.of("/stores/{store_id}/read-tuples");
+    private static final UriTemplate HEALTH_URI = UriTemplate.of("/healthz");
 
 }
