@@ -1,12 +1,17 @@
 package io.quarkiverse.openfga.client.model.dto;
 
+import static com.fasterxml.jackson.annotation.JsonCreator.Mode.PROPERTIES;
+
 import java.util.Objects;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
 
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class CreateStoreRequest {
     private final String name;
 
+    @JsonCreator(mode = PROPERTIES)
     public CreateStoreRequest(String name) {
         this.name = Preconditions.parameterNonNull(name, "name");
     }

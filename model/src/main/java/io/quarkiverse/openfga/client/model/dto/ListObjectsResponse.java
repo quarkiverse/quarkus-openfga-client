@@ -1,8 +1,11 @@
 package io.quarkiverse.openfga.client.model.dto;
 
+import static com.fasterxml.jackson.annotation.JsonCreator.Mode.PROPERTIES;
+
 import java.util.List;
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
@@ -11,6 +14,7 @@ public final class ListObjectsResponse {
     @JsonProperty("object_ids")
     private final List<String> objectIds;
 
+    @JsonCreator(mode = PROPERTIES)
     public ListObjectsResponse(@JsonProperty("object_ids") List<String> objectIds) {
         this.objectIds = Preconditions.parameterNonNull(objectIds, "objectIds");
     }

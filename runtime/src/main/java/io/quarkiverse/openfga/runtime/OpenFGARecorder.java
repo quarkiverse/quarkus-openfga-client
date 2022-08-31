@@ -5,7 +5,6 @@ import io.quarkiverse.openfga.client.OpenFGAClient;
 import io.quarkiverse.openfga.client.StoreClient;
 import io.quarkiverse.openfga.client.api.API;
 import io.quarkiverse.openfga.runtime.config.OpenFGAConfig;
-import io.quarkiverse.openfga.runtime.health.OpenFGAHealthCheck;
 import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.ShutdownContext;
 import io.quarkus.runtime.TlsConfig;
@@ -36,10 +35,5 @@ public class OpenFGARecorder {
         AuthorizationModelClient authModelClient = new AuthorizationModelClient(api.getValue(), config.storeId,
                 config.authorizationModelId.orElse(null));
         return new RuntimeValue<>(authModelClient);
-    }
-
-    public RuntimeValue<OpenFGAHealthCheck> createHealthCheck(RuntimeValue<API> api, OpenFGAConfig config) {
-        OpenFGAHealthCheck healthCheck = new OpenFGAHealthCheck(api.getValue(), config.storeId);
-        return new RuntimeValue<>(healthCheck);
     }
 }

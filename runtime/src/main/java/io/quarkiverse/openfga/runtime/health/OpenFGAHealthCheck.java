@@ -1,35 +1,39 @@
 package io.quarkiverse.openfga.runtime.health;
 
-import org.eclipse.microprofile.health.HealthCheck;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+
 import org.eclipse.microprofile.health.HealthCheckResponse;
 import org.eclipse.microprofile.health.HealthCheckResponseBuilder;
 
 import io.quarkiverse.openfga.client.api.API;
+import io.smallrye.health.api.AsyncHealthCheck;
+import io.smallrye.mutiny.Uni;
 
-public class OpenFGAHealthCheck implements HealthCheck {
+@ApplicationScoped
+public class OpenFGAHealthCheck implements AsyncHealthCheck {
 
     private final API api;
-    private final String storeId;
 
-    public OpenFGAHealthCheck(API api, String storeId) {
+    @Inject
+    public OpenFGAHealthCheck(API api) {
         this.api = api;
-        this.storeId = storeId;
     }
 
     @Override
-    public HealthCheckResponse call() {
+    public Uni<HealthCheckResponse> call() {
 
         final HealthCheckResponseBuilder builder = HealthCheckResponse.named("OpenFGA client connection health check");
 
-        try {
-            api.getStore(storeId).await().indefinitely();
+        return api.health()
+                .map(response -> {
 
-            builder.up();
+                    if (response.getStatus().equalsIgnoreCase("SERVING")) {
+                        return builder.up().build();
+                    }
 
-        } catch (Exception e) {
-            builder.down().withData("reason", e.getMessage()).build();
-        }
-
-        return builder.build();
+                    return builder.down().withData("reported-status", response.getStatus()).build();
+                })
+                .onFailure().recoverWithItem(x -> builder.withData("failure", x.getMessage()).build());
     }
 }

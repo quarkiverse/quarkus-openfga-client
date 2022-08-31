@@ -1,10 +1,13 @@
 package io.quarkiverse.openfga.client.model.dto;
 
+import static com.fasterxml.jackson.annotation.JsonCreator.Mode.PROPERTIES;
+
 import java.util.List;
 import java.util.Objects;
 
 import javax.annotation.Nullable;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.quarkiverse.openfga.client.model.Store;
@@ -16,6 +19,7 @@ public final class ListStoresResponse {
     @Nullable
     private final String continuationToken;
 
+    @JsonCreator(mode = PROPERTIES)
     public ListStoresResponse(List<Store> stores, @JsonProperty("continuation_token") @Nullable String continuationToken) {
         this.stores = Preconditions.parameterNonNull(stores, "stores");
         this.continuationToken = continuationToken;

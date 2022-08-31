@@ -1,7 +1,11 @@
 package io.quarkiverse.openfga.client.model.dto;
 
+import static com.fasterxml.jackson.annotation.JsonCreator.Mode.PROPERTIES;
+
 import java.util.List;
 import java.util.Objects;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
 
 import io.quarkiverse.openfga.client.model.Assertion;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
@@ -9,6 +13,7 @@ import io.quarkiverse.openfga.client.model.utils.Preconditions;
 public final class WriteAssertionsRequest {
     private final List<Assertion> assertions;
 
+    @JsonCreator(mode = PROPERTIES)
     public WriteAssertionsRequest(List<Assertion> assertions) {
         this.assertions = Preconditions.parameterNonNull(assertions, "assertions");
     }

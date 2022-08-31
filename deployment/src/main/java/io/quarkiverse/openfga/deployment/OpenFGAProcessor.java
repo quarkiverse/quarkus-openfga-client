@@ -58,7 +58,6 @@ class OpenFGAProcessor {
             OpenFGARecorder recorder,
             Capabilities capabilities,
             BuildProducer<SyntheticBeanBuildItem> syntheticBeans,
-            BuildProducer<HealthBuildItem> health,
             BuildProducer<ExtensionSslNativeSupportBuildItem> sslNativeSupport) {
 
         RuntimeValue<API> apiValue = recorder.createAPI(
@@ -95,20 +94,19 @@ class OpenFGAProcessor {
                         .runtimeValue(recorder.createAuthModelClient(apiValue, runtimeConfig))
                         .done());
 
-        if (capabilities.isPresent(SMALLRYE_HEALTH) && buildTimeConfig.healthEnabled) {
+        return new ServiceStartBuildItem("openfga-client");
+    }
 
-            syntheticBeans.produce(
-                    SyntheticBeanBuildItem.configure(OpenFGAHealthCheck.class)
-                            .unremovable()
-                            .scope(ApplicationScoped.class)
-                            .setRuntimeInit()
-                            .runtimeValue(recorder.createHealthCheck(apiValue, runtimeConfig))
-                            .done());
+    @BuildStep
+    void registerHealthCheck(
+            OpenFGABuildTimeConfig buildTimeConfig,
+            Capabilities capabilities,
+            BuildProducer<HealthBuildItem> health) {
+
+        if (capabilities.isPresent(SMALLRYE_HEALTH)) {
 
             health.produce(new HealthBuildItem(OpenFGAHealthCheck.class.getName(), buildTimeConfig.healthEnabled));
         }
 
-        return new ServiceStartBuildItem("openfga-client");
     }
-
 }
