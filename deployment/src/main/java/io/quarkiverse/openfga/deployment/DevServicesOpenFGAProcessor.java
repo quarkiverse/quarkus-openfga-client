@@ -34,7 +34,7 @@ import io.quarkus.runtime.util.ClassPathUtils;
 public class DevServicesOpenFGAProcessor {
 
     private static final Logger log = Logger.getLogger(DevServicesOpenFGAProcessor.class);
-    static final String OPEN_FGA_VERSION = "v0.2.0";
+    static final String OPEN_FGA_VERSION = "v0.2.1";
     static final String OPEN_FGA_IMAGE = "openfga/openfga:" + OPEN_FGA_VERSION;
     static final int OPEN_FGA_EXPOSED_PORT = 8080;
     static final String DEV_SERVICE_LABEL = "quarkus-dev-service-openfga";
