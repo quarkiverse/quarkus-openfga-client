@@ -1,6 +1,6 @@
 # Quarkus OpenFGA Client
 
-[![Version](https://img.shields.io/maven-central/v/io.quarkiverse.openfga/quarkus-openfga?logo=apache-maven&style=flat-square)](https://search.maven.org/artifact/io.quarkiverse.openfga/quarkus-openfga-client)
+[![Version](https://img.shields.io/maven-central/v/io.quarkiverse.openfga/quarkus-openfga-client?logo=apache-maven&style=flat-square)](https://search.maven.org/artifact/io.quarkiverse.openfga/quarkus-openfga-client)
 [![Build](https://github.com/quarkiverse/quarkus-openfga-client/actions/workflows/build.yml/badge.svg)](https://github.com/quarkiverse/quarkus-openfga-client/actions/workflows/build.yml)
 
 ## Overview
