@@ -10,6 +10,7 @@ import java.util.Optional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.quarkiverse.openfga.client.api.API;
 import io.quarkiverse.openfga.client.model.Store;
 import io.quarkiverse.openfga.client.model.dto.CreateStoreRequest;
 import io.quarkiverse.openfga.client.model.dto.CreateStoreResponse;
@@ -18,7 +19,7 @@ import io.quarkiverse.openfga.client.model.dto.WriteAuthorizationModelResponse;
 
 public class DevServicesStoreInitializer {
 
-    private static final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
+    private static final ObjectMapper objectMapper = API.createObjectMapper();
 
     private final HttpClient httpClient = HttpClient.newHttpClient();
     private final URI instanceURL;
