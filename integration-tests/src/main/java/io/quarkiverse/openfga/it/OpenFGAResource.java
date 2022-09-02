@@ -26,8 +26,10 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
+import io.quarkiverse.openfga.client.AuthorizationModelClient;
 import io.quarkiverse.openfga.client.StoreClient;
 import io.quarkiverse.openfga.client.model.AuthorizationModel;
+import io.quarkiverse.openfga.client.model.Tuple;
 import io.smallrye.mutiny.Uni;
 
 @Path("/openfga")
@@ -37,10 +39,20 @@ public class OpenFGAResource {
     @Inject
     StoreClient storeClient;
 
+    @Inject
+    AuthorizationModelClient authorizationModelClient;
+
     @GET
     @Path("authorization-models")
     @Produces(APPLICATION_JSON)
     public Uni<List<AuthorizationModel>> listModels() {
         return storeClient.authorizationModels().listAll();
+    }
+
+    @GET
+    @Path("authorization-tuples")
+    @Produces(APPLICATION_JSON)
+    public Uni<List<Tuple>> listTuples() {
+        return authorizationModelClient.readAllTuples();
     }
 }

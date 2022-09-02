@@ -82,4 +82,27 @@ public class DevServicesOpenFGAConfig {
      */
     @ConfigItem
     public Optional<String> authorizationModelLocation;
+
+    /**
+     * JSON formatted authorization tuples to upload during DevServices initialization.
+     * <p>
+     *
+     * @implNote Initialization of tuples will only happen if an authorization model is also defined via
+     *           {@link #authorizationModel} or {@link #authorizationModelLocation}.
+     */
+    @ConfigItem
+    public Optional<String> authorizationTuples;
+
+    /**
+     * Location of JSON formatted authorization tuples file to upload during DevServices initialization.
+     * <p>
+     * The location can be prefixed with {@code classpath:} or {@code filesystem:} to specify where the file
+     * will be read from; if not prefixed, it will be read from the classpath.
+     * <p>
+     *
+     * @implNote Initialization of tuples will only happen if an authorization model is also defined via
+     *           {@link #authorizationModel} or {@link #authorizationModelLocation}.
+     */
+    @ConfigItem
+    public Optional<String> authorizationTuplesLocation;
 }

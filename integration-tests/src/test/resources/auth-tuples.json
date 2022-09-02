@@ -1,0 +1,17 @@
+[
+  {
+    "object": "thing:1",
+    "relation": "owner",
+    "user": "me"
+  },
+  {
+    "object": "thing:2",
+    "relation": "owner",
+    "user": "you"
+  },
+  {
+    "object": "thing:2",
+    "relation": "reader",
+    "user": "me"
+  }
+]

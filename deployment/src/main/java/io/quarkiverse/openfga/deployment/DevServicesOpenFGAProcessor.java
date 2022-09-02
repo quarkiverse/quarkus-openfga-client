@@ -24,10 +24,9 @@ import io.quarkiverse.openfga.client.AuthorizationModelsClient;
 import io.quarkiverse.openfga.client.OpenFGAClient;
 import io.quarkiverse.openfga.client.api.API;
 import io.quarkiverse.openfga.client.api.VertxWebClientFactory;
-import io.quarkiverse.openfga.client.model.AuthorizationModel;
-import io.quarkiverse.openfga.client.model.Store;
-import io.quarkiverse.openfga.client.model.TypeDefinitions;
+import io.quarkiverse.openfga.client.model.*;
 import io.quarkiverse.openfga.client.model.dto.CreateStoreRequest;
+import io.quarkiverse.openfga.client.model.dto.WriteBody;
 import io.quarkus.deployment.IsNormal;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
@@ -197,21 +196,42 @@ public class DevServicesOpenFGAProcessor {
                 }
 
                 loadAuthorizationModelDefinition(api, devServicesConfig)
-                        .ifPresentOrElse(value -> {
+                        .ifPresentOrElse(authModelDef -> {
+
+                            String authModelId;
                             try {
                                 log.info("Initializing authorization model...");
 
-                                var authorizationModelId = api.writeAuthorizationModel(storeId, value)
+                                authModelId = api.writeAuthorizationModel(storeId, authModelDef)
                                         .await()
                                         .atMost(INIT_OP_MAX_WAIT)
                                         .getAuthorizationModelId();
 
-                                devServicesConfigProperties.put(AUTHORIZATION_MODEL_ID_CONFIG_KEY, authorizationModelId);
+                                devServicesConfigProperties.put(AUTHORIZATION_MODEL_ID_CONFIG_KEY, authModelId);
 
                             } catch (Exception e) {
                                 throw new RuntimeException("Model initialization failed", e);
                             }
-                        }, () -> log.info("No authorization model provided, skipping initialization"));
+
+                            loadAuthorizationTuples(api, devServicesConfig)
+                                    .ifPresent(authTuples -> {
+                                        try {
+                                            log.info("Initializing authorization tuples...");
+
+                                            api.write(storeId, new WriteBody(new TupleKeys(authTuples), null, authModelId))
+                                                    .await()
+                                                    .atMost(INIT_OP_MAX_WAIT);
+
+                                        } catch (Exception e) {
+                                            throw new RuntimeException("Tuples initialization failed", e);
+                                        }
+                                    });
+                        }, () -> {
+                            if (devServicesConfig.authorizationTuples.isPresent()
+                                    || devServicesConfig.authorizationTuplesLocation.isPresent()) {
+                                log.warn("No authorization model configured, no tuples will not be initialized");
+                            }
+                        });
 
                 return null;
             });
@@ -251,7 +271,7 @@ public class DevServicesOpenFGAProcessor {
                                     try {
                                         var client = new AuthorizationModelsClient(api, storeId);
 
-                                        var authModel = client.listAll().await().atMost(INIT_OP_MAX_WAIT)
+                                        var authModelId = client.listAll().await().atMost(INIT_OP_MAX_WAIT)
                                                 .stream()
                                                 .filter(item -> item.getTypeDefinitions()
                                                         .equals(authModelDef.getTypeDefinitions()))
@@ -259,7 +279,7 @@ public class DevServicesOpenFGAProcessor {
                                                 .findFirst()
                                                 .orElseThrow();
 
-                                        devServicesConfigProperties.put(AUTHORIZATION_MODEL_ID_CONFIG_KEY, authModel);
+                                        devServicesConfigProperties.put(AUTHORIZATION_MODEL_ID_CONFIG_KEY, authModelId);
 
                                     } catch (Throwable x) {
                                         throw new ConfigurationException(
@@ -295,6 +315,30 @@ public class DevServicesOpenFGAProcessor {
                         return api.parseModel(authModelJSON);
                     } catch (Throwable t) {
                         throw new RuntimeException("Unable to parse authorization model", t);
+                    }
+                });
+    }
+
+    private static Optional<List<TupleKey>> loadAuthorizationTuples(API api,
+            DevServicesOpenFGAConfig devServicesConfig) {
+        return devServicesConfig.authorizationTuples
+                .or(() -> {
+                    return devServicesConfig.authorizationTuplesLocation
+                            .map(location -> {
+                                try {
+                                    var authModelPath = resolveModelPath(location);
+                                    return Files.readString(authModelPath);
+                                } catch (Throwable x) {
+                                    throw new RuntimeException(
+                                            format("Unable to load authorization tuples from '%s'", location));
+                                }
+                            });
+                })
+                .map(authTuplesJSON -> {
+                    try {
+                        return api.parseTuples(authTuplesJSON);
+                    } catch (Throwable t) {
+                        throw new RuntimeException("Unable to parse authorization tuples", t);
                     }
                 });
     }
