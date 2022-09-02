@@ -52,11 +52,7 @@ public class API {
     public API(WebClient webClient, Optional<Credentials> credentials) {
         this.webClient = webClient;
         this.credentials = credentials;
-        this.objectMapper = new ObjectMapper()
-                .registerModule(new JavaTimeModule())
-                .registerModule(new Jdk8Module())
-                .registerModule(new ParameterNamesModule())
-                .setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        this.objectMapper = createObjectMapper();
     }
 
     public void close() {
@@ -302,6 +298,14 @@ public class API {
                 .setURI(uriTemplate.expandToString(variables))
                 .setTraceOperation(format("FGA | %s", operationName.toUpperCase()));
         return webClient.request(method, options);
+    }
+
+    public static ObjectMapper createObjectMapper() {
+        return new ObjectMapper()
+                .registerModule(new JavaTimeModule())
+                .registerModule(new Jdk8Module())
+                .registerModule(new ParameterNamesModule())
+                .setSerializationInclusion(JsonInclude.Include.NON_NULL);
     }
 
     private static final String APPLICATION_JSON = "application/json";
