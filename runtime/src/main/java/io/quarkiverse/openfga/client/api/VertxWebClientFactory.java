@@ -1,5 +1,9 @@
 package io.quarkiverse.openfga.client.api;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
+import java.net.URL;
+
 import org.jboss.logging.Logger;
 
 import io.quarkiverse.openfga.runtime.config.OpenFGAConfig;
@@ -10,7 +14,7 @@ import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.mutiny.core.Vertx;
 import io.vertx.mutiny.ext.web.client.WebClient;
 
-class VertxWebClientFactory {
+public class VertxWebClientFactory {
 
     private static final Logger log = Logger.getLogger(VertxWebClientFactory.class.getName());
 
@@ -34,6 +38,19 @@ class VertxWebClientFactory {
         } else {
             config.tls.caCert.ifPresent(caCert -> cacert(options, caCert));
         }
+
+        return WebClient.create(vertx, options);
+    }
+
+    public static WebClient create(URL url, Vertx vertx) {
+
+        var options = new WebClientOptions()
+                .setSsl("https".equals(url.getProtocol()))
+                .setDefaultHost(url.getHost())
+                .setDefaultPort(url.getPort() != -1 ? url.getPort() : url.getDefaultPort())
+                .setConnectTimeout((int) SECONDS.toMillis(2))
+                .setIdleTimeout(2)
+                .setIdleTimeoutUnit(SECONDS);
 
         return WebClient.create(vertx, options);
     }
