@@ -1,14 +1,17 @@
 package io.quarkiverse.openfga.deployment;
 
+import static io.quarkiverse.openfga.deployment.OpenFGAProcessor.FEATURE;
 import static java.lang.String.format;
-import static java.nio.charset.StandardCharsets.UTF_8;
 
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
 import org.jboss.logging.Logger;
@@ -17,11 +20,22 @@ import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 
+import io.quarkiverse.openfga.client.AuthorizationModelsClient;
+import io.quarkiverse.openfga.client.OpenFGAClient;
+import io.quarkiverse.openfga.client.api.API;
+import io.quarkiverse.openfga.client.api.VertxWebClientFactory;
+import io.quarkiverse.openfga.client.model.AuthorizationModel;
+import io.quarkiverse.openfga.client.model.Store;
+import io.quarkiverse.openfga.client.model.TypeDefinitions;
+import io.quarkiverse.openfga.client.model.dto.CreateStoreRequest;
 import io.quarkus.deployment.IsNormal;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
-import io.quarkus.deployment.builditem.*;
+import io.quarkus.deployment.builditem.CuratedApplicationShutdownBuildItem;
+import io.quarkus.deployment.builditem.DevServicesResultBuildItem;
 import io.quarkus.deployment.builditem.DevServicesResultBuildItem.RunningDevService;
+import io.quarkus.deployment.builditem.DockerStatusBuildItem;
+import io.quarkus.deployment.builditem.LaunchModeBuildItem;
 import io.quarkus.deployment.console.ConsoleInstalledBuildItem;
 import io.quarkus.deployment.console.StartupLogCompressor;
 import io.quarkus.deployment.dev.devservices.GlobalDevServicesConfig;
@@ -30,6 +44,7 @@ import io.quarkus.devservices.common.ContainerLocator;
 import io.quarkus.runtime.configuration.ConfigUtils;
 import io.quarkus.runtime.configuration.ConfigurationException;
 import io.quarkus.runtime.util.ClassPathUtils;
+import io.vertx.mutiny.core.Vertx;
 
 public class DevServicesOpenFGAProcessor {
 
@@ -42,8 +57,9 @@ public class DevServicesOpenFGAProcessor {
     static final String URL_CONFIG_KEY = CONFIG_PREFIX + "url";
     static final String STORE_ID_CONFIG_KEY = CONFIG_PREFIX + "store-id";
     static final String AUTHORIZATION_MODEL_ID_CONFIG_KEY = CONFIG_PREFIX + "authorization-model-id";
-    static final ContainerLocator openFGAContainerLocator = new ContainerLocator(DEV_SERVICE_LABEL,
-            OPEN_FGA_EXPOSED_PORT);
+    static final ContainerLocator openFGAContainerLocator = new ContainerLocator(DEV_SERVICE_LABEL, OPEN_FGA_EXPOSED_PORT);
+    static final Duration INIT_OP_MAX_WAIT = Duration.ofSeconds(5);
+
     private static volatile RunningDevService devService;
     private static volatile DevServicesOpenFGAConfig capturedDevServicesConfiguration;
     private static volatile boolean first = true;
@@ -125,8 +141,7 @@ public class DevServicesOpenFGAProcessor {
     }
 
     private RunningDevService startContainer(DockerStatusBuildItem dockerStatusBuildItem,
-            DevServicesOpenFGAConfig devServicesConfig,
-            LaunchModeBuildItem launchMode, Optional<Duration> timeout) {
+            DevServicesOpenFGAConfig devServicesConfig, LaunchModeBuildItem launchMode, Optional<Duration> timeout) {
         if (!devServicesConfig.enabled.orElse(true)) {
             // explicitly disabled
             log.debug("Not starting devservices for OpenFGA as it has been disabled in the config");
@@ -160,87 +175,174 @@ public class DevServicesOpenFGAProcessor {
 
             container.start();
 
-            var instanceURL = format("http://%s:%d", container.getHost(), container.getPort());
-
             var devServicesConfigProperties = new HashMap<String, String>();
-            devServicesConfigProperties.put(URL_CONFIG_KEY, instanceURL);
 
-            var storeInitializer = new DevServicesStoreInitializer(instanceURL);
+            withAPI(container.getHost(), container.getPort(), (instanceURL, api) -> {
 
-            String storeId;
-            try {
-                log.info("Initializing authorization store...");
+                devServicesConfigProperties.put(URL_CONFIG_KEY, instanceURL.toExternalForm());
 
-                storeId = storeInitializer.createStore(devServicesConfig.storeName);
+                String storeId;
+                try {
 
-                devServicesConfigProperties.put(STORE_ID_CONFIG_KEY, storeId);
+                    log.info("Initializing authorization store...");
 
-            } catch (Exception e) {
-                throw new RuntimeException("Store initialization failed", e);
-            }
+                    storeId = api.createStore(new CreateStoreRequest(devServicesConfig.storeName))
+                            .await().atMost(INIT_OP_MAX_WAIT)
+                            .getId();
 
-            devServicesConfig.authorizationModel
-                    .ifPresentOrElse(authModel -> {
-                        try {
-                            log.info("Initializing authorization model...");
+                    devServicesConfigProperties.put(STORE_ID_CONFIG_KEY, storeId);
 
-                            var authorizationModelId = storeInitializer.createAuthorizationModel(storeId, authModel);
+                } catch (Throwable e) {
+                    throw new RuntimeException("Store initialization failed", e);
+                }
 
-                            devServicesConfigProperties.put(AUTHORIZATION_MODEL_ID_CONFIG_KEY, authorizationModelId);
+                loadAuthorizationModelDefinition(api, devServicesConfig)
+                        .ifPresentOrElse(value -> {
+                            try {
+                                log.info("Initializing authorization model...");
 
-                        } catch (Exception e) {
-                            throw new RuntimeException("Model initialization failed", e);
-                        }
-                    }, () -> devServicesConfig.authorizationModelLocation
-                            .ifPresentOrElse(location -> {
-                                try {
-                                    log.infof("Initializing authorization model from %s...", location);
+                                var authorizationModelId = api.writeAuthorizationModel(storeId, value)
+                                        .await()
+                                        .atMost(INIT_OP_MAX_WAIT)
+                                        .getAuthorizationModelId();
 
-                                    var modelPath = resolveModelPath(location);
+                                devServicesConfigProperties.put(AUTHORIZATION_MODEL_ID_CONFIG_KEY, authorizationModelId);
 
-                                    try (var modelStream = new FileInputStream(modelPath.toFile())) {
+                            } catch (Exception e) {
+                                throw new RuntimeException("Model initialization failed", e);
+                            }
+                        }, () -> log.info("No authorization model provided, skipping initialization"));
 
-                                        var authModel = new String(modelStream.readAllBytes(), UTF_8);
+                return null;
+            });
 
-                                        var authorizationModelId = storeInitializer.createAuthorizationModel(storeId,
-                                                authModel);
-
-                                        devServicesConfigProperties.put(AUTHORIZATION_MODEL_ID_CONFIG_KEY,
-                                                authorizationModelId);
-                                    }
-
-                                } catch (Exception e) {
-                                    throw new RuntimeException("Model initialization failed", e);
-                                }
-                            }, () -> log.info(
-                                    "No authentication model provided, skipping authorization store & model initialization")));
-
-            return new RunningDevService(OpenFGAProcessor.FEATURE, container.getContainerId(), container::close,
-                    devServicesConfigProperties);
+            return new RunningDevService(FEATURE, container.getContainerId(), container::close, devServicesConfigProperties);
         };
 
         return openFGAContainerLocator
                 .locateContainer(devServicesConfig.serviceName, devServicesConfig.shared, launchMode.getLaunchMode())
                 .map(containerAddress -> {
 
-                    var instanceURL = format("http://%s:%d", containerAddress.getHost(), containerAddress.getPort());
+                    Map<String, String> devServicesConfigProperties = new HashMap<>();
 
-                    String storeId;
-                    try {
-                        storeId = new DevServicesStoreInitializer(instanceURL)
-                                .findStoreId(devServicesConfig.storeName)
-                                .orElseThrow(() -> new ConfigurationException(
-                                        format("Could not find store '%s' in shared DevServices instance",
-                                                devServicesConfig.storeName)));
-                    } catch (Throwable t) {
-                        throw new RuntimeException("Unable to connect to shared DevServices instance", t);
-                    }
+                    withAPI(containerAddress.getHost(), containerAddress.getPort(), (instanceURL, api) -> {
 
-                    var config = Map.of(URL_CONFIG_KEY, instanceURL, STORE_ID_CONFIG_KEY, storeId);
+                        devServicesConfigProperties.put(URL_CONFIG_KEY, instanceURL.toExternalForm());
 
-                    return new RunningDevService(OpenFGAProcessor.FEATURE, containerAddress.getId(), null, config);
+                        String storeId;
+                        try {
+                            var client = new OpenFGAClient(api);
+
+                            storeId = client.listAll().await().atMost(INIT_OP_MAX_WAIT)
+                                    .stream().filter(store -> store.getName().equals(devServicesConfig.storeName))
+                                    .map(Store::getId)
+                                    .findFirst()
+                                    .orElseThrow();
+
+                            devServicesConfigProperties.put(STORE_ID_CONFIG_KEY, storeId);
+
+                        } catch (Throwable x) {
+                            throw new ConfigurationException(format("Could not find store '%s' in shared DevServices instance",
+                                    devServicesConfig.storeName));
+                        }
+
+                        loadAuthorizationModelDefinition(api, devServicesConfig)
+                                .ifPresent(authModelDef -> {
+                                    try {
+                                        var client = new AuthorizationModelsClient(api, storeId);
+
+                                        var authModel = client.listAll().await().atMost(INIT_OP_MAX_WAIT)
+                                                .stream()
+                                                .filter(item -> item.getTypeDefinitions()
+                                                        .equals(authModelDef.getTypeDefinitions()))
+                                                .map(AuthorizationModel::getId)
+                                                .findFirst()
+                                                .orElseThrow();
+
+                                        devServicesConfigProperties.put(AUTHORIZATION_MODEL_ID_CONFIG_KEY, authModel);
+
+                                    } catch (Throwable x) {
+                                        throw new ConfigurationException(
+                                                "Could not find authorization model in shared DevServices instance");
+                                    }
+                                });
+
+                        return null;
+                    });
+
+                    return new RunningDevService(FEATURE, containerAddress.getId(), null, devServicesConfigProperties);
                 })
                 .orElseGet(defaultOpenFGAInstanceSupplier);
+    }
+
+    private static Optional<TypeDefinitions> loadAuthorizationModelDefinition(API api,
+            DevServicesOpenFGAConfig devServicesConfig) {
+        return devServicesConfig.authorizationModel
+                .or(() -> {
+                    return devServicesConfig.authorizationModelLocation
+                            .map(location -> {
+                                try {
+                                    var authModelPath = resolveModelPath(location);
+                                    return Files.readString(authModelPath);
+                                } catch (Throwable x) {
+                                    throw new RuntimeException(
+                                            format("Unable to load authorization model from '%s'", location));
+                                }
+                            });
+                })
+                .map(authModelJSON -> {
+                    try {
+                        return api.parseModel(authModelJSON);
+                    } catch (Throwable t) {
+                        throw new RuntimeException("Unable to parse authorization model", t);
+                    }
+                });
+    }
+
+    private static Path resolveModelPath(String location) throws IOException {
+        location = normalizeLocation(location);
+        if (location.startsWith("filesystem:")) {
+            return Path.of(location.substring("filesystem:".length()));
+        }
+
+        var classpathPath = new AtomicReference<Path>();
+        ClassPathUtils.consumeAsPaths(Thread.currentThread().getContextClassLoader(), location, classpathPath::set);
+
+        return classpathPath.get();
+    }
+
+    private static String normalizeLocation(String location) {
+        // Strip any 'classpath:' protocol prefixes because they are assumed
+        // but not recognized by ClassLoader.getResources()
+        if (location.startsWith("classpath:")) {
+            location = location.substring("classpath:".length());
+            if (location.startsWith("/")) {
+                location = location.substring(1);
+            }
+        }
+        if (!location.endsWith("/")) {
+            location += "/";
+        }
+        return location;
+    }
+
+    private static void withAPI(String host, Integer port, BiFunction<URL, API, Void> apiConsumer) {
+        URL instanceURL;
+        try {
+            instanceURL = new URL("http", host, port, "");
+        } catch (MalformedURLException e) {
+            // Should not happen
+            throw new RuntimeException(e);
+        }
+
+        Vertx vertx = Vertx.vertx();
+        try (var api = new API(VertxWebClientFactory.create(instanceURL, vertx), Optional.empty())) {
+
+            apiConsumer.apply(instanceURL, api);
+
+        } finally {
+            vertx.close().await().atMost(INIT_OP_MAX_WAIT);
+        }
     }
 
     private static class QuarkusOpenFGAContainer extends GenericContainer<QuarkusOpenFGAContainer> {
@@ -272,32 +374,5 @@ public class DevServicesOpenFGAProcessor {
             }
             return super.getMappedPort(OPEN_FGA_EXPOSED_PORT);
         }
-    }
-
-    private Path resolveModelPath(String location) throws IOException {
-        location = normalizeLocation(location);
-        if (location.startsWith("filesystem:")) {
-            return Path.of(location.substring("filesystem:".length()));
-        }
-
-        var classpathPath = new AtomicReference<Path>();
-        ClassPathUtils.consumeAsPaths(Thread.currentThread().getContextClassLoader(), location, classpathPath::set);
-
-        return classpathPath.get();
-    }
-
-    private String normalizeLocation(String location) {
-        // Strip any 'classpath:' protocol prefixes because they are assumed
-        // but not recognized by ClassLoader.getResources()
-        if (location.startsWith("classpath:")) {
-            location = location.substring("classpath:".length());
-            if (location.startsWith("/")) {
-                location = location.substring(1);
-            }
-        }
-        if (!location.endsWith("/")) {
-            location += "/";
-        }
-        return location;
     }
 }

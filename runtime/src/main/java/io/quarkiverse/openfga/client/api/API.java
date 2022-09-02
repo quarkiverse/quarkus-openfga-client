@@ -9,6 +9,8 @@ import static io.vertx.mutiny.core.http.HttpHeaders.ACCEPT;
 import static io.vertx.mutiny.core.http.HttpHeaders.CONTENT_TYPE;
 import static java.lang.String.format;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
 
@@ -38,7 +40,7 @@ import io.vertx.mutiny.ext.web.codec.BodyCodec;
 import io.vertx.mutiny.uritemplate.UriTemplate;
 import io.vertx.mutiny.uritemplate.Variables;
 
-public class API {
+public class API implements Closeable {
 
     private final WebClient webClient;
     private final Optional<Credentials> credentials;
@@ -57,6 +59,10 @@ public class API {
 
     public void close() {
         webClient.close();
+    }
+
+    public TypeDefinitions parseModel(String modelJSON) throws IOException {
+        return objectMapper.readValue(modelJSON, TypeDefinitions.class);
     }
 
     public Uni<ListStoresResponse> listStores(@Nullable Integer pageSize, @Nullable String continuationToken) {
