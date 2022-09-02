@@ -11,17 +11,20 @@ import static java.lang.String.format;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import javax.annotation.Nullable;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 
+import io.quarkiverse.openfga.client.model.TupleKey;
 import io.quarkiverse.openfga.client.model.TypeDefinitions;
 import io.quarkiverse.openfga.client.model.dto.*;
 import io.quarkiverse.openfga.runtime.config.OpenFGAConfig;
@@ -63,6 +66,11 @@ public class API implements Closeable {
 
     public TypeDefinitions parseModel(String modelJSON) throws IOException {
         return objectMapper.readValue(modelJSON, TypeDefinitions.class);
+    }
+
+    public List<TupleKey> parseTuples(String modelJSON) throws IOException {
+        return objectMapper.readValue(modelJSON, new TypeReference<>() {
+        });
     }
 
     public Uni<ListStoresResponse> listStores(@Nullable Integer pageSize, @Nullable String continuationToken) {
