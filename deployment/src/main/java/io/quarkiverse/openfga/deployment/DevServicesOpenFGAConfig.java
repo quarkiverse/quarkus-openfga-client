@@ -53,12 +53,28 @@ public class DevServicesOpenFGAConfig {
     public String serviceName;
 
     /**
-     * Optional fixed port the service will be bound to.
+     * Optional fixed port the HTTP service will be bound to.
      * <p>
      * If not defined, the port will be chosen randomly.
      */
     @ConfigItem
-    public OptionalInt port;
+    public OptionalInt httpPort;
+
+    /**
+     * Optional fixed port the gRPC service will be bound to.
+     * <p>
+     * If not defined, the port will be chosen randomly.
+     */
+    @ConfigItem
+    public OptionalInt grpcPort;
+
+    /**
+     * Optional fixed port the Playground service will be bound to.
+     * <p>
+     * If not defined, the port will be chosen randomly.
+     */
+    @ConfigItem
+    public OptionalInt playgroundPort;
 
     /**
      * Name of authorization store to create for DevServices.

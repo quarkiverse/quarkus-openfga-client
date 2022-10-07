@@ -51,14 +51,17 @@ public class DevServicesOpenFGAProcessor {
     private static final Logger log = Logger.getLogger(DevServicesOpenFGAProcessor.class);
     static final String OPEN_FGA_VERSION = "v0.2.1";
     static final String OPEN_FGA_IMAGE = "openfga/openfga:" + OPEN_FGA_VERSION;
-    static final int OPEN_FGA_EXPOSED_PORT = 8080;
+    static final int OPEN_FGA_EXPOSED_HTTP_PORT = 8080;
+    static final int OPEN_FGA_EXPOSED_GRPC_PORT = 8081;
+    static final int OPEN_FGA_EXPOSED_PLAY_PORT = 3000;
     static final String DEV_SERVICE_LABEL = "quarkus-dev-service-openfga";
     static final String CONFIG_PREFIX = "quarkus.openfga.";
     static final String URL_CONFIG_KEY = CONFIG_PREFIX + "url";
     static final String STORE_ID_CONFIG_KEY = CONFIG_PREFIX + "store";
     static final String AUTHORIZATION_MODEL_ID_CONFIG_KEY = CONFIG_PREFIX + "authorization-model-id";
-    static final ContainerLocator openFGAContainerLocator = new ContainerLocator(DEV_SERVICE_LABEL, OPEN_FGA_EXPOSED_PORT);
+    static final ContainerLocator openFGAContainerLocator = new ContainerLocator(DEV_SERVICE_LABEL, OPEN_FGA_EXPOSED_HTTP_PORT);
     static final Duration INIT_OP_MAX_WAIT = Duration.ofSeconds(5);
+    public static final String HEALTH_ENDPOINT = "/healthz";
 
     private static volatile RunningDevService devService;
     private static volatile DevServicesOpenFGAConfig capturedDevServicesConfiguration;
@@ -164,10 +167,11 @@ public class DevServicesOpenFGAProcessor {
 
         final Supplier<RunningDevService> defaultOpenFGAInstanceSupplier = () -> {
 
-            QuarkusOpenFGAContainer container = new QuarkusOpenFGAContainer(dockerImageName, devServicesConfig.port,
+            QuarkusOpenFGAContainer container = new QuarkusOpenFGAContainer(dockerImageName, devServicesConfig.httpPort,
+                    devServicesConfig.grpcPort, devServicesConfig.playgroundPort,
                     devServicesConfig.serviceName)
                     .withNetwork(Network.SHARED)
-                    .waitingFor(Wait.forHttp("/stores"));
+                    .waitingFor(Wait.forHttp(HEALTH_ENDPOINT).forPort(OPEN_FGA_EXPOSED_HTTP_PORT));
 
             timeout.ifPresent(container::withStartupTimeout);
 
@@ -177,7 +181,7 @@ public class DevServicesOpenFGAProcessor {
 
             var devServicesConfigProperties = new HashMap<String, String>();
 
-            withAPI(container.getHost(), container.getPort(), (instanceURL, api) -> {
+            withAPI(container.getHost(), container.getHttpPort(), (instanceURL, api) -> {
 
                 devServicesConfigProperties.put(URL_CONFIG_KEY, instanceURL.toExternalForm());
 
@@ -391,11 +395,16 @@ public class DevServicesOpenFGAProcessor {
     }
 
     private static class QuarkusOpenFGAContainer extends GenericContainer<QuarkusOpenFGAContainer> {
-        OptionalInt fixedExposedPort;
+        OptionalInt fixedExposedHttpPort;
+        OptionalInt fixedExposedGrpcPort;
+        OptionalInt fixedExposedPlaygroundPort;
 
-        public QuarkusOpenFGAContainer(DockerImageName dockerImageName, OptionalInt fixedExposedPort, String serviceName) {
+        public QuarkusOpenFGAContainer(DockerImageName dockerImageName, OptionalInt fixedExposedHttpPort,
+                OptionalInt fixedExposedGrpcPort, OptionalInt fixedExposedPlaygroundPort, String serviceName) {
             super(dockerImageName);
-            this.fixedExposedPort = fixedExposedPort;
+            this.fixedExposedHttpPort = fixedExposedHttpPort;
+            this.fixedExposedGrpcPort = fixedExposedGrpcPort;
+            this.fixedExposedPlaygroundPort = fixedExposedPlaygroundPort;
             withCommand("run");
             withNetwork(Network.SHARED);
             if (serviceName != null) { // Only adds the label in dev mode.
@@ -406,18 +415,31 @@ public class DevServicesOpenFGAProcessor {
         @Override
         protected void configure() {
             super.configure();
-            if (fixedExposedPort.isPresent()) {
-                addFixedExposedPort(fixedExposedPort.getAsInt(), OPEN_FGA_EXPOSED_PORT);
+
+            if (fixedExposedHttpPort.isPresent()) {
+                addFixedExposedPort(fixedExposedHttpPort.getAsInt(), OPEN_FGA_EXPOSED_HTTP_PORT);
             } else {
-                addExposedPort(OPEN_FGA_EXPOSED_PORT);
+                addExposedPort(OPEN_FGA_EXPOSED_HTTP_PORT);
+            }
+
+            if (fixedExposedGrpcPort.isPresent()) {
+                addFixedExposedPort(fixedExposedGrpcPort.getAsInt(), OPEN_FGA_EXPOSED_GRPC_PORT);
+            } else {
+                addExposedPort(OPEN_FGA_EXPOSED_GRPC_PORT);
+            }
+
+            if (fixedExposedPlaygroundPort.isPresent()) {
+                addFixedExposedPort(fixedExposedPlaygroundPort.getAsInt(), OPEN_FGA_EXPOSED_PLAY_PORT);
+            } else {
+                addExposedPort(OPEN_FGA_EXPOSED_PLAY_PORT);
             }
         }
 
-        public int getPort() {
-            if (fixedExposedPort.isPresent()) {
-                return fixedExposedPort.getAsInt();
+        public int getHttpPort() {
+            if (fixedExposedHttpPort.isPresent()) {
+                return fixedExposedHttpPort.getAsInt();
             }
-            return super.getMappedPort(OPEN_FGA_EXPOSED_PORT);
+            return super.getMappedPort(OPEN_FGA_EXPOSED_HTTP_PORT);
         }
     }
 }
