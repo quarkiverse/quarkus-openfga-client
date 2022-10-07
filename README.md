@@ -40,11 +40,11 @@ implementation("io.quarkiverse.openfga:quarkus-openfga-client:${openfga.version}
 
 The extension requires two configuration properties to be defined at startup to define what instance and store are
 targeted by the client. The `url` property selects the scheme, host and, optionally, the port of the OpenFGA instance.
-While `store-id` determines which authorization store is targeted.
+While `store` determines which authorization store is targeted; it can be referenced by store id or name.
 
 ```properties
 quarkus.openfga.url=http://localhost:80
-quarkus.openfga.store-id=my-app-authz
+quarkus.openfga.store=my-app-authz
 ```
 
 #### DevServices
