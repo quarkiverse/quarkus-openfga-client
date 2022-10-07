@@ -19,30 +19,30 @@ import io.smallrye.mutiny.Uni;
 public class StoreClient {
 
     private final API api;
-    private final String storeId;
+    private final Uni<String> storeId;
 
-    public StoreClient(API api, String storeId) {
+    public StoreClient(API api, Uni<String> storeId) {
         this.api = api;
         this.storeId = storeId;
-
     }
 
     public Uni<Store> get() {
-        return api.getStore(storeId).map(GetStoreResponse::asStore);
+        return storeId.flatMap(api::getStore)
+                .map(GetStoreResponse::asStore);
     }
 
     public Uni<Void> delete() {
-        return api.deleteStore(storeId);
+        return storeId.flatMap(api::deleteStore);
     }
 
     public Uni<List<TupleChange>> changes(@Nullable String type, @Nullable Integer pageSize,
             @Nullable String continuationToken) {
-        return api.readChanges(storeId, type, pageSize, continuationToken)
+        return storeId.flatMap(storeId -> api.readChanges(storeId, type, pageSize, continuationToken))
                 .map(ReadChangesResponse::getChanges);
     }
 
     public Uni<PaginatedList<Tuple>> readTuples(@Nullable Integer pageSize, @Nullable String pagingToken) {
-        return api.readTuples(storeId, new ReadTuplesBody(pageSize, pagingToken))
+        return storeId.flatMap(storeId -> api.readTuples(storeId, new ReadTuplesBody(pageSize, pagingToken)))
                 .map(res -> new PaginatedList<>(res.getTuples(), res.getContinuationToken()));
     }
 

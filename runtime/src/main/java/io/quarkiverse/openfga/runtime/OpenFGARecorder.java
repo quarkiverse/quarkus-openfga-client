@@ -1,5 +1,7 @@
 package io.quarkiverse.openfga.runtime;
 
+import static io.quarkiverse.openfga.client.OpenFGAClient.storeIdResolver;
+
 import io.quarkiverse.openfga.client.AuthorizationModelClient;
 import io.quarkiverse.openfga.client.OpenFGAClient;
 import io.quarkiverse.openfga.client.StoreClient;
@@ -27,12 +29,14 @@ public class OpenFGARecorder {
     }
 
     public RuntimeValue<StoreClient> createStoreClient(RuntimeValue<API> api, OpenFGAConfig config) {
-        StoreClient storeClient = new StoreClient(api.getValue(), config.storeId);
+        var storeIdResolver = storeIdResolver(api.getValue(), config.store, config.alwaysResolveStoreId);
+        StoreClient storeClient = new StoreClient(api.getValue(), storeIdResolver);
         return new RuntimeValue<>(storeClient);
     }
 
     public RuntimeValue<AuthorizationModelClient> createAuthModelClient(RuntimeValue<API> api, OpenFGAConfig config) {
-        AuthorizationModelClient authModelClient = new AuthorizationModelClient(api.getValue(), config.storeId,
+        var storeIdResolver = storeIdResolver(api.getValue(), config.store, config.alwaysResolveStoreId);
+        AuthorizationModelClient authModelClient = new AuthorizationModelClient(api.getValue(), storeIdResolver,
                 config.authorizationModelId.orElse(null));
         return new RuntimeValue<>(authModelClient);
     }
