@@ -9,15 +9,23 @@ import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class AuthorizationModel {
     private final String id;
+    private final String schemaVersion;
     private final List<TypeDefinition> typeDefinitions;
 
-    public AuthorizationModel(String id, @JsonProperty("type_definitions") List<TypeDefinition> typeDefinitions) {
+    public AuthorizationModel(String id, @JsonProperty("schema_version") String schemaVersion,
+            @JsonProperty("type_definitions") List<TypeDefinition> typeDefinitions) {
         this.id = Preconditions.parameterNonNull(id, "id");
+        this.schemaVersion = Preconditions.parameterNonNull(schemaVersion, "schemaVersion");
         this.typeDefinitions = Preconditions.parameterNonNull(typeDefinitions, "typeDefinitions");
     }
 
     public String getId() {
         return id;
+    }
+
+    @JsonProperty("schema_version")
+    public String getSchemaVersion() {
+        return schemaVersion;
     }
 
     @JsonProperty("type_definitions")
