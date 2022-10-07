@@ -11,22 +11,23 @@ import io.smallrye.mutiny.Uni;
 public class AssertionsClient {
 
     private final API api;
-    private final String storeId;
+    private final Uni<String> storeId;
     private final String authorizationModelId;
 
-    public AssertionsClient(API api, String storeId, String authorizationModelId) {
+    public AssertionsClient(API api, Uni<String> storeId, String authorizationModelId) {
         this.api = api;
         this.storeId = storeId;
         this.authorizationModelId = authorizationModelId;
     }
 
     public Uni<List<Assertion>> list() {
-        return api.readAssertions(storeId, authorizationModelId)
+        return storeId.flatMap(storeId -> api.readAssertions(storeId, authorizationModelId))
                 .map(ReadAssertionsResponse::getAssertions);
     }
 
     public Uni<Void> update(List<Assertion> assertions) {
-        return api.writeAssertions(storeId, authorizationModelId, new WriteAssertionsRequest(assertions));
+        return storeId
+                .flatMap(storeId -> api.writeAssertions(storeId, authorizationModelId, new WriteAssertionsRequest(assertions)));
     }
 
 }

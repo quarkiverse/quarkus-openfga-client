@@ -43,6 +43,7 @@ import io.quarkus.devservices.common.ContainerLocator;
 import io.quarkus.runtime.configuration.ConfigUtils;
 import io.quarkus.runtime.configuration.ConfigurationException;
 import io.quarkus.runtime.util.ClassPathUtils;
+import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.Vertx;
 
 public class DevServicesOpenFGAProcessor {
@@ -54,7 +55,7 @@ public class DevServicesOpenFGAProcessor {
     static final String DEV_SERVICE_LABEL = "quarkus-dev-service-openfga";
     static final String CONFIG_PREFIX = "quarkus.openfga.";
     static final String URL_CONFIG_KEY = CONFIG_PREFIX + "url";
-    static final String STORE_ID_CONFIG_KEY = CONFIG_PREFIX + "store-id";
+    static final String STORE_ID_CONFIG_KEY = CONFIG_PREFIX + "store";
     static final String AUTHORIZATION_MODEL_ID_CONFIG_KEY = CONFIG_PREFIX + "authorization-model-id";
     static final ContainerLocator openFGAContainerLocator = new ContainerLocator(DEV_SERVICE_LABEL, OPEN_FGA_EXPOSED_PORT);
     static final Duration INIT_OP_MAX_WAIT = Duration.ofSeconds(5);
@@ -269,7 +270,7 @@ public class DevServicesOpenFGAProcessor {
                         loadAuthorizationModelDefinition(api, devServicesConfig)
                                 .ifPresent(authModelDef -> {
                                     try {
-                                        var client = new AuthorizationModelsClient(api, storeId);
+                                        var client = new AuthorizationModelsClient(api, Uni.createFrom().item(storeId));
 
                                         var authModelId = client.listAll().await().atMost(INIT_OP_MAX_WAIT)
                                                 .stream()

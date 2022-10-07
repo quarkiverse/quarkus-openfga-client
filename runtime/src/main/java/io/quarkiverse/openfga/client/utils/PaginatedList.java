@@ -21,7 +21,7 @@ public final class PaginatedList<T> {
         this.token = token;
     }
 
-    public Boolean isLastPage() {
+    public Boolean isNotLastPage() {
         return token != null && !token.isEmpty();
     }
 
@@ -32,7 +32,7 @@ public final class PaginatedList<T> {
                     return listGenerator.apply(pageSize, lastToken.get())
                             .onItem().invoke(list -> lastToken.set(list.getToken()));
                 })
-                .whilst(PaginatedList::isLastPage)
+                .whilst(PaginatedList::isNotLastPage)
                 .onItem().transformToIterable(PaginatedList::getItems)
                 .collect().asList();
     }

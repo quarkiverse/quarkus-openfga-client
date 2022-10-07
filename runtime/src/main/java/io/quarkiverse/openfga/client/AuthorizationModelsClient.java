@@ -17,15 +17,15 @@ import io.smallrye.mutiny.Uni;
 public class AuthorizationModelsClient {
 
     private final API api;
-    private final String storeId;
+    private final Uni<String> storeId;
 
-    public AuthorizationModelsClient(API api, String storeId) {
+    public AuthorizationModelsClient(API api, Uni<String> storeId) {
         this.api = api;
         this.storeId = storeId;
     }
 
     public Uni<PaginatedList<AuthorizationModel>> list(@Nullable Integer pageSize, @Nullable String pagingToken) {
-        return api.readAuthorizationModels(storeId, pageSize, pagingToken)
+        return storeId.flatMap(storeId -> api.readAuthorizationModels(storeId, pageSize, pagingToken))
                 .map(res -> new PaginatedList<>(res.getAuthorizationModels(), res.getContinuationToken()));
     }
 
@@ -38,7 +38,7 @@ public class AuthorizationModelsClient {
     }
 
     public Uni<String> create(List<TypeDefinition> typeDefinitions) {
-        return api.writeAuthorizationModel(storeId, new TypeDefinitions(typeDefinitions))
+        return storeId.flatMap(storeId -> api.writeAuthorizationModel(storeId, new TypeDefinitions(typeDefinitions)))
                 .map(WriteAuthorizationModelResponse::getAuthorizationModelId);
     }
 

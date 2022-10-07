@@ -60,15 +60,17 @@ public class AuthorizationModelsClientTest {
 
         var typeDefinition = new TypeDefinition("document", Map.of("reader", Userset.direct()));
 
-        authorizationModelsClient.create(List.of(typeDefinition))
-                .subscribe().withSubscriber(UniAssertSubscriber.create())
-                .awaitItem();
+        for (int c = 0; c < 4; c++) {
+            authorizationModelsClient.create(List.of(typeDefinition))
+                    .subscribe().withSubscriber(UniAssertSubscriber.create())
+                    .awaitItem();
+        }
 
-        var models = authorizationModelsClient.listAll()
+        var models = authorizationModelsClient.listAll(1)
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
 
-        assertThat(models, hasSize(1));
+        assertThat(models, hasSize(4));
     }
 }

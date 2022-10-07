@@ -38,10 +38,32 @@ public class OpenFGAConfig {
     public Optional<String> sharedKey;
 
     /**
-     * Store id for default {@link StoreClient} bean.
+     * Store id or name for default {@link StoreClient} bean.
+     * <p>
+     * If the provided property does not match the OpenFGA store id format
+     * ({@code ^[ABCDEFGHJKMNPQRSTVWXYZ0-9]{26}$}) it will be treated as
+     * a store name and a matching store id will be resolved at runtime.
+     * <p>
+     *
+     * @see #alwaysResolveStoreId
      */
     @ConfigItem
-    public String storeId;
+    public String store;
+
+    /**
+     * Always Treat {@link #store} as the name of a store and resolve the
+     * store id at runtime.
+     * <p>
+     * If true, the store id will always be resolved at runtime regardless
+     * of the format of the {@link #store} property. Otherwise, the store
+     * id will be resolved only when {@link #store} does not match the
+     * OpenFGA store id format.
+     * <p>
+     *
+     * @see #store
+     */
+    @ConfigItem(defaultValue = "false")
+    public boolean alwaysResolveStoreId;
 
     /**
      * Authorization model id for default {@link AuthorizationModelClient} bean.
