@@ -3,15 +3,26 @@ package io.quarkiverse.openfga.client.model;
 import java.util.Map;
 import java.util.Objects;
 
+import javax.annotation.Nullable;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class TypeDefinition {
     private final String type;
     private final Map<String, Userset> relations;
+    private final Object metadata;
 
-    public TypeDefinition(String type, Map<String, Userset> relations) {
+    @JsonCreator
+    public TypeDefinition(String type, Map<String, Userset> relations, @Nullable Object metadata) {
         this.type = Preconditions.parameterNonNull(type, "type");
         this.relations = Preconditions.parameterNonNull(relations, "relations");
+        this.metadata = metadata;
+    }
+
+    public TypeDefinition(String type, Map<String, Userset> relations) {
+        this(type, relations, null);
     }
 
     public String getType() {
@@ -20,6 +31,11 @@ public final class TypeDefinition {
 
     public Map<String, Userset> getRelations() {
         return relations;
+    }
+
+    @Nullable
+    public Object getMetadata() {
+        return metadata;
     }
 
     @Override
