@@ -42,7 +42,7 @@ public class AuthorizationModelsClientTest {
 
     @BeforeEach
     public void createTestStore() {
-        store = openFGAClient.create("test").await().atMost(ofSeconds(10));
+        store = openFGAClient.createStore("test").await().atMost(ofSeconds(10));
         storeClient = openFGAClient.store(store.getId());
         authorizationModelsClient = storeClient.authorizationModels();
     }

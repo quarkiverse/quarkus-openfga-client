@@ -38,7 +38,7 @@ public class OpenFGAClientTest {
 
     @BeforeEach
     public void deleteAllStores() {
-        for (var store : client.listAll().await().indefinitely()) {
+        for (var store : client.listAllStores().await().indefinitely()) {
             client.store(store.getId()).delete().await().indefinitely();
         }
     }
@@ -47,7 +47,7 @@ public class OpenFGAClientTest {
     @DisplayName("Can Create Stores")
     public void canCreateStores() {
 
-        var store = client.create("testing")
+        var store = client.createStore("testing")
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
@@ -64,7 +64,7 @@ public class OpenFGAClientTest {
     public void canListStoresWithoutPagination() {
 
         var createdStores = Multi.createFrom().items("testing1", "testing2")
-                .onItem().transformToUniAndConcatenate(name -> client.create(name))
+                .onItem().transformToUniAndConcatenate(name -> client.createStore(name))
                 .collect().asList()
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
@@ -73,7 +73,7 @@ public class OpenFGAClientTest {
         assertThat(createdStores.stream().map(Store::getName).collect(Collectors.toList()),
                 containsInAnyOrder("testing1", "testing2"));
 
-        var list = client.list(2, null)
+        var list = client.listStores(2, null)
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
@@ -86,7 +86,7 @@ public class OpenFGAClientTest {
     public void canListStoresWithPagination() {
 
         var createdStores = Multi.createFrom().items("testing1", "testing2", "testing3")
-                .onItem().transformToUniAndConcatenate(name -> client.create(name))
+                .onItem().transformToUniAndConcatenate(name -> client.createStore(name))
                 .collect().asList()
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
@@ -95,7 +95,7 @@ public class OpenFGAClientTest {
         assertThat(createdStores.stream().map(Store::getName).collect(Collectors.toList()),
                 containsInAnyOrder("testing1", "testing2", "testing3"));
 
-        var list = client.listAll(1)
+        var list = client.listAllStores(1)
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
@@ -107,12 +107,12 @@ public class OpenFGAClientTest {
     @DisplayName("Can Delete Stores")
     public void canDeleteStores() {
 
-        var store = client.create("testing")
+        var store = client.createStore("testing")
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
 
-        var preList = client.listAll(1)
+        var preList = client.listAllStores(1)
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
@@ -123,7 +123,7 @@ public class OpenFGAClientTest {
                 .awaitItem()
                 .assertCompleted();
 
-        var postList = client.listAll(1)
+        var postList = client.listAllStores(1)
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();

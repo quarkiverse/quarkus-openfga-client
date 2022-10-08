@@ -258,7 +258,7 @@ public class DevServicesOpenFGAProcessor {
                         try {
                             var client = new OpenFGAClient(api);
 
-                            storeId = client.listAll().await().atMost(INIT_OP_MAX_WAIT)
+                            storeId = client.listAllStores().await().atMost(INIT_OP_MAX_WAIT)
                                     .stream().filter(store -> store.getName().equals(devServicesConfig.storeName))
                                     .map(Store::getId)
                                     .findFirst()

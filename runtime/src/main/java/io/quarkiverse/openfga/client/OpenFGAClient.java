@@ -30,20 +30,20 @@ public class OpenFGAClient {
         this.api = api;
     }
 
-    public Uni<PaginatedList<Store>> list(@Nullable Integer pageSize, @Nullable String continuationToken) {
+    public Uni<PaginatedList<Store>> listStores(@Nullable Integer pageSize, @Nullable String continuationToken) {
         return api.listStores(pageSize, continuationToken)
                 .map(res -> new PaginatedList<>(res.getStores(), res.getContinuationToken()));
     }
 
-    public Uni<List<Store>> listAll() {
-        return listAll(null);
+    public Uni<List<Store>> listAllStores() {
+        return listAllStores(null);
     }
 
-    public Uni<List<Store>> listAll(@Nullable Integer pageSize) {
-        return collectAllPages(pageSize, this::list);
+    public Uni<List<Store>> listAllStores(@Nullable Integer pageSize) {
+        return collectAllPages(pageSize, this::listStores);
     }
 
-    public Uni<Store> create(String name) {
+    public Uni<Store> createStore(String name) {
         return api.createStore(new CreateStoreRequest(name)).map(CreateStoreResponse::asStore);
     }
 
