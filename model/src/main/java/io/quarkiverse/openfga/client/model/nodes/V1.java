@@ -2,6 +2,8 @@ package io.quarkiverse.openfga.client.model.nodes;
 
 import java.util.Objects;
 
+import javax.annotation.Nullable;
+
 import io.quarkiverse.openfga.client.model.ObjectRelation;
 import io.quarkiverse.openfga.client.model.Userset;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
@@ -26,7 +28,7 @@ public class V1 {
         }
 
         @Override
-        public boolean equals(Object obj) {
+        public boolean equals(@Nullable Object obj) {
             if (obj == this)
                 return true;
             if (obj == null || obj.getClass() != this.getClass())
@@ -68,7 +70,7 @@ public class V1 {
         }
 
         @Override
-        public boolean equals(Object obj) {
+        public boolean equals(@Nullable Object obj) {
             if (obj == this)
                 return true;
             if (obj == null || obj.getClass() != this.getClass())
