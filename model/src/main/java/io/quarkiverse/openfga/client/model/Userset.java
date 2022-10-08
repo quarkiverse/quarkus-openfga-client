@@ -4,6 +4,7 @@ import java.util.Objects;
 
 import javax.annotation.Nullable;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.quarkiverse.openfga.client.model.nodes.V1;
@@ -23,6 +24,7 @@ public final class Userset {
     @Nullable
     private final V1.Difference difference;
 
+    @JsonCreator
     public Userset(
             @Nullable @JsonProperty("this") DirectUserset directUserset,
             @Nullable ObjectRelation computedUserset,
@@ -38,12 +40,38 @@ public final class Userset {
         this.difference = difference;
     }
 
-    public static Userset direct() {
-        return new Userset(new DirectUserset(), null, null, null, null, null);
+    public static Userset direct(DirectUserset directUserset) {
+        return new Userset(directUserset, null, null, null, null, null);
+    }
+
+    public static Userset direct(String k1, Object v1) {
+        return direct(DirectUserset.of(k1, v1));
+    }
+
+    public static Userset direct(String k1, Object v1, String k2, Object v2) {
+        return direct(DirectUserset.of(k1, v1, k2, v2));
+    }
+
+    public static Userset direct(String k1, Object v1, String k2, Object v2, String k3, Object v3) {
+        return direct(DirectUserset.of(k1, v1, k2, v2, k3, v3));
+    }
+
+    public static Userset direct(String k1, Object v1, String k2, Object v2, String k3, Object v3,
+            String k4, Object v4) {
+        return direct(DirectUserset.of(k1, v1, k2, v2, k3, v3, k4, v4));
+    }
+
+    public static Userset direct(String k1, Object v1, String k2, Object v2, String k3, Object v3,
+            String k4, Object v4, String k5, Object v5) {
+        return direct(DirectUserset.of(k1, v1, k2, v2, k3, v3, k4, v4, k5, v5));
     }
 
     public static Userset computed(ObjectRelation computedUserset) {
         return new Userset(null, computedUserset, null, null, null, null);
+    }
+
+    public static Userset computed(String object, String relation) {
+        return computed(new ObjectRelation(object, relation));
     }
 
     public static Userset tupleTo(V1.TupleToUserset tupleToUserset) {

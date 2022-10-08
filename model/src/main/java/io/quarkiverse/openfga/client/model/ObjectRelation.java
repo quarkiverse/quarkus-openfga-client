@@ -2,12 +2,15 @@ package io.quarkiverse.openfga.client.model;
 
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class ObjectRelation {
     private final String object;
     private final String relation;
 
+    @JsonCreator
     public ObjectRelation(String object, String relation) {
         this.object = Preconditions.parameterNonNull(object, "object");
         this.relation = Preconditions.parameterNonNull(relation, "relation");

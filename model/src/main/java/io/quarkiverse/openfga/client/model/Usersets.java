@@ -3,11 +3,14 @@ package io.quarkiverse.openfga.client.model;
 import java.util.List;
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class Usersets {
     private final List<Userset> child;
 
+    @JsonCreator
     public Usersets(List<Userset> child) {
         this.child = Preconditions.parameterNonNull(child, "child");
     }
