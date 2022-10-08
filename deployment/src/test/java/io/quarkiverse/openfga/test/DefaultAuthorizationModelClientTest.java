@@ -51,8 +51,8 @@ public class DefaultAuthorizationModelClientTest {
 
         // ensure it has an auth model
         var documentTypeDef = new TypeDefinition("document", Map.of(
-                "reader", Userset.direct(),
-                "writer", Userset.direct()));
+                "reader", Userset.direct("a", 1),
+                "writer", Userset.direct("b", 2)));
 
         var authModelId = storeClient.authorizationModels().create(List.of(documentTypeDef))
                 .subscribe().withSubscriber(UniAssertSubscriber.create())

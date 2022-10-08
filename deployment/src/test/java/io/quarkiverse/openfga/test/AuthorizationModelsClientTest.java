@@ -58,7 +58,7 @@ public class AuthorizationModelsClientTest {
     @DisplayName("Can List Models")
     public void canList() {
 
-        var typeDefinition = new TypeDefinition("document", Map.of("reader", Userset.direct()));
+        var typeDefinition = new TypeDefinition("document", Map.of("reader", Userset.direct("a", 1)));
 
         for (int c = 0; c < 4; c++) {
             authorizationModelsClient.create(List.of(typeDefinition))

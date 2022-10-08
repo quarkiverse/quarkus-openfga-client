@@ -2,12 +2,15 @@ package io.quarkiverse.openfga.client.model;
 
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 import io.quarkiverse.openfga.client.model.nodes.Node;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class UsersetTree {
     private final Node root;
 
+    @JsonCreator
     public UsersetTree(Node root) {
         this.root = Preconditions.parameterNonNull(root, "root");
     }
