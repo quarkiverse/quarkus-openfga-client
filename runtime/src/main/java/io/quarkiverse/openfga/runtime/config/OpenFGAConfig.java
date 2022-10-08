@@ -67,6 +67,8 @@ public class OpenFGAConfig {
 
     /**
      * Authorization model id for default {@link AuthorizationModelClient} bean.
+     * <p>
+     * If none is provided the default bean will target the default authorization model for the store.
      */
     @ConfigItem
     public Optional<String> authorizationModelId;

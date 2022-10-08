@@ -40,11 +40,13 @@ implementation("io.quarkiverse.openfga:quarkus-openfga-client:${openfga.version}
 
 The extension requires two configuration properties to be defined at startup to define what instance and store are
 targeted by the client. The `url` property selects the scheme, host and, optionally, the port of the OpenFGA instance.
-While `store` determines which authorization store is targeted; it can be referenced by store id or name.
+While `store` determines which authorization store is targeted; ***it can be referenced by store id or name***.
 
 ```properties
 quarkus.openfga.url=http://localhost:80
 quarkus.openfga.store=my-app-authz
+# Optional authorization model id 
+#quarkus.openfga.authorization-model-id=11G22H33I44J55K66L77M88N99
 ```
 
 #### DevServices
@@ -63,7 +65,7 @@ The extension provides three injectable clients for accessing the configured ins
 
 * `OpenFGAClient` - Main client for accessing the OpenFGA instance.
 * `StoreClient` - Access authorization store configured via `quarkus.openfga.store-id`
-* `AuthorizationModelClient` - Access authorization model configured via `quarkus.openfga.authoriztion-id` or the default model if none is configured.
+* `AuthorizationModelClient` - Access authorization model configured via `quarkus.openfga.authoriztion-model-id` or the default model if none is configured.
 
 ### Examples
 
