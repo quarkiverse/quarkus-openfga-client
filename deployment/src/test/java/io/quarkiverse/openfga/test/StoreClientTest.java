@@ -35,7 +35,7 @@ public class StoreClientTest {
 
     @BeforeEach
     public void createTestStore() {
-        store = openFGAClient.create("test").await().atMost(ofSeconds(10));
+        store = openFGAClient.createStore("test").await().atMost(ofSeconds(10));
         storeClient = openFGAClient.store(store.getId());
     }
 
@@ -62,7 +62,7 @@ public class StoreClientTest {
     @DisplayName("Can Delete Store")
     public void canDeleteStores() {
 
-        var preList = openFGAClient.listAll()
+        var preList = openFGAClient.listAllStores()
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
@@ -73,7 +73,7 @@ public class StoreClientTest {
                 .awaitItem()
                 .assertCompleted();
 
-        var postList = openFGAClient.listAll()
+        var postList = openFGAClient.listAllStores()
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
