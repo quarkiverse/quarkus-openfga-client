@@ -3,6 +3,8 @@ package io.quarkiverse.openfga.client.model.nodes;
 import java.util.List;
 import java.util.Objects;
 
+import javax.annotation.Nullable;
+
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class Users {
@@ -17,7 +19,7 @@ public final class Users {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(@Nullable Object obj) {
         if (obj == this)
             return true;
         if (obj == null || obj.getClass() != this.getClass())

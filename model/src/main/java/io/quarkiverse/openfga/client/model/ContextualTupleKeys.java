@@ -3,6 +3,8 @@ package io.quarkiverse.openfga.client.model;
 import java.util.List;
 import java.util.Objects;
 
+import javax.annotation.Nullable;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
@@ -21,7 +23,7 @@ public final class ContextualTupleKeys {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(@Nullable Object obj) {
         if (obj == this)
             return true;
         if (obj == null || obj.getClass() != this.getClass())
