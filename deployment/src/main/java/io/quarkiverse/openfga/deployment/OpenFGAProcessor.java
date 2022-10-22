@@ -40,7 +40,8 @@ class OpenFGAProcessor {
 
         final String[] modelClasses = combinedIndexBuildItem.getIndex()
                 .getKnownClasses().stream()
-                .filter(c -> c.name().packagePrefix().startsWith(Store.class.getPackageName()))
+                .filter(c -> c.name().packagePrefix() != null &&
+                        c.name().packagePrefix().startsWith(Store.class.getPackageName()))
                 .map(c -> c.name().toString())
                 .toArray(String[]::new);
         reflectiveClasses.produce(ReflectiveClassBuildItem.weakClass(modelClasses));
