@@ -1,7 +1,10 @@
 package io.quarkiverse.openfga.client.model;
 
+import static com.fasterxml.jackson.annotation.JsonCreator.Mode.PROPERTIES;
+
 import javax.annotation.Nullable;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class FGAException extends Exception {
@@ -150,17 +153,13 @@ public class FGAException extends Exception {
 
     private final Code code;
 
-    public FGAException(Code code, @Nullable String message) {
+    @JsonCreator(mode = PROPERTIES)
+    public FGAException(@JsonProperty("code") Code code, @JsonProperty("message") @Nullable String message) {
         super(message);
         this.code = code;
     }
 
-    public Code getcode() {
+    public Code getCode() {
         return code;
-    }
-
-    @Nullable
-    public String message() {
-        return getMessage();
     }
 }
