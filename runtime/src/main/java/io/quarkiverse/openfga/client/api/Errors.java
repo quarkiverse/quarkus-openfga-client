@@ -1,6 +1,8 @@
 package io.quarkiverse.openfga.client.api;
 
-import io.quarkiverse.openfga.client.model.FGAException;
+import io.quarkiverse.openfga.client.model.FGAInternalException;
+import io.quarkiverse.openfga.client.model.FGAUnknownException;
+import io.quarkiverse.openfga.client.model.FGAValidationException;
 import io.vertx.mutiny.ext.web.client.predicate.ErrorConverter;
 
 class Errors {
@@ -10,9 +12,13 @@ class Errors {
         var response = result.response();
 
         try {
-            return response.bodyAsJson(FGAException.class);
+            return response.bodyAsJson(FGAValidationException.class);
         } catch (Throwable ignored) {
-            return new FGAException(FGAException.Code.UNKNOWN_ERROR, "An unknown error occurred");
+            try {
+                return response.bodyAsJson(FGAInternalException.class);
+            } catch (Throwable ignored2) {
+                return new FGAUnknownException();
+            }
         }
     });
 
