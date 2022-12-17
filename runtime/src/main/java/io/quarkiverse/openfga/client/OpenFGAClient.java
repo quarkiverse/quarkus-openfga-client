@@ -9,8 +9,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 
 import io.quarkiverse.openfga.client.api.API;
 import io.quarkiverse.openfga.client.model.Store;
@@ -20,12 +18,10 @@ import io.quarkiverse.openfga.client.utils.PaginatedList;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 
-@ApplicationScoped
 public class OpenFGAClient {
 
     private final API api;
 
-    @Inject
     public OpenFGAClient(API api) {
         this.api = api;
     }
