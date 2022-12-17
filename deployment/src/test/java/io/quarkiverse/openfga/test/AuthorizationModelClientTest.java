@@ -238,6 +238,6 @@ public class AuthorizationModelClientTest {
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
-        assertThat(objects, containsInAnyOrder("123", "456"));
+        assertThat(objects, hasItems("document:123", "document:456"));
     }
 }

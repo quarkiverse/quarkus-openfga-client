@@ -47,7 +47,7 @@ public class AuthorizationModelClient {
         return storeId.flatMap(storeId -> api.listObjects(storeId,
                 new ListObjectsBody(authorizationModelId, type, relation, user,
                         contextualTupleKeys != null ? new ContextualTupleKeys(contextualTupleKeys) : null)))
-                .map(ListObjectsResponse::getObjectIds);
+                .map(ListObjectsResponse::getObjects);
     }
 
     public Uni<PaginatedList<Tuple>> queryTuples(PartialTupleKey tupleKey, @Nullable Integer pageSize,

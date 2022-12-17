@@ -14,16 +14,16 @@ import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class ListObjectsResponse {
     @JsonProperty("object_ids")
-    private final List<String> objectIds;
+    private final List<String> objects;
 
     @JsonCreator(mode = PROPERTIES)
-    public ListObjectsResponse(@JsonProperty("object_ids") List<String> objectIds) {
-        this.objectIds = Preconditions.parameterNonNull(objectIds, "objectIds");
+    public ListObjectsResponse(@JsonProperty("objects") List<String> objects) {
+        this.objects = Preconditions.parameterNonNull(objects, "objects");
     }
 
-    @JsonProperty("object_ids")
-    public List<String> getObjectIds() {
-        return objectIds;
+    @JsonProperty("objects")
+    public List<String> getObjects() {
+        return objects;
     }
 
     @Override
@@ -33,18 +33,18 @@ public final class ListObjectsResponse {
         if (obj == null || obj.getClass() != this.getClass())
             return false;
         var that = (ListObjectsResponse) obj;
-        return Objects.equals(this.objectIds, that.objectIds);
+        return Objects.equals(this.objects, that.objects);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(objectIds);
+        return Objects.hash(objects);
     }
 
     @Override
     public String toString() {
         return "ListObjectsResponse[" +
-                "objectIds=" + objectIds + ']';
+                "objects=" + objects + ']';
     }
 
 }
