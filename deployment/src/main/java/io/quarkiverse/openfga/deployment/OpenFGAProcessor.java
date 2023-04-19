@@ -3,7 +3,7 @@ package io.quarkiverse.openfga.deployment;
 import static io.quarkus.deployment.Capability.SMALLRYE_HEALTH;
 import static io.quarkus.deployment.annotations.ExecutionTime.RUNTIME_INIT;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import io.quarkiverse.openfga.client.AuthorizationModelClient;
 import io.quarkiverse.openfga.client.OpenFGAClient;
