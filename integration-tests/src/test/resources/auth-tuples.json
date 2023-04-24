@@ -2,16 +2,16 @@
   {
     "object": "thing:1",
     "relation": "owner",
-    "user": "me"
+    "user": "user:me"
   },
   {
     "object": "thing:2",
     "relation": "owner",
-    "user": "you"
+    "user": "user:you"
   },
   {
     "object": "thing:2",
     "relation": "reader",
-    "user": "me"
+    "user": "user:me"
   }
 ]

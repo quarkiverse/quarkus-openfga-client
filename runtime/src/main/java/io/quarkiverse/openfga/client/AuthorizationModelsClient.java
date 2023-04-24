@@ -38,7 +38,11 @@ public class AuthorizationModelsClient {
     }
 
     public Uni<String> create(List<TypeDefinition> typeDefinitions) {
-        return storeId.flatMap(storeId -> api.writeAuthorizationModel(storeId, new TypeDefinitions(typeDefinitions)))
+        return create(new TypeDefinitions(typeDefinitions));
+    }
+
+    public Uni<String> create(TypeDefinitions typeDefinitions) {
+        return storeId.flatMap(storeId -> api.writeAuthorizationModel(storeId, typeDefinitions))
                 .map(WriteAuthorizationModelResponse::getAuthorizationModelId);
     }
 

@@ -1,6 +1,9 @@
 {
   "type_definitions": [
     {
+      "type": "user"
+    },
+    {
       "type": "thing",
       "relations": {
         "reader": {
@@ -11,6 +14,31 @@
         },
         "owner": {
           "this": {}
+        }
+      },
+      "metadata": {
+        "relations": {
+          "reader": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              }
+            ]
+          },
+          "writer": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              }
+            ]
+          },
+          "owner": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              }
+            ]
+          }
         }
       }
     }
