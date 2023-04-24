@@ -223,17 +223,6 @@ public class API implements Closeable {
                 ReadResponse.class);
     }
 
-    public Uni<ReadTuplesResponse> readTuples(String storeId, ReadTuplesBody body) {
-        return execute(
-                request("Read Tuples",
-                        POST,
-                        READ_TUPLES_URI,
-                        vars(STORE_ID_PARAM, storeId)),
-                body,
-                ExpectedStatus.OK,
-                ReadTuplesResponse.class);
-    }
-
     public Uni<WriteResponse> write(String storeId, WriteBody body) {
         return execute(
                 request("Write",
@@ -342,7 +331,6 @@ public class API implements Closeable {
     private static final UriTemplate LIST_OBJECTS_URI = UriTemplate.of("/stores/{store_id}/list-objects");
     private static final UriTemplate READ_URI = UriTemplate.of("/stores/{store_id}/read");
     private static final UriTemplate WRITE_URI = UriTemplate.of("/stores/{store_id}/write");
-    private static final UriTemplate READ_TUPLES_URI = UriTemplate.of("/stores/{store_id}/read-tuples");
     private static final UriTemplate HEALTH_URI = UriTemplate.of("/healthz");
 
 }

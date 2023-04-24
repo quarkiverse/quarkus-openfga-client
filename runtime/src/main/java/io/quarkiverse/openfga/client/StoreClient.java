@@ -11,8 +11,8 @@ import io.quarkiverse.openfga.client.model.Store;
 import io.quarkiverse.openfga.client.model.Tuple;
 import io.quarkiverse.openfga.client.model.TupleChange;
 import io.quarkiverse.openfga.client.model.dto.GetStoreResponse;
+import io.quarkiverse.openfga.client.model.dto.ReadBody;
 import io.quarkiverse.openfga.client.model.dto.ReadChangesResponse;
-import io.quarkiverse.openfga.client.model.dto.ReadTuplesBody;
 import io.quarkiverse.openfga.client.utils.PaginatedList;
 import io.smallrye.mutiny.Uni;
 
@@ -42,7 +42,7 @@ public class StoreClient {
     }
 
     public Uni<PaginatedList<Tuple>> readTuples(@Nullable Integer pageSize, @Nullable String pagingToken) {
-        return storeId.flatMap(storeId -> api.readTuples(storeId, new ReadTuplesBody(pageSize, pagingToken)))
+        return storeId.flatMap(storeId -> api.read(storeId, new ReadBody(null, null, pageSize, pagingToken)))
                 .map(res -> new PaginatedList<>(res.getTuples(), res.getContinuationToken()));
     }
 

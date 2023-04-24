@@ -20,9 +20,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import io.quarkiverse.openfga.client.AuthorizationModelsClient;
 import io.quarkiverse.openfga.client.OpenFGAClient;
 import io.quarkiverse.openfga.client.StoreClient;
-import io.quarkiverse.openfga.client.model.Store;
-import io.quarkiverse.openfga.client.model.TypeDefinition;
-import io.quarkiverse.openfga.client.model.Userset;
+import io.quarkiverse.openfga.client.model.*;
 import io.quarkus.test.QuarkusUnitTest;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 
@@ -58,10 +56,16 @@ public class AuthorizationModelsClientTest {
     @DisplayName("Can List Models")
     public void canList() {
 
-        var typeDefinition = new TypeDefinition("document", Map.of("reader", Userset.direct("a", 1)));
+        var userTypeDef = new TypeDefinition("user");
+        var documentTypeDef = new TypeDefinition("document", Map.of(
+                "reader", Userset.direct("a", 1)),
+                new Metadata(
+                        Map.of("reader", new RelationMetadata(List.of(new RelationReference("user"))))));
+
+        var typeDefinitions = new TypeDefinitions(List.of(userTypeDef, documentTypeDef));
 
         for (int c = 0; c < 4; c++) {
-            authorizationModelsClient.create(List.of(typeDefinition))
+            authorizationModelsClient.create(typeDefinitions)
                     .subscribe().withSubscriber(UniAssertSubscriber.create())
                     .awaitItem();
         }

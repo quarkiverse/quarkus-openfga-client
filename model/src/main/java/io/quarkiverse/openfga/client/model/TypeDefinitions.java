@@ -11,12 +11,29 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class TypeDefinitions {
+    @JsonProperty("schema_version")
+    @Nullable
+    private final String schemaVersion;
+
     @JsonProperty("type_definitions")
     private final List<TypeDefinition> typeDefinitions;
 
     @JsonCreator
-    public TypeDefinitions(@JsonProperty("type_definitions") List<TypeDefinition> typeDefinitions) {
+    public TypeDefinitions(@JsonProperty("schema_version") @Nullable String schemaVersion,
+            @JsonProperty("type_definitions") List<TypeDefinition> typeDefinitions) {
+        this.schemaVersion = schemaVersion;
         this.typeDefinitions = Preconditions.parameterNonNull(typeDefinitions, "typeDefinitions");
+    }
+
+    public TypeDefinitions(@JsonProperty("type_definitions") List<TypeDefinition> typeDefinitions) {
+        this.schemaVersion = null;
+        this.typeDefinitions = Preconditions.parameterNonNull(typeDefinitions, "typeDefinitions");
+    }
+
+    @JsonProperty("schema_version")
+    @Nullable
+    public String getSchemaVersion() {
+        return schemaVersion;
     }
 
     @JsonProperty("type_definitions")
@@ -25,24 +42,25 @@ public final class TypeDefinitions {
     }
 
     @Override
-    public boolean equals(@Nullable Object obj) {
-        if (obj == this)
+    public boolean equals(Object o) {
+        if (this == o)
             return true;
-        if (obj == null || obj.getClass() != this.getClass())
+        if (!(o instanceof TypeDefinitions))
             return false;
-        var that = (TypeDefinitions) obj;
-        return Objects.equals(this.typeDefinitions, that.typeDefinitions);
+        TypeDefinitions that = (TypeDefinitions) o;
+        return Objects.equals(schemaVersion, that.schemaVersion) && Objects.equals(typeDefinitions, that.typeDefinitions);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(typeDefinitions);
+        return Objects.hash(schemaVersion, typeDefinitions);
     }
 
     @Override
     public String toString() {
-        return "TypeDefinitions[" +
-                "typeDefinitions=" + typeDefinitions + ']';
+        return "TypeDefinitions{" +
+                "schemaVersion='" + schemaVersion + '\'' +
+                ", typeDefinitions=" + typeDefinitions +
+                '}';
     }
-
 }

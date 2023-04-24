@@ -11,54 +11,62 @@ import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class TypeDefinition {
     private final String type;
+    @Nullable
     private final Map<String, Userset> relations;
-    private final Object metadata;
+    @Nullable
+    private final Metadata metadata;
 
     @JsonCreator
-    public TypeDefinition(String type, Map<String, Userset> relations, @Nullable Object metadata) {
+    public TypeDefinition(String type, @Nullable Map<String, Userset> relations, @Nullable Metadata metadata) {
         this.type = Preconditions.parameterNonNull(type, "type");
-        this.relations = Preconditions.parameterNonNull(relations, "relations");
+        this.relations = relations;
         this.metadata = metadata;
     }
 
-    public TypeDefinition(String type, Map<String, Userset> relations) {
+    public TypeDefinition(String type, @Nullable Map<String, Userset> relations) {
         this(type, relations, null);
+    }
+
+    public TypeDefinition(String type) {
+        this(type, null, null);
     }
 
     public String getType() {
         return type;
     }
 
+    @Nullable
     public Map<String, Userset> getRelations() {
         return relations;
     }
 
     @Nullable
-    public Object getMetadata() {
+    public Metadata getMetadata() {
         return metadata;
     }
 
     @Override
-    public boolean equals(@Nullable Object obj) {
-        if (obj == this)
+    public boolean equals(Object o) {
+        if (this == o)
             return true;
-        if (obj == null || obj.getClass() != this.getClass())
+        if (!(o instanceof TypeDefinition))
             return false;
-        var that = (TypeDefinition) obj;
-        return Objects.equals(this.type, that.type) &&
-                Objects.equals(this.relations, that.relations);
+        TypeDefinition that = (TypeDefinition) o;
+        return Objects.equals(type, that.type) && Objects.equals(relations, that.relations)
+                && Objects.equals(metadata, that.metadata);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(type, relations);
+        return Objects.hash(type, relations, metadata);
     }
 
     @Override
     public String toString() {
-        return "TypeDefinition[" +
-                "type=" + type + ", " +
-                "relations=" + relations + ']';
+        return "TypeDefinition{" +
+                "type='" + type + '\'' +
+                ", relations=" + relations +
+                ", metadata=" + metadata +
+                '}';
     }
-
 }

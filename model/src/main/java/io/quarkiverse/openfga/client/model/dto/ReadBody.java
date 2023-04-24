@@ -10,10 +10,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.quarkiverse.openfga.client.model.PartialTupleKey;
-import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class ReadBody {
     @JsonProperty("tuple_key")
+    @Nullable
     private final PartialTupleKey tupleKey;
     @JsonProperty("authorization_model_id")
     @Nullable
@@ -26,17 +26,18 @@ public final class ReadBody {
     private final String continuationToken;
 
     @JsonCreator(mode = PROPERTIES)
-    public ReadBody(@JsonProperty("tuple_key") PartialTupleKey tupleKey,
+    public ReadBody(@JsonProperty("tuple_key") @Nullable PartialTupleKey tupleKey,
             @JsonProperty("authorization_model_id") @Nullable String authorizationModelId,
             @JsonProperty("page_size") @Nullable Integer pageSize,
             @JsonProperty("continuation_token") @Nullable String continuationToken) {
-        this.tupleKey = Preconditions.parameterNonNull(tupleKey, "tupleKey");
+        this.tupleKey = tupleKey;
         this.authorizationModelId = authorizationModelId;
         this.pageSize = pageSize;
         this.continuationToken = continuationToken;
     }
 
     @JsonProperty("tuple_key")
+    @Nullable
     public PartialTupleKey getTupleKey() {
         return tupleKey;
     }
@@ -60,16 +61,15 @@ public final class ReadBody {
     }
 
     @Override
-    public boolean equals(@Nullable Object obj) {
-        if (obj == this)
+    public boolean equals(Object o) {
+        if (this == o)
             return true;
-        if (obj == null || obj.getClass() != this.getClass())
+        if (!(o instanceof ReadBody))
             return false;
-        var that = (ReadBody) obj;
-        return Objects.equals(this.tupleKey, that.tupleKey) &&
-                Objects.equals(this.authorizationModelId, that.authorizationModelId) &&
-                Objects.equals(this.pageSize, that.pageSize) &&
-                Objects.equals(this.continuationToken, that.continuationToken);
+        ReadBody readBody = (ReadBody) o;
+        return Objects.equals(tupleKey, readBody.tupleKey)
+                && Objects.equals(authorizationModelId, readBody.authorizationModelId)
+                && Objects.equals(pageSize, readBody.pageSize) && Objects.equals(continuationToken, readBody.continuationToken);
     }
 
     @Override
@@ -79,11 +79,11 @@ public final class ReadBody {
 
     @Override
     public String toString() {
-        return "ReadBody[" +
-                "tupleKey=" + tupleKey + ", " +
-                "authorizationModelId=" + authorizationModelId + ", " +
-                "pageSize=" + pageSize + ", " +
-                "continuationToken=" + continuationToken + ']';
+        return "ReadBody{" +
+                "tupleKey=" + tupleKey +
+                ", authorizationModelId='" + authorizationModelId + '\'' +
+                ", pageSize=" + pageSize +
+                ", continuationToken='" + continuationToken + '\'' +
+                '}';
     }
-
 }

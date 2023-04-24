@@ -34,6 +34,6 @@ public class OpenFGAResourceTest {
                 .body("$", hasSize(3),
                         "key.object", containsInAnyOrder("thing:1", "thing:2", "thing:2"),
                         "key.relation", containsInAnyOrder("owner", "owner", "reader"),
-                        "key.user", containsInAnyOrder("me", "you", "me"));
+                        "key.user", containsInAnyOrder("user:me", "user:you", "user:me"));
     }
 }

@@ -50,11 +50,18 @@ public class AuthorizationModelClientTest {
         storeClient = openFGAClient.store(store.getId());
 
         // ensure it has an auth model
+        var useTypeDef = new TypeDefinition("user", Map.of());
+
         var documentTypeDef = new TypeDefinition("document", Map.of(
                 "reader", Userset.direct("a", 1),
-                "writer", Userset.direct("b", 2)));
+                "writer", Userset.direct("b", 2)),
+                new Metadata(
+                        Map.of("reader", new RelationMetadata(List.of(new RelationReference("user"))),
+                                "writer", new RelationMetadata(List.of(new RelationReference("user"))))));
 
-        var authModelId = storeClient.authorizationModels().create(List.of(documentTypeDef))
+        var typeDefs = new TypeDefinitions(List.of(useTypeDef, documentTypeDef));
+
+        var authModelId = storeClient.authorizationModels().create(typeDefs)
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
@@ -74,7 +81,7 @@ public class AuthorizationModelClientTest {
     public void canReadWriteTuples() {
 
         var tuples = List.of(
-                TupleKey.of("document:123", "reader", "me"));
+                TupleKey.of("document:123", "reader", "user:me"));
         var writes = authorizationModelClient.write(tuples, emptyList())
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
@@ -94,7 +101,7 @@ public class AuthorizationModelClientTest {
     @DisplayName("Can Execute Checks")
     public void canExecuteChecks() {
 
-        var tuple = TupleKey.of("document:123", "reader", "me");
+        var tuple = TupleKey.of("document:123", "reader", "user:me");
 
         var writes = authorizationModelClient.write(List.of(tuple), emptyList())
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
@@ -113,8 +120,8 @@ public class AuthorizationModelClientTest {
     @DisplayName("Can Read All Relationships for an Object")
     public void canReadAllRelationshipsForObject() {
 
-        var readerTuple = TupleKey.of("document:123", "reader", "me");
-        var writerTuple = TupleKey.of("document:123", "writer", "me");
+        var readerTuple = TupleKey.of("document:123", "reader", "user:me");
+        var writerTuple = TupleKey.of("document:123", "writer", "user:me");
 
         authorizationModelClient.write(List.of(readerTuple), emptyList())
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
@@ -140,8 +147,8 @@ public class AuthorizationModelClientTest {
     @DisplayName("Can Read All Relationships for an Object, and Relation")
     public void canReadAllRelationshipsForObjectAndRelation() {
 
-        var meTuple = TupleKey.of("document:123", "reader", "me");
-        var youTuple = TupleKey.of("document:123", "reader", "you");
+        var meTuple = TupleKey.of("document:123", "reader", "user:me");
+        var youTuple = TupleKey.of("document:123", "reader", "user:you");
 
         authorizationModelClient.write(List.of(meTuple), emptyList())
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
@@ -167,8 +174,8 @@ public class AuthorizationModelClientTest {
     @DisplayName("Can Read All Relationships for an Object, and User")
     public void canReadAllRelationshipsForObjectAndUser() {
 
-        var readerTuple = TupleKey.of("document:123", "reader", "me");
-        var writerTuple = TupleKey.of("document:123", "writer", "me");
+        var readerTuple = TupleKey.of("document:123", "reader", "user:me");
+        var writerTuple = TupleKey.of("document:123", "writer", "user:me");
 
         authorizationModelClient.write(List.of(readerTuple), emptyList())
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
@@ -177,7 +184,7 @@ public class AuthorizationModelClientTest {
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem();
 
-        var objects = authorizationModelClient.queryAllTuples(PartialTupleKey.of("document:123", null, "me"))
+        var objects = authorizationModelClient.queryAllTuples(PartialTupleKey.of("document:123", null, "user:me"))
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
@@ -194,8 +201,8 @@ public class AuthorizationModelClientTest {
     @DisplayName("Can Read All Relationships for an Object Type, and User")
     public void canReadAllRelationshipsForObjectTypeAndUser() {
 
-        var readerTuple = TupleKey.of("document:123", "reader", "me");
-        var writerTuple = TupleKey.of("document:123", "writer", "me");
+        var readerTuple = TupleKey.of("document:123", "reader", "user:me");
+        var writerTuple = TupleKey.of("document:123", "writer", "user:me");
 
         authorizationModelClient.write(List.of(readerTuple), emptyList())
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
@@ -203,11 +210,11 @@ public class AuthorizationModelClientTest {
         authorizationModelClient.write(List.of(writerTuple), emptyList())
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem();
-        authorizationModelClient.write(List.of(TupleKey.of("document:123", "writer", "you")), emptyList())
+        authorizationModelClient.write(List.of(TupleKey.of("document:123", "writer", "user:you")), emptyList())
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem();
 
-        var objects = authorizationModelClient.queryAllTuples(PartialTupleKey.of("document:", null, "me"))
+        var objects = authorizationModelClient.queryAllTuples(PartialTupleKey.of("document:", null, "user:me"))
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
@@ -224,8 +231,8 @@ public class AuthorizationModelClientTest {
     @DisplayName("Can List All Objects for an Object Type, Relation, and User")
     public void canListAllRelationshipsForObjectTypeRelationAndUser() {
 
-        var aTuple = TupleKey.of("document:123", "writer", "me");
-        var bTuple = TupleKey.of("document:456", "writer", "me");
+        var aTuple = TupleKey.of("document:123", "writer", "user:me");
+        var bTuple = TupleKey.of("document:456", "writer", "user:me");
 
         authorizationModelClient.write(List.of(aTuple), emptyList())
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
@@ -234,7 +241,7 @@ public class AuthorizationModelClientTest {
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem();
 
-        var objects = authorizationModelClient.listObjects("document", "writer", "me", null)
+        var objects = authorizationModelClient.listObjects("document", "writer", "user:me", null)
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();

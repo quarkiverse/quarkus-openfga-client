@@ -68,7 +68,7 @@ public class AuthorizationModelClient {
     }
 
     public Uni<PaginatedList<Tuple>> readTuples(@Nullable Integer pageSize, @Nullable String pagingToken) {
-        return storeId.flatMap(storeId -> api.readTuples(storeId, new ReadTuplesBody(pageSize, pagingToken)))
+        return storeId.flatMap(storeId -> api.read(storeId, new ReadBody(null, authorizationModelId, pageSize, pagingToken)))
                 .map(res -> new PaginatedList<>(res.getTuples(), res.getContinuationToken()));
     }
 
