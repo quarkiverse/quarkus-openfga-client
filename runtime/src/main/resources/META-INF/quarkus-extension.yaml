@@ -4,7 +4,7 @@ metadata:
   keywords:
   - openfga
   - fga
-#  guide: https://quarkiverse.github.io/quarkiverse-docs/openfga/dev/
+  guide: https://quarkiverse.github.io/quarkiverse-docs/quarkus-openfga-client/dev/
   categories:
   - authorization
   - security

@@ -2,7 +2,13 @@
 
 include::./includes/attributes.adoc[]
 
-TIP: Describe what the extension does here.
+== Overview
+
+The **Quarkus OpenFGA Client** extension provides a reactive client for accessing https://openfga.dev[OpenFGA]
+instances. Additionally, it is the client that powers the
+https://github.com/quarkiverse/quarkus-zanzibar#OpenFGA-Connector[Quarkus Zanzibar - OpenFGA Connector] to provide
+Find Grained Authorization for Quarkus applications.
+
 
 == Installation
 
@@ -19,9 +25,89 @@ For instance, with Maven, add the following dependency to your POM file:
 </dependency>
 ----
 
+Or with Gradle, add the dependency to your `build.gradle`:
+
+[source,kotlin,subs=attributes+]
+----
+implementation("io.quarkiverse.openfga:quarkus-openfga-client:{project-version}")
+----
+
+[[configuration]]
+== Configuration
+
+The extension requires two configuration properties to be defined at startup to define what instance and store are
+targeted by the client. The `url` property selects the scheme, host and, optionally, the port of the OpenFGA instance.
+While `store` determines which authorization store is targeted; ***it can be referenced by store id or name***.
+
+[source,properties]
+----
+quarkus.openfga.url=http://localhost:80
+quarkus.openfga.store=my-app-authz
+# Optional authorization model id
+#quarkus.openfga.authorization-model-id=11G22H33I44J55K66L77M88N99
+----
+
+[[configuration-devservices]]
+=== DevServices
+
+The extension supports Quarkus's DevServices and will start and configure a local OpenFGA in `dev` and `test` if no
+`url` configuration property is provided. Additionally it will automatically create and configure an authorization
+store in the server.
+
+In addition to starting and creating an authorization store, an authorization model can be initialized in the store
+by configuring the `quarkus.openfga.devservices.authorization-model` or
+`quarkus.openfga.devservices.authorization-model.lcation` property.
+
+[[basic-usage]]
+== Basic Usage
+
+Adding the `quarkus-openfga-client` extension to your project defines clients beans `OpenFGAClient` that are configured to access the OpenFGA instance configured in `application.properties`.
+
+=== Clients
+
+The extension provides three injectable clients for accessing the configured instance and store.
+
+`OpenFGAClient`:: Main client for accessing the OpenFGA instance.
+`StoreClient`:: Access authorization store configured via `quarkus.openfga.store-id`
+`AuthorizationModelsClient`:: Manage (list, create, delete) authorization models and create `AuthorizationModelClient` instances for accessing a specific model.
+`AuthorizationModelClient`:: Access authorization model configured via `quarkus.openfga.authoriztion-model-id` or the default model if none is configured.
+
+== Examples
+
+=== Write a Relationship Tuple
+
+[source,java]
+----
+class ExampleTupleWriter {
+
+    @Inject
+    StoreClient storeClient;
+
+    void write() {
+        var authModelClient = storeClient.authorizationModels().defaultModel();
+        authModelClient.write(TupleKey.of("thing:1", "reader", "user:me"));
+    }
+}
+----
+
+==== Check Access for a Relationship Tuple
+
+[source,java]
+----
+class Example {
+
+    @Inject
+    AuthorizationModelClient defaultAuthModelClient;
+
+    void write() {
+        if (defaultAuthModelClient.check(TupleKey.of("thing:1", "reader", "user:me"))) {
+            System.out.println("Allowed!");
+        }
+    }
+}
+----
+
 [[extension-configuration-reference]]
 == Extension Configuration Reference
 
-TIP: Remove this section if you don't have Quarkus configuration properties in your extension.
-
-include::includes/quarkus-openfga-client.adoc[leveloffset=+1, opts=optional]
+include::includes/quarkus-openfga.adoc[leveloffset=+1, opts=optional]

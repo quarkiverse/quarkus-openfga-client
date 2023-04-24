@@ -65,7 +65,9 @@
                             <resources>
                                 <resource>
                                     <directory>${project.basedir}/../target/asciidoc/generated/config/</directory>
-                                    <include>quarkus-openfga-client.adoc</include>
+                                    <includes>
+                                        <include>quarkus-openfga.adoc</include>
+                                    </includes>
                                     <filtering>false</filtering>
                                 </resource>
                                 <resource>
