@@ -18,7 +18,7 @@
     <module>docs</module>
   </modules>
   <scm>
-    <connection>:git:git@github.com:quarkiverse/quarkus-openfga-client.git</connection>
+    <connection>scm:git:git@github.com:quarkiverse/quarkus-openfga-client.git</connection>
     <developerConnection>scm:git:git@github.com:quarkiverse/quarkus-openfga-client.git</developerConnection>
     <url>https://github.com/quarkiverse/quarkus-openfga-client</url>
   </scm>
