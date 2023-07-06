@@ -17,6 +17,11 @@
     <module>runtime</module>
     <module>docs</module>
   </modules>
+  <scm>
+    <connection>scm:git:git@github.com:quarkiverse/quarkus-openfga-client.git</connection>
+    <developerConnection>scm:git:git@github.com:quarkiverse/quarkus-openfga-client.git</developerConnection>
+    <url>https://github.com/quarkiverse/quarkus-openfga-client</url>
+  </scm>
   <properties>
     <compiler-plugin.version>3.8.1</compiler-plugin.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
