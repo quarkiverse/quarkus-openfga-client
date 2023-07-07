@@ -1,5 +1,5 @@
 name: quarkus-openfga-client
-title: Quarkus OpenFGA Client
+title: OpenFGA Client
 version: dev
 nav:
   - modules/ROOT/nav.adoc
