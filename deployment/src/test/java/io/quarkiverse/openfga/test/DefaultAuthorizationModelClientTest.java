@@ -59,7 +59,9 @@ public class DefaultAuthorizationModelClientTest {
                         Map.of("reader", new RelationMetadata(List.of(new RelationReference("user"))),
                                 "writer", new RelationMetadata(List.of(new RelationReference("user"))))));
 
-        storeClient.authorizationModels().create(List.of(userTypeDef, documentTypeDef))
+        var documentTypeDefs = new TypeDefinitions("1.1", List.of(userTypeDef, documentTypeDef));
+
+        storeClient.authorizationModels().create(documentTypeDefs)
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();

@@ -12,20 +12,23 @@ public class RelationReference {
     String relation;
     @Nullable
     Object wildcard;
+    @Nullable
+    String condition;
 
     @JsonCreator
-    public RelationReference(String type, @Nullable String relation, @Nullable Object wildcard) {
+    public RelationReference(String type, @Nullable String relation, @Nullable Object wildcard, @Nullable String condition) {
         this.type = type;
         this.relation = relation;
         this.wildcard = wildcard;
+        this.condition = condition;
     }
 
     public RelationReference(String type) {
-        this(type, null, null);
+        this(type, null, null, null);
     }
 
     public RelationReference(String type, String relation) {
-        this(type, relation, null);
+        this(type, relation, null, null);
     }
 
     public String getType() {
@@ -42,6 +45,11 @@ public class RelationReference {
         return wildcard;
     }
 
+    @Nullable
+    public String getCondition() {
+        return condition;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o)
@@ -50,12 +58,12 @@ public class RelationReference {
             return false;
         RelationReference that = (RelationReference) o;
         return Objects.equals(type, that.type) && Objects.equals(relation, that.relation)
-                && Objects.equals(wildcard, that.wildcard);
+                && Objects.equals(wildcard, that.wildcard) && Objects.equals(condition, that.condition);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(type, relation, wildcard);
+        return Objects.hash(type, relation, wildcard, condition);
     }
 
     @Override
@@ -63,7 +71,8 @@ public class RelationReference {
         return "RelationReference{" +
                 "type='" + type + '\'' +
                 ", relation='" + relation + '\'' +
-                ", wildcard=" + wildcard +
+                ", wildcard=" + wildcard + '\'' +
+                ", condition='" + condition + '\'' +
                 '}';
     }
 }
