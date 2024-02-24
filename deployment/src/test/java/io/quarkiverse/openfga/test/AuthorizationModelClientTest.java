@@ -59,7 +59,7 @@ public class AuthorizationModelClientTest {
                         Map.of("reader", new RelationMetadata(List.of(new RelationReference("user"))),
                                 "writer", new RelationMetadata(List.of(new RelationReference("user"))))));
 
-        var typeDefs = new TypeDefinitions(List.of(useTypeDef, documentTypeDef));
+        var typeDefs = new TypeDefinitions("1.1", List.of(useTypeDef, documentTypeDef));
 
         var authModelId = storeClient.authorizationModels().create(typeDefs)
                 .subscribe().withSubscriber(UniAssertSubscriber.create())

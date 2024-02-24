@@ -37,6 +37,7 @@ public class AuthorizationModelsClient {
         return collectAllPages(pageSize, this::list);
     }
 
+    @Deprecated
     public Uni<String> create(List<TypeDefinition> typeDefinitions) {
         return create(new TypeDefinitions(typeDefinitions));
     }
