@@ -10,7 +10,8 @@ h|[[quarkus-openfga_configuration]]link:#quarkus-openfga_configuration[Configura
 h|Type
 h|Default
 
-a|icon:lock[title=Fixed at build time] [[quarkus-openfga_quarkus.openfga.health.enabled]]`link:#quarkus-openfga_quarkus.openfga.health.enabled[quarkus.openfga.health.enabled]`
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga_quarkus-openfga-health-enabled]]`link:#quarkus-openfga_quarkus-openfga-health-enabled[quarkus.openfga.health.enabled]`
+
 
 [.description]
 --
@@ -26,7 +27,8 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-openfga_quarkus.openfga.tracing.enabled]]`link:#quarkus-openfga_quarkus.openfga.tracing.enabled[quarkus.openfga.tracing.enabled]`
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga_quarkus-openfga-tracing-enabled]]`link:#quarkus-openfga_quarkus-openfga-tracing-enabled[quarkus.openfga.tracing.enabled]`
+
 
 [.description]
 --
@@ -42,11 +44,13 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-openfga_quarkus.openfga.devservices.enabled]]`link:#quarkus-openfga_quarkus.openfga.devservices.enabled[quarkus.openfga.devservices.enabled]`
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga_quarkus-openfga-devservices-enabled]]`link:#quarkus-openfga_quarkus-openfga-devservices-enabled[quarkus.openfga.devservices.enabled]`
+
 
 [.description]
 --
-If DevServices has been explicitly enabled or disabled. DevServices is generally enabled by default, unless there is an existing configuration present. 
+If DevServices has been explicitly enabled or disabled. DevServices is generally enabled by default, unless there is an existing configuration present.
+
 When DevServices is enabled Quarkus will attempt to automatically configure and start a database when running in 'dev' or 'test' mode.
 
 ifdef::add-copy-button-to-env-var[]
@@ -59,7 +63,8 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-openfga_quarkus.openfga.devservices.image-name]]`link:#quarkus-openfga_quarkus.openfga.devservices.image-name[quarkus.openfga.devservices.image-name]`
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga_quarkus-openfga-devservices-image-name]]`link:#quarkus-openfga_quarkus-openfga-devservices-image-name[quarkus.openfga.devservices.image-name]`
+
 
 [.description]
 --
@@ -75,12 +80,15 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-openfga_quarkus.openfga.devservices.shared]]`link:#quarkus-openfga_quarkus.openfga.devservices.shared[quarkus.openfga.devservices.shared]`
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga_quarkus-openfga-devservices-shared]]`link:#quarkus-openfga_quarkus-openfga-devservices-shared[quarkus.openfga.devservices.shared]`
+
 
 [.description]
 --
-Indicates if the OpenFGA instance managed by Quarkus DevServices is shared. When shared, Quarkus looks for running containers using label-based service discovery. If a matching container is found, it is used, and so a second one is not started. Otherwise, DevServices for OpenFGA starts a new container. 
-The discovery uses the `quarkus-dev-service-openfga` label. The value is configured using the `service-name` property. 
+Indicates if the OpenFGA instance managed by Quarkus DevServices is shared. When shared, Quarkus looks for running containers using label-based service discovery. If a matching container is found, it is used, and so a second one is not started. Otherwise, DevServices for OpenFGA starts a new container.
+
+The discovery uses the `quarkus-dev-service-openfga` label. The value is configured using the `service-name` property.
+
 Container sharing is only used in 'dev' mode.
 
 ifdef::add-copy-button-to-env-var[]
@@ -93,11 +101,13 @@ endif::add-copy-button-to-env-var[]
 |`true`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-openfga_quarkus.openfga.devservices.service-name]]`link:#quarkus-openfga_quarkus.openfga.devservices.service-name[quarkus.openfga.devservices.service-name]`
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga_quarkus-openfga-devservices-service-name]]`link:#quarkus-openfga_quarkus-openfga-devservices-service-name[quarkus.openfga.devservices.service-name]`
+
 
 [.description]
 --
-The value of the `quarkus-dev-service-openfga` label attached to the started container. This property is used when `shared` is set to `true`. In this case, before starting a container, DevServices for OpenFGA looks for a container with the `quarkus-dev-service-openfga` label set to the configured value. If found, it will use this container instead of starting a new one, otherwise it starts a new container with the `quarkus-dev-service-openfga` label set to the specified value. 
+The value of the `quarkus-dev-service-openfga` label attached to the started container. This property is used when `shared` is set to `true`. In this case, before starting a container, DevServices for OpenFGA looks for a container with the `quarkus-dev-service-openfga` label set to the configured value. If found, it will use this container instead of starting a new one, otherwise it starts a new container with the `quarkus-dev-service-openfga` label set to the specified value.
+
 This property is used when you need multiple shared OpenFGA instances.
 
 ifdef::add-copy-button-to-env-var[]
@@ -110,11 +120,13 @@ endif::add-copy-button-to-env-var[]
 |`openfga`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-openfga_quarkus.openfga.devservices.http-port]]`link:#quarkus-openfga_quarkus.openfga.devservices.http-port[quarkus.openfga.devservices.http-port]`
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga_quarkus-openfga-devservices-http-port]]`link:#quarkus-openfga_quarkus-openfga-devservices-http-port[quarkus.openfga.devservices.http-port]`
+
 
 [.description]
 --
-Optional fixed port the HTTP service will be bound to. 
+Optional fixed port the HTTP service will be bound to.
+
 If not defined, the port will be chosen randomly.
 
 ifdef::add-copy-button-to-env-var[]
@@ -127,11 +139,13 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-openfga_quarkus.openfga.devservices.grpc-port]]`link:#quarkus-openfga_quarkus.openfga.devservices.grpc-port[quarkus.openfga.devservices.grpc-port]`
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga_quarkus-openfga-devservices-grpc-port]]`link:#quarkus-openfga_quarkus-openfga-devservices-grpc-port[quarkus.openfga.devservices.grpc-port]`
+
 
 [.description]
 --
-Optional fixed port the gRPC service will be bound to. 
+Optional fixed port the gRPC service will be bound to.
+
 If not defined, the port will be chosen randomly.
 
 ifdef::add-copy-button-to-env-var[]
@@ -144,11 +158,13 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-openfga_quarkus.openfga.devservices.playground-port]]`link:#quarkus-openfga_quarkus.openfga.devservices.playground-port[quarkus.openfga.devservices.playground-port]`
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga_quarkus-openfga-devservices-playground-port]]`link:#quarkus-openfga_quarkus-openfga-devservices-playground-port[quarkus.openfga.devservices.playground-port]`
+
 
 [.description]
 --
-Optional fixed port the Playground service will be bound to. 
+Optional fixed port the Playground service will be bound to.
+
 If not defined, the port will be chosen randomly.
 
 ifdef::add-copy-button-to-env-var[]
@@ -161,11 +177,13 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-openfga_quarkus.openfga.devservices.store-name]]`link:#quarkus-openfga_quarkus.openfga.devservices.store-name[quarkus.openfga.devservices.store-name]`
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga_quarkus-openfga-devservices-store-name]]`link:#quarkus-openfga_quarkus-openfga-devservices-store-name[quarkus.openfga.devservices.store-name]`
+
 
 [.description]
 --
-Name of authorization store to create for DevServices. 
+Name of authorization store to create for DevServices.
+
 Defaults to "dev".
 
 ifdef::add-copy-button-to-env-var[]
@@ -178,7 +196,8 @@ endif::add-copy-button-to-env-var[]
 |`dev`
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-openfga_quarkus.openfga.devservices.authorization-model]]`link:#quarkus-openfga_quarkus.openfga.devservices.authorization-model[quarkus.openfga.devservices.authorization-model]`
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga_quarkus-openfga-devservices-authorization-model]]`link:#quarkus-openfga_quarkus-openfga-devservices-authorization-model[quarkus.openfga.devservices.authorization-model]`
+
 
 [.description]
 --
@@ -194,11 +213,13 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-openfga_quarkus.openfga.devservices.authorization-model-location]]`link:#quarkus-openfga_quarkus.openfga.devservices.authorization-model-location[quarkus.openfga.devservices.authorization-model-location]`
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga_quarkus-openfga-devservices-authorization-model-location]]`link:#quarkus-openfga_quarkus-openfga-devservices-authorization-model-location[quarkus.openfga.devservices.authorization-model-location]`
+
 
 [.description]
 --
-Location of JSON formatted authorization model file to upload during DevServices initialization. 
+Location of JSON formatted authorization model file to upload during DevServices initialization.
+
 The location can be prefixed with `classpath:` or `filesystem:` to specify where the file will be read from; if not prefixed, it will be read from the classpath.
 
 ifdef::add-copy-button-to-env-var[]
@@ -211,7 +232,8 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-openfga_quarkus.openfga.devservices.authorization-tuples]]`link:#quarkus-openfga_quarkus.openfga.devservices.authorization-tuples[quarkus.openfga.devservices.authorization-tuples]`
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga_quarkus-openfga-devservices-authorization-tuples]]`link:#quarkus-openfga_quarkus-openfga-devservices-authorization-tuples[quarkus.openfga.devservices.authorization-tuples]`
+
 
 [.description]
 --
@@ -227,11 +249,13 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-openfga_quarkus.openfga.devservices.authorization-tuples-location]]`link:#quarkus-openfga_quarkus.openfga.devservices.authorization-tuples-location[quarkus.openfga.devservices.authorization-tuples-location]`
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga_quarkus-openfga-devservices-authorization-tuples-location]]`link:#quarkus-openfga_quarkus-openfga-devservices-authorization-tuples-location[quarkus.openfga.devservices.authorization-tuples-location]`
+
 
 [.description]
 --
-Location of JSON formatted authorization tuples file to upload during DevServices initialization. 
+Location of JSON formatted authorization tuples file to upload during DevServices initialization.
+
 The location can be prefixed with `classpath:` or `filesystem:` to specify where the file will be read from; if not prefixed, it will be read from the classpath.
 
 ifdef::add-copy-button-to-env-var[]
@@ -244,11 +268,13 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-openfga_quarkus.openfga.url]]`link:#quarkus-openfga_quarkus.openfga.url[quarkus.openfga.url]`
+a| [[quarkus-openfga_quarkus-openfga-url]]`link:#quarkus-openfga_quarkus-openfga-url[quarkus.openfga.url]`
+
 
 [.description]
 --
-OpenFGA server URL. 
+OpenFGA server URL.
+
 Example: http://openfga:8080
 
 ifdef::add-copy-button-to-env-var[]
@@ -262,11 +288,13 @@ endif::add-copy-button-to-env-var[]
 |required icon:exclamation-circle[title=Configuration property is required]
 
 
-a| [[quarkus-openfga_quarkus.openfga.shared-key]]`link:#quarkus-openfga_quarkus.openfga.shared-key[quarkus.openfga.shared-key]`
+a| [[quarkus-openfga_quarkus-openfga-shared-key]]`link:#quarkus-openfga_quarkus-openfga-shared-key[quarkus.openfga.shared-key]`
+
 
 [.description]
 --
-Shared authentication key. 
+Shared authentication key.
+
 If none provided unauthenticated access will be attempted.
 
 ifdef::add-copy-button-to-env-var[]
@@ -279,11 +307,13 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-openfga_quarkus.openfga.store]]`link:#quarkus-openfga_quarkus.openfga.store[quarkus.openfga.store]`
+a| [[quarkus-openfga_quarkus-openfga-store]]`link:#quarkus-openfga_quarkus-openfga-store[quarkus.openfga.store]`
+
 
 [.description]
 --
-Store id or name for default `StoreClient` bean. 
+Store id or name for default `StoreClient` bean.
+
 If the provided property does not match the OpenFGA store id format (`^++[++ABCDEFGHJKMNPQRSTVWXYZ0-9++]{++26`$++}++) it will be treated as a store name and a matching store id will be resolved at runtime.
 
 ifdef::add-copy-button-to-env-var[]
@@ -296,11 +326,13 @@ endif::add-copy-button-to-env-var[]
 |required icon:exclamation-circle[title=Configuration property is required]
 
 
-a| [[quarkus-openfga_quarkus.openfga.always-resolve-store-id]]`link:#quarkus-openfga_quarkus.openfga.always-resolve-store-id[quarkus.openfga.always-resolve-store-id]`
+a| [[quarkus-openfga_quarkus-openfga-always-resolve-store-id]]`link:#quarkus-openfga_quarkus-openfga-always-resolve-store-id[quarkus.openfga.always-resolve-store-id]`
+
 
 [.description]
 --
-Always Treat `store` as the name of a store and resolve the store id at runtime. 
+Always Treat `store` as the name of a store and resolve the store id at runtime.
+
 If true, the store id will always be resolved at runtime regardless of the format of the `store` property. Otherwise, the store id will be resolved only when `store` does not match the OpenFGA store id format.
 
 ifdef::add-copy-button-to-env-var[]
@@ -313,11 +345,13 @@ endif::add-copy-button-to-env-var[]
 |`false`
 
 
-a| [[quarkus-openfga_quarkus.openfga.authorization-model-id]]`link:#quarkus-openfga_quarkus.openfga.authorization-model-id[quarkus.openfga.authorization-model-id]`
+a| [[quarkus-openfga_quarkus-openfga-authorization-model-id]]`link:#quarkus-openfga_quarkus-openfga-authorization-model-id[quarkus.openfga.authorization-model-id]`
+
 
 [.description]
 --
-Authorization model id for default `AuthorizationModelClient` bean. 
+Authorization model id for default `AuthorizationModelClient` bean.
+
 If none is provided the default bean will target the default authorization model for the store.
 
 ifdef::add-copy-button-to-env-var[]
@@ -330,7 +364,8 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-openfga_quarkus.openfga.connect-timeout]]`link:#quarkus-openfga_quarkus.openfga.connect-timeout[quarkus.openfga.connect-timeout]`
+a| [[quarkus-openfga_quarkus-openfga-connect-timeout]]`link:#quarkus-openfga_quarkus-openfga-connect-timeout[quarkus.openfga.connect-timeout]`
+
 
 [.description]
 --
@@ -343,11 +378,12 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_OPENFGA_CONNECT_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --|link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html[Duration]
-  link:#duration-note-anchor-{summaryTableId}[icon:question-circle[], title=More information about the Duration format]
+  link:#duration-note-anchor-{summaryTableId}[icon:question-circle[title=More information about the Duration format]]
 |`5S`
 
 
-a| [[quarkus-openfga_quarkus.openfga.read-timeout]]`link:#quarkus-openfga_quarkus.openfga.read-timeout[quarkus.openfga.read-timeout]`
+a| [[quarkus-openfga_quarkus-openfga-read-timeout]]`link:#quarkus-openfga_quarkus-openfga-read-timeout[quarkus.openfga.read-timeout]`
+
 
 [.description]
 --
@@ -360,15 +396,17 @@ ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_OPENFGA_READ_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --|link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html[Duration]
-  link:#duration-note-anchor-{summaryTableId}[icon:question-circle[], title=More information about the Duration format]
+  link:#duration-note-anchor-{summaryTableId}[icon:question-circle[title=More information about the Duration format]]
 |`5S`
 
 
-a| [[quarkus-openfga_quarkus.openfga.non-proxy-hosts]]`link:#quarkus-openfga_quarkus.openfga.non-proxy-hosts[quarkus.openfga.non-proxy-hosts]`
+a| [[quarkus-openfga_quarkus-openfga-non-proxy-hosts]]`link:#quarkus-openfga_quarkus-openfga-non-proxy-hosts[quarkus.openfga.non-proxy-hosts]`
+
 
 [.description]
 --
-List of remote hosts that are not proxied when the client is configured to use a proxy. This list serves the same purpose as the JVM `nonProxyHosts` configuration. 
+List of remote hosts that are not proxied when the client is configured to use a proxy. This list serves the same purpose as the JVM `nonProxyHosts` configuration.
+
 Entries can use the _++*++_ wildcard character for pattern matching, e.g _++*++.example.com_ matches _www.example.com_.
 
 ifdef::add-copy-button-to-env-var[]
@@ -381,16 +419,18 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-h|[[quarkus-openfga_quarkus.openfga.tls-tls-configuration]]link:#quarkus-openfga_quarkus.openfga.tls-tls-configuration[TLS configuration]
+h|[[quarkus-openfga_quarkus-openfga-tls-tls-configuration]]link:#quarkus-openfga_quarkus-openfga-tls-tls-configuration[TLS configuration]
 
 h|Type
 h|Default
 
-a| [[quarkus-openfga_quarkus.openfga.tls.skip-verify]]`link:#quarkus-openfga_quarkus.openfga.tls.skip-verify[quarkus.openfga.tls.skip-verify]`
+a| [[quarkus-openfga_quarkus-openfga-tls-skip-verify]]`link:#quarkus-openfga_quarkus-openfga-tls-skip-verify[quarkus.openfga.tls.skip-verify]`
+
 
 [.description]
 --
-Allows to bypass certificate validation on TLS communications. 
+Allows to bypass certificate validation on TLS communications.
+
 If true this will allow TLS communications with OpenFGA, without checking the validity of the certificate presented by OpenFGA. This is discouraged in production because it allows man in the middle type of attacks.
 
 ifdef::add-copy-button-to-env-var[]
@@ -403,11 +443,13 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a| [[quarkus-openfga_quarkus.openfga.tls.ca-cert]]`link:#quarkus-openfga_quarkus.openfga.tls.ca-cert[quarkus.openfga.tls.ca-cert]`
+a| [[quarkus-openfga_quarkus-openfga-tls-ca-cert]]`link:#quarkus-openfga_quarkus-openfga-tls-ca-cert[quarkus.openfga.tls.ca-cert]`
+
 
 [.description]
 --
-Certificate bundle used to validate TLS communications with OpenFGA. 
+Certificate bundle used to validate TLS communications with OpenFGA.
+
 The path to a pem bundle file, if TLS is required, and trusted certificates are not set through javax.net.ssl.trustStore system property.
 
 ifdef::add-copy-button-to-env-var[]
@@ -425,11 +467,17 @@ ifndef::no-duration-note[]
 [id='duration-note-anchor-{summaryTableId}']
 .About the Duration format
 ====
-The format for durations uses the standard `java.time.Duration` format.
-You can learn more about it in the link:https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html#parse-java.lang.CharSequence-[Duration#parse() javadoc].
+To write duration values, use the standard `java.time.Duration` format.
+See the link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html#parse(java.lang.CharSequence)[Duration#parse() Java API documentation] for more information.
 
-You can also provide duration values starting with a number.
-In this case, if the value consists only of a number, the converter treats the value as seconds.
-Otherwise, `PT` is implicitly prepended to the value to obtain a standard `java.time.Duration` format.
+You can also use a simplified format, starting with a number:
+
+* If the value is only a number, it represents time in seconds.
+* If the value is a number followed by `ms`, it represents time in milliseconds.
+
+In other cases, the simplified format is translated to the `java.time.Duration` format for parsing:
+
+* If the value is a number followed by `h`, `m`, or `s`, it is prefixed with `PT`.
+* If the value is a number followed by `d`, it is prefixed with `P`.
 ====
 endif::no-duration-note[]
