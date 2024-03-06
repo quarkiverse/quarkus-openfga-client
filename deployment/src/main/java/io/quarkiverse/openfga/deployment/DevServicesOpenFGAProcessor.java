@@ -15,9 +15,8 @@ import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
 import org.jboss.logging.Logger;
-import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
-import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.openfga.OpenFGAContainer;
 import org.testcontainers.utility.DockerImageName;
 
 import io.quarkiverse.openfga.client.AuthorizationModelsClient;
@@ -61,7 +60,6 @@ public class DevServicesOpenFGAProcessor {
     static final String AUTHORIZATION_MODEL_ID_CONFIG_KEY = CONFIG_PREFIX + "authorization-model-id";
     static final ContainerLocator openFGAContainerLocator = new ContainerLocator(DEV_SERVICE_LABEL, OPEN_FGA_EXPOSED_HTTP_PORT);
     static final Duration INIT_OP_MAX_WAIT = Duration.ofSeconds(5);
-    public static final String HEALTH_ENDPOINT = "/healthz";
 
     private static volatile RunningDevService devService;
     private static volatile DevServicesOpenFGAConfig capturedDevServicesConfiguration;
@@ -167,11 +165,10 @@ public class DevServicesOpenFGAProcessor {
 
         final Supplier<RunningDevService> defaultOpenFGAInstanceSupplier = () -> {
 
-            QuarkusOpenFGAContainer container = new QuarkusOpenFGAContainer(dockerImageName, devServicesConfig.httpPort,
+            OpenFGAContainer container = new QuarkusOpenFGAContainer(dockerImageName, devServicesConfig.httpPort,
                     devServicesConfig.grpcPort, devServicesConfig.playgroundPort,
                     devServicesConfig.serviceName)
-                    .withNetwork(Network.SHARED)
-                    .waitingFor(Wait.forHttp(HEALTH_ENDPOINT).forPort(OPEN_FGA_EXPOSED_HTTP_PORT));
+                    .withNetwork(Network.SHARED);
 
             timeout.ifPresent(container::withStartupTimeout);
 
@@ -181,7 +178,7 @@ public class DevServicesOpenFGAProcessor {
 
             var devServicesConfigProperties = new HashMap<String, String>();
 
-            withAPI(container.getHost(), container.getHttpPort(), (instanceURL, api) -> {
+            withAPI(container.getHost(), ((QuarkusOpenFGAContainer) container).getHttpPort(), (instanceURL, api) -> {
 
                 devServicesConfigProperties.put(URL_CONFIG_KEY, instanceURL.toExternalForm());
 
@@ -394,7 +391,7 @@ public class DevServicesOpenFGAProcessor {
         }
     }
 
-    private static class QuarkusOpenFGAContainer extends GenericContainer<QuarkusOpenFGAContainer> {
+    private static class QuarkusOpenFGAContainer extends OpenFGAContainer {
         OptionalInt fixedExposedHttpPort;
         OptionalInt fixedExposedGrpcPort;
         OptionalInt fixedExposedPlaygroundPort;
@@ -405,7 +402,6 @@ public class DevServicesOpenFGAProcessor {
             this.fixedExposedHttpPort = fixedExposedHttpPort;
             this.fixedExposedGrpcPort = fixedExposedGrpcPort;
             this.fixedExposedPlaygroundPort = fixedExposedPlaygroundPort;
-            withCommand("run");
             withNetwork(Network.SHARED);
             if (serviceName != null) { // Only adds the label in dev mode.
                 withLabel(DEV_SERVICE_LABEL, serviceName);
