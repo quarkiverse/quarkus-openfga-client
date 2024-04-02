@@ -9,15 +9,18 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class ObjectRelation {
+
+    @Nullable
     private final String object;
     private final String relation;
 
     @JsonCreator
-    public ObjectRelation(String object, String relation) {
-        this.object = Preconditions.parameterNonNull(object, "object");
+    public ObjectRelation(@Nullable String object, String relation) {
+        this.object = object;
         this.relation = Preconditions.parameterNonNull(relation, "relation");
     }
 
+    @Nullable
     public String getObject() {
         return object;
     }
