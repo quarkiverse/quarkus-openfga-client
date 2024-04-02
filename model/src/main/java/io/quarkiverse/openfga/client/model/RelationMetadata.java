@@ -13,15 +13,38 @@ public class RelationMetadata {
     @JsonProperty("directly_related_user_types")
     @Nullable
     List<RelationReference> directlyRelatedUserTypes;
+    @Nullable
+    String module;
+    @JsonProperty("source_info")
+    @Nullable
+    String sourceInfo;
 
     @JsonCreator
-    public RelationMetadata(@Nullable List<RelationReference> directlyRelatedUserTypes) {
+    public RelationMetadata(@Nullable List<RelationReference> directlyRelatedUserTypes, @Nullable String module,
+            @Nullable String sourceInfo) {
         this.directlyRelatedUserTypes = directlyRelatedUserTypes;
+        this.module = module;
+        this.sourceInfo = sourceInfo;
+    }
+
+    public RelationMetadata(@Nullable List<RelationReference> directlyRelatedUserTypes) {
+        this(directlyRelatedUserTypes, null, null);
     }
 
     @Nullable
     public List<RelationReference> getDirectlyRelatedUserTypes() {
         return directlyRelatedUserTypes;
+    }
+
+    @Nullable
+    public String getModule() {
+        return module;
+    }
+
+    @JsonProperty("source_info")
+    @Nullable
+    public String getSourceInfo() {
+        return sourceInfo;
     }
 
     @Override
@@ -31,18 +54,21 @@ public class RelationMetadata {
         if (!(o instanceof RelationMetadata))
             return false;
         RelationMetadata that = (RelationMetadata) o;
-        return Objects.equals(directlyRelatedUserTypes, that.directlyRelatedUserTypes);
+        return Objects.equals(directlyRelatedUserTypes, that.directlyRelatedUserTypes)
+                && Objects.equals(module, that.module) && Objects.equals(sourceInfo, that.sourceInfo);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(directlyRelatedUserTypes);
+        return Objects.hash(directlyRelatedUserTypes, module, sourceInfo);
     }
 
     @Override
     public String toString() {
         return "RelationMetadata{" +
-                "directlyRelatedUserTypes=" + directlyRelatedUserTypes +
+                "directlyRelatedUserTypes=" + directlyRelatedUserTypes + ", " +
+                "module=" + module + ", " +
+                "sourceInfo=" + sourceInfo +
                 '}';
     }
 }
