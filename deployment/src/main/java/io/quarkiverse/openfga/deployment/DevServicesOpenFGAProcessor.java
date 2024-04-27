@@ -8,9 +8,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
@@ -26,6 +26,7 @@ import io.quarkiverse.openfga.client.api.VertxWebClientFactory;
 import io.quarkiverse.openfga.client.model.*;
 import io.quarkiverse.openfga.client.model.dto.CreateStoreRequest;
 import io.quarkiverse.openfga.client.model.dto.WriteBody;
+import io.quarkus.bootstrap.classloading.QuarkusClassLoader;
 import io.quarkus.deployment.IsNormal;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
@@ -41,7 +42,6 @@ import io.quarkus.deployment.logging.LoggingSetupBuildItem;
 import io.quarkus.devservices.common.ContainerLocator;
 import io.quarkus.runtime.configuration.ConfigUtils;
 import io.quarkus.runtime.configuration.ConfigurationException;
-import io.quarkus.runtime.util.ClassPathUtils;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.Vertx;
 
@@ -346,30 +346,21 @@ public class DevServicesOpenFGAProcessor {
     }
 
     private static Path resolveModelPath(String location) throws IOException {
-        location = normalizeLocation(location);
         if (location.startsWith("filesystem:")) {
             return Path.of(location.substring("filesystem:".length()));
         }
 
-        var classpathPath = new AtomicReference<Path>();
-        ClassPathUtils.consumeAsPaths(Thread.currentThread().getContextClassLoader(), location, classpathPath::set);
-
-        return classpathPath.get();
-    }
-
-    private static String normalizeLocation(String location) {
         // Strip any 'classpath:' protocol prefixes because they are assumed
         // but not recognized by ClassLoader.getResources()
         if (location.startsWith("classpath:")) {
             location = location.substring("classpath:".length());
-            if (location.startsWith("/")) {
-                location = location.substring(1);
-            }
         }
-        if (!location.endsWith("/")) {
-            location += "/";
-        }
-        return location;
+
+        return Collections.list(QuarkusClassLoader.getSystemResources(location))
+                .stream()
+                .findFirst()
+                .map(url -> Paths.get(url.getPath()))
+                .orElseThrow(() -> new IOException("Authorization model not found"));
     }
 
     private static void withAPI(String host, Integer port, BiFunction<URL, API, Void> apiConsumer) {
