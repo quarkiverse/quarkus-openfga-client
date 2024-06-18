@@ -7,7 +7,6 @@ import java.net.URL;
 import org.jboss.logging.Logger;
 
 import io.quarkiverse.openfga.runtime.config.OpenFGAConfig;
-import io.quarkus.runtime.TlsConfig;
 import io.vertx.core.net.PemTrustOptions;
 import io.vertx.core.tracing.TracingPolicy;
 import io.vertx.ext.web.client.WebClientOptions;
@@ -18,7 +17,7 @@ public class VertxWebClientFactory {
 
     private static final Logger log = Logger.getLogger(VertxWebClientFactory.class.getName());
 
-    public static WebClient create(OpenFGAConfig config, TlsConfig tlsConfig, boolean tracingEnabled, Vertx vertx) {
+    public static WebClient create(OpenFGAConfig config, boolean globalTrustAll, boolean tracingEnabled, Vertx vertx) {
 
         var url = config.url;
 
@@ -32,7 +31,7 @@ public class VertxWebClientFactory {
 
         config.nonProxyHosts.ifPresent(options::setNonProxyHosts);
 
-        boolean trustAll = config.tls.skipVerify.orElseGet(() -> tlsConfig.trustAll);
+        boolean trustAll = config.tls.skipVerify.orElseGet(() -> globalTrustAll);
         if (trustAll) {
             skipVerify(options);
         } else {
