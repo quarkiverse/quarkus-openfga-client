@@ -21,7 +21,6 @@ import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.*;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.runtime.RuntimeValue;
-import io.quarkus.runtime.TlsConfig;
 import io.quarkus.smallrye.health.deployment.spi.HealthBuildItem;
 import io.quarkus.vertx.deployment.VertxBuildItem;
 
@@ -52,8 +51,6 @@ class OpenFGAProcessor {
     ServiceStartBuildItem registerSyntheticBeans(
             OpenFGABuildTimeConfig buildTimeConfig,
             OpenFGAConfig runtimeConfig,
-            TlsConfig tlsConfig,
-            SslNativeConfigBuildItem sslNativeConfig,
             VertxBuildItem vertx,
             ShutdownContextBuildItem shutdownContextBuildItem,
             OpenFGARecorder recorder,
@@ -62,7 +59,7 @@ class OpenFGAProcessor {
             BuildProducer<ExtensionSslNativeSupportBuildItem> sslNativeSupport) {
 
         RuntimeValue<API> apiValue = recorder.createAPI(
-                runtimeConfig, tlsConfig, buildTimeConfig.tracingEnabled,
+                runtimeConfig, buildTimeConfig.tracingEnabled,
                 vertx.getVertx(), shutdownContextBuildItem);
 
         sslNativeSupport.produce(new ExtensionSslNativeSupportBuildItem(FEATURE));
