@@ -5,12 +5,18 @@ import static java.lang.String.format;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
@@ -23,7 +29,11 @@ import io.quarkiverse.openfga.client.AuthorizationModelsClient;
 import io.quarkiverse.openfga.client.OpenFGAClient;
 import io.quarkiverse.openfga.client.api.API;
 import io.quarkiverse.openfga.client.api.VertxWebClientFactory;
-import io.quarkiverse.openfga.client.model.*;
+import io.quarkiverse.openfga.client.model.AuthorizationModel;
+import io.quarkiverse.openfga.client.model.Store;
+import io.quarkiverse.openfga.client.model.TupleKey;
+import io.quarkiverse.openfga.client.model.TupleKeys;
+import io.quarkiverse.openfga.client.model.TypeDefinitions;
 import io.quarkiverse.openfga.client.model.dto.CreateStoreRequest;
 import io.quarkiverse.openfga.client.model.dto.WriteBody;
 import io.quarkus.bootstrap.classloading.QuarkusClassLoader;
@@ -48,6 +58,7 @@ import io.vertx.mutiny.core.Vertx;
 public class DevServicesOpenFGAProcessor {
 
     private static final Logger log = Logger.getLogger(DevServicesOpenFGAProcessor.class);
+
     static final String OPEN_FGA_VERSION = "v1.5.1";
     static final String OPEN_FGA_IMAGE = "openfga/openfga:" + OPEN_FGA_VERSION;
     static final int OPEN_FGA_EXPOSED_HTTP_PORT = 8080;
@@ -359,8 +370,17 @@ public class DevServicesOpenFGAProcessor {
         return Collections.list(QuarkusClassLoader.getSystemResources(location))
                 .stream()
                 .findFirst()
-                .map(url -> Paths.get(url.getPath()))
+                .map(DevServicesOpenFGAProcessor::getPath)
                 .orElseThrow(() -> new IOException("Authorization model not found"));
+    }
+
+    private static Path getPath(URL url) {
+        try {
+            return Paths.get(url.toURI());
+        } catch (URISyntaxException e) {
+            log.error("Parsing path failed: {}", url.getPath(), e);
+            throw new IllegalArgumentException(e);
+        }
     }
 
     private static void withAPI(String host, Integer port, BiFunction<URL, API, Void> apiConsumer) {
