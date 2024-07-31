@@ -2,8 +2,6 @@ package io.quarkiverse.openfga.client.api;
 
 import static io.quarkiverse.openfga.client.api.Queries.query;
 import static io.quarkiverse.openfga.client.api.Vars.vars;
-import static io.smallrye.mutiny.unchecked.Unchecked.function;
-import static io.smallrye.mutiny.unchecked.Unchecked.supplier;
 import static io.vertx.core.http.HttpMethod.*;
 import static io.vertx.mutiny.core.http.HttpHeaders.ACCEPT;
 import static io.vertx.mutiny.core.http.HttpHeaders.CONTENT_TYPE;
@@ -248,25 +246,45 @@ public class API implements Closeable {
 
     private <B, R> Uni<R> execute(HttpRequest<Buffer> request, B body, ExpectedStatus expectedStatus, Class<R> responseType) {
         return Uni.createFrom()
-                .deferred(supplier(() -> {
-                    return prepare(request)
-                            .putHeader(ACCEPT.toString(), APPLICATION_JSON)
-                            .putHeader(CONTENT_TYPE.toString(), APPLICATION_JSON)
-                            .sendBuffer(Buffer.buffer(objectMapper.writeValueAsString(body)))
-                            .onItem().invoke(response -> checkJSONResponse(response, expectedStatus));
-                }))
-                .onItem().transform(function(response -> objectMapper.readValue(response.bodyAsString(), responseType)));
+                .deferred(() -> {
+                    try {
+                        return prepare(request)
+                                .putHeader(ACCEPT.toString(), APPLICATION_JSON)
+                                .putHeader(CONTENT_TYPE.toString(), APPLICATION_JSON)
+                                .sendBuffer(Buffer.buffer(objectMapper.writeValueAsString(body)));
+                    } catch (Throwable t) {
+                        return Uni.createFrom().failure(t);
+                    }
+                })
+                .onItem().transformToUni(response -> {
+                    try {
+                        checkJSONResponse(response, expectedStatus);
+                        return Uni.createFrom().item(objectMapper.readValue(response.bodyAsString(), responseType));
+                    } catch (Throwable e) {
+                        return Uni.createFrom().failure(e);
+                    }
+                });
     }
 
     private <B> Uni<Void> execute(HttpRequest<Buffer> request, B body, ExpectedStatus expectedStatus) {
         return Uni.createFrom()
-                .deferred(supplier(() -> {
-                    return prepare(request)
-                            .putHeader(CONTENT_TYPE.toString(), APPLICATION_JSON)
-                            .sendBuffer(Buffer.buffer(objectMapper.writeValueAsString(body)))
-                            .onItem().invoke(response -> checkStatus(response, expectedStatus))
-                            .replaceWithVoid();
-                }));
+                .deferred(() -> {
+                    try {
+                        return prepare(request)
+                                .putHeader(CONTENT_TYPE.toString(), APPLICATION_JSON)
+                                .sendBuffer(Buffer.buffer(objectMapper.writeValueAsString(body)));
+                    } catch (Throwable t) {
+                        return Uni.createFrom().failure(t);
+                    }
+                })
+                .onItem().transformToUni(response -> {
+                    try {
+                        checkStatus(response, expectedStatus);
+                        return Uni.createFrom().nullItem();
+                    } catch (Throwable e) {
+                        return Uni.createFrom().failure(e);
+                    }
+                });
     }
 
     private <R> Uni<R> execute(HttpRequest<Buffer> request, ExpectedStatus expectedStatus, Class<R> responseType) {
@@ -274,15 +292,27 @@ public class API implements Closeable {
                 .putHeader(ACCEPT.toString(), APPLICATION_JSON)
                 .as(BodyCodec.buffer())
                 .send()
-                .onItem().invoke(response -> checkJSONResponse(response, expectedStatus))
-                .onItem().transform(function(response -> objectMapper.readValue(response.bodyAsString(), responseType)));
+                .onItem().transformToUni(response -> {
+                    try {
+                        checkJSONResponse(response, expectedStatus);
+                        return Uni.createFrom().item(objectMapper.readValue(response.bodyAsString(), responseType));
+                    } catch (Throwable e) {
+                        return Uni.createFrom().failure(e);
+                    }
+                });
     }
 
     private Uni<Void> execute(HttpRequest<Buffer> request, ExpectedStatus expectedStatus) {
         return prepare(request)
                 .send()
-                .onItem().invoke(response -> checkStatus(response, expectedStatus))
-                .replaceWithVoid();
+                .onItem().transformToUni(response -> {
+                    try {
+                        checkStatus(response, expectedStatus);
+                        return Uni.createFrom().nullItem();
+                    } catch (Throwable e) {
+                        return Uni.createFrom().failure(e);
+                    }
+                });
     }
 
     private <R> HttpRequest<R> prepare(HttpRequest<R> request) {
@@ -306,21 +336,21 @@ public class API implements Closeable {
         return webClient.request(method, options);
     }
 
-    private static void checkJSONResponse(HttpResponse<Buffer> response, ExpectedStatus expectedStatus) {
+    private static void checkJSONResponse(HttpResponse<Buffer> response, ExpectedStatus expectedStatus) throws Throwable {
         checkStatus(response, expectedStatus);
         checkJSON(response);
     }
 
-    private static void checkStatus(HttpResponse<Buffer> response, ExpectedStatus expectedStatus) {
+    private static void checkStatus(HttpResponse<Buffer> response, ExpectedStatus expectedStatus) throws Throwable {
         if (response.statusCode() != expectedStatus.statusCode) {
-            throw new RuntimeException(Errors.convert(response));
+            throw Errors.convert(response);
         }
     }
 
-    private static void checkJSON(HttpResponse<Buffer> response) {
+    private static void checkJSON(HttpResponse<Buffer> response) throws Throwable {
         String contentType = response.headers().get(HttpHeaders.CONTENT_TYPE);
         if (contentType == null) {
-            throw new RuntimeException(new NoStackTraceThrowable("Missing response content type"));
+            throw new NoStackTraceThrowable("Missing response content type");
         }
         int paramIdx = contentType.indexOf(';');
         String mediaType = paramIdx != -1 ? contentType.substring(0, paramIdx) : contentType;
@@ -328,7 +358,7 @@ public class API implements Closeable {
             return;
         }
         String message = "Expect content type " + contentType + " to be application/json";
-        throw new RuntimeException(new NoStackTraceThrowable(message));
+        throw new NoStackTraceThrowable(message);
     }
 
     public static ObjectMapper createObjectMapper() {
