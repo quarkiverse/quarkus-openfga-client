@@ -98,6 +98,19 @@ public class AuthorizationModelClientTest {
     }
 
     @Test
+    @DisplayName("Throws Validation Exception When Write User Not Object")
+    public void throwsValidationExceptionWhenUserNotObject() {
+
+        var tuples = List.of(
+                TupleKey.of("document:123", "reader", "user"));
+        authorizationModelClient.write(tuples, emptyList())
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitFailure()
+                .assertFailedWith(FGAValidationException.class,
+                        "Invalid tuple 'document:123#reader@user'. Reason: the 'user' field must be an object (e.g. document:1) or an 'object#relation' or a typed wildcard (e.g. group:*)");
+    }
+
+    @Test
     @DisplayName("Can Execute Checks")
     public void canExecuteChecks() {
 

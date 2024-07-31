@@ -1,19 +1,14 @@
 package io.quarkiverse.openfga.client.api;
 
-import static io.quarkiverse.openfga.client.api.Errors.errorConverter;
-
-import io.vertx.mutiny.ext.web.client.predicate.ResponsePredicate;
-
 public enum ExpectedStatus {
 
-    OK(ResponsePredicate.create(ResponsePredicate.SC_OK, errorConverter)),
-    CREATED(ResponsePredicate.create(ResponsePredicate.SC_CREATED, errorConverter)),
-    NO_CONTENT(ResponsePredicate.create(ResponsePredicate.SC_NO_CONTENT, errorConverter));
+    OK(200),
+    CREATED(201),
+    NO_CONTENT(204);
 
-    public final ResponsePredicate responsePredicate;
+    public final int statusCode;
 
-    ExpectedStatus(ResponsePredicate responsePredicate) {
-        this.responsePredicate = responsePredicate;
+    ExpectedStatus(int statusCode) {
+        this.statusCode = statusCode;
     }
-
 }
