@@ -155,7 +155,7 @@ public class DevServicesOpenFGAProcessor {
             return null;
         }
 
-        if (!dockerStatusBuildItem.isDockerAvailable()) {
+        if (!dockerStatusBuildItem.isContainerRuntimeAvailable()) {
             log.warn("Please configure " + URL_CONFIG_KEY + " or get a working docker instance");
             return null;
         }
