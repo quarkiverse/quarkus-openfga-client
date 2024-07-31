@@ -29,15 +29,17 @@ import io.quarkiverse.openfga.client.model.TypeDefinitions;
 import io.quarkiverse.openfga.client.model.dto.*;
 import io.quarkiverse.openfga.runtime.config.OpenFGAConfig;
 import io.smallrye.mutiny.Uni;
+import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.RequestOptions;
+import io.vertx.core.impl.NoStackTraceThrowable;
 import io.vertx.ext.auth.authentication.Credentials;
 import io.vertx.ext.auth.authentication.TokenCredentials;
 import io.vertx.mutiny.core.Vertx;
 import io.vertx.mutiny.core.buffer.Buffer;
 import io.vertx.mutiny.ext.web.client.HttpRequest;
+import io.vertx.mutiny.ext.web.client.HttpResponse;
 import io.vertx.mutiny.ext.web.client.WebClient;
-import io.vertx.mutiny.ext.web.client.predicate.ResponsePredicate;
 import io.vertx.mutiny.ext.web.codec.BodyCodec;
 import io.vertx.mutiny.uritemplate.UriTemplate;
 import io.vertx.mutiny.uritemplate.Variables;
@@ -247,11 +249,11 @@ public class API implements Closeable {
     private <B, R> Uni<R> execute(HttpRequest<Buffer> request, B body, ExpectedStatus expectedStatus, Class<R> responseType) {
         return Uni.createFrom()
                 .deferred(supplier(() -> {
-                    return prepare(request, expectedStatus)
+                    return prepare(request)
                             .putHeader(ACCEPT.toString(), APPLICATION_JSON)
-                            .expect(ResponsePredicate.JSON)
                             .putHeader(CONTENT_TYPE.toString(), APPLICATION_JSON)
-                            .sendBuffer(Buffer.buffer(objectMapper.writeValueAsString(body)));
+                            .sendBuffer(Buffer.buffer(objectMapper.writeValueAsString(body)))
+                            .onItem().invoke(response -> checkJSONResponse(response, expectedStatus));
                 }))
                 .onItem().transform(function(response -> objectMapper.readValue(response.bodyAsString(), responseType)));
     }
@@ -259,34 +261,36 @@ public class API implements Closeable {
     private <B> Uni<Void> execute(HttpRequest<Buffer> request, B body, ExpectedStatus expectedStatus) {
         return Uni.createFrom()
                 .deferred(supplier(() -> {
-                    return prepare(request, expectedStatus)
+                    return prepare(request)
                             .putHeader(CONTENT_TYPE.toString(), APPLICATION_JSON)
                             .sendBuffer(Buffer.buffer(objectMapper.writeValueAsString(body)))
+                            .onItem().invoke(response -> checkStatus(response, expectedStatus))
                             .replaceWithVoid();
                 }));
     }
 
     private <R> Uni<R> execute(HttpRequest<Buffer> request, ExpectedStatus expectedStatus, Class<R> responseType) {
-        return prepare(request, expectedStatus)
+        return prepare(request)
                 .putHeader(ACCEPT.toString(), APPLICATION_JSON)
-                .expect(ResponsePredicate.JSON)
                 .as(BodyCodec.buffer())
                 .send()
+                .onItem().invoke(response -> checkJSONResponse(response, expectedStatus))
                 .onItem().transform(function(response -> objectMapper.readValue(response.bodyAsString(), responseType)));
     }
 
     private Uni<Void> execute(HttpRequest<Buffer> request, ExpectedStatus expectedStatus) {
-        return prepare(request, expectedStatus)
+        return prepare(request)
                 .send()
+                .onItem().invoke(response -> checkStatus(response, expectedStatus))
                 .replaceWithVoid();
     }
 
-    private <R> HttpRequest<R> prepare(HttpRequest<R> request, ExpectedStatus expectedStatus) {
+    private <R> HttpRequest<R> prepare(HttpRequest<R> request) {
 
         // Add creds
         credentials.ifPresent(request::authentication);
 
-        return request.expect(expectedStatus.responsePredicate);
+        return request;
     }
 
     private HttpRequest<Buffer> request(String operationName, HttpMethod method, UriTemplate uriTemplate, Variables variables,
@@ -300,6 +304,31 @@ public class API implements Closeable {
                 .setURI(uriTemplate.expandToString(variables))
                 .setTraceOperation(format("FGA | %s", operationName.toUpperCase()));
         return webClient.request(method, options);
+    }
+
+    private static void checkJSONResponse(HttpResponse<Buffer> response, ExpectedStatus expectedStatus) {
+        checkStatus(response, expectedStatus);
+        checkJSON(response);
+    }
+
+    private static void checkStatus(HttpResponse<Buffer> response, ExpectedStatus expectedStatus) {
+        if (response.statusCode() != expectedStatus.statusCode) {
+            throw new RuntimeException(Errors.convert(response));
+        }
+    }
+
+    private static void checkJSON(HttpResponse<Buffer> response) {
+        String contentType = response.headers().get(HttpHeaders.CONTENT_TYPE);
+        if (contentType == null) {
+            throw new RuntimeException(new NoStackTraceThrowable("Missing response content type"));
+        }
+        int paramIdx = contentType.indexOf(';');
+        String mediaType = paramIdx != -1 ? contentType.substring(0, paramIdx) : contentType;
+        if (mediaType.equalsIgnoreCase("application/json")) {
+            return;
+        }
+        String message = "Expect content type " + contentType + " to be application/json";
+        throw new RuntimeException(new NoStackTraceThrowable(message));
     }
 
     public static ObjectMapper createObjectMapper() {

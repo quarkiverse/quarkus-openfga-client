@@ -3,14 +3,11 @@ package io.quarkiverse.openfga.client.api;
 import io.quarkiverse.openfga.client.model.FGAInternalException;
 import io.quarkiverse.openfga.client.model.FGAUnknownException;
 import io.quarkiverse.openfga.client.model.FGAValidationException;
-import io.vertx.mutiny.ext.web.client.predicate.ErrorConverter;
+import io.vertx.mutiny.ext.web.client.HttpResponse;
 
 class Errors {
 
-    static final ErrorConverter errorConverter = ErrorConverter.createFullBody(result -> {
-
-        var response = result.response();
-
+    static Throwable convert(HttpResponse<?> response) {
         try {
             return response.bodyAsJson(FGAValidationException.class);
         } catch (Throwable ignored) {
@@ -20,6 +17,5 @@ class Errors {
                 return new FGAUnknownException();
             }
         }
-    });
-
+    }
 }
