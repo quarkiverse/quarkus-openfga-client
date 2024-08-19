@@ -11,12 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.OptionalInt;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
@@ -29,13 +24,10 @@ import io.quarkiverse.openfga.client.AuthorizationModelsClient;
 import io.quarkiverse.openfga.client.OpenFGAClient;
 import io.quarkiverse.openfga.client.api.API;
 import io.quarkiverse.openfga.client.api.VertxWebClientFactory;
-import io.quarkiverse.openfga.client.model.AuthorizationModel;
-import io.quarkiverse.openfga.client.model.Store;
-import io.quarkiverse.openfga.client.model.TupleKey;
-import io.quarkiverse.openfga.client.model.TupleKeys;
-import io.quarkiverse.openfga.client.model.TypeDefinitions;
+import io.quarkiverse.openfga.client.model.*;
 import io.quarkiverse.openfga.client.model.dto.CreateStoreRequest;
-import io.quarkiverse.openfga.client.model.dto.WriteBody;
+import io.quarkiverse.openfga.client.model.dto.WriteAuthorizationModelRequest;
+import io.quarkiverse.openfga.client.model.dto.WriteRequest;
 import io.quarkus.bootstrap.classloading.QuarkusClassLoader;
 import io.quarkus.deployment.IsNormal;
 import io.quarkus.deployment.annotations.BuildProducer;
@@ -59,7 +51,7 @@ public class DevServicesOpenFGAProcessor {
 
     private static final Logger log = Logger.getLogger(DevServicesOpenFGAProcessor.class);
 
-    static final String OPEN_FGA_VERSION = "v1.5.1";
+    static final String OPEN_FGA_VERSION = "v1.5.9";
     static final String OPEN_FGA_IMAGE = "openfga/openfga:" + OPEN_FGA_VERSION;
     static final int OPEN_FGA_EXPOSED_HTTP_PORT = 8080;
     static final int OPEN_FGA_EXPOSED_GRPC_PORT = 8081;
@@ -198,7 +190,7 @@ public class DevServicesOpenFGAProcessor {
 
                     log.info("Initializing authorization store...");
 
-                    storeId = api.createStore(new CreateStoreRequest(devServicesConfig.storeName))
+                    storeId = api.createStore(CreateStoreRequest.of(devServicesConfig.storeName))
                             .await().atMost(INIT_OP_MAX_WAIT)
                             .getId();
 
@@ -209,13 +201,14 @@ public class DevServicesOpenFGAProcessor {
                 }
 
                 loadAuthorizationModelDefinition(api, devServicesConfig)
-                        .ifPresentOrElse(authModelDef -> {
+                        .ifPresentOrElse(schema -> {
 
                             String authModelId;
                             try {
                                 log.info("Initializing authorization model...");
 
-                                authModelId = api.writeAuthorizationModel(storeId, authModelDef)
+                                var request = WriteAuthorizationModelRequest.of(schema);
+                                authModelId = api.writeAuthorizationModel(storeId, request)
                                         .await()
                                         .atMost(INIT_OP_MAX_WAIT)
                                         .getAuthorizationModelId();
@@ -231,7 +224,11 @@ public class DevServicesOpenFGAProcessor {
                                         try {
                                             log.info("Initializing authorization tuples...");
 
-                                            api.write(storeId, new WriteBody(new TupleKeys(authTuples), null, authModelId))
+                                            var writeRequest = WriteRequest.builder()
+                                                    .authorizationModelId(authModelId)
+                                                    .addWrites(authTuples)
+                                                    .build();
+                                            api.write(storeId, writeRequest)
                                                     .await()
                                                     .atMost(INIT_OP_MAX_WAIT);
 
@@ -308,7 +305,7 @@ public class DevServicesOpenFGAProcessor {
                 .orElseGet(defaultOpenFGAInstanceSupplier);
     }
 
-    private static Optional<TypeDefinitions> loadAuthorizationModelDefinition(API api,
+    private static Optional<AuthorizationModelSchema> loadAuthorizationModelDefinition(API api,
             DevServicesOpenFGAConfig devServicesConfig) {
         return devServicesConfig.authorizationModel
                 .or(() -> {
@@ -325,14 +322,14 @@ public class DevServicesOpenFGAProcessor {
                 })
                 .map(authModelJSON -> {
                     try {
-                        return api.parseModel(authModelJSON);
+                        return api.parseModelSchema(authModelJSON);
                     } catch (Throwable t) {
                         throw new RuntimeException("Unable to parse authorization model", t);
                     }
                 });
     }
 
-    private static Optional<List<TupleKey>> loadAuthorizationTuples(API api,
+    private static Optional<List<ConditionalTupleKey>> loadAuthorizationTuples(API api,
             DevServicesOpenFGAConfig devServicesConfig) {
         return devServicesConfig.authorizationTuples
                 .or(() -> {

@@ -10,11 +10,16 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class Usersets {
+
     private final List<Userset> child;
 
-    @JsonCreator
-    public Usersets(List<Userset> child) {
+    @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+    Usersets(List<Userset> child) {
         this.child = Preconditions.parameterNonNull(child, "child");
+    }
+
+    public static Usersets of(List<Userset> child) {
+        return new Usersets(child);
     }
 
     public List<Userset> getChild() {

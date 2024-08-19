@@ -9,7 +9,9 @@ import javax.annotation.Nullable;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 public final class CheckResponse {
+
     private final boolean allowed;
+
     @Nullable
     private final String resolution;
 

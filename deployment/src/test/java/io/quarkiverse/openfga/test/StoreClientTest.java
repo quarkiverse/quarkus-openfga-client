@@ -1,8 +1,8 @@
 package io.quarkiverse.openfga.test;
 
 import static java.time.Duration.ofSeconds;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
 import jakarta.inject.Inject;
 
@@ -16,7 +16,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.quarkiverse.openfga.client.OpenFGAClient;
 import io.quarkiverse.openfga.client.StoreClient;
-import io.quarkiverse.openfga.client.model.*;
+import io.quarkiverse.openfga.client.model.Store;
 import io.quarkus.test.QuarkusUnitTest;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 
@@ -31,6 +31,7 @@ public class StoreClientTest {
     OpenFGAClient openFGAClient;
 
     Store store;
+
     StoreClient storeClient;
 
     @BeforeEach
@@ -55,7 +56,8 @@ public class StoreClientTest {
                 .awaitItem()
                 .getItem();
 
-        assertThat(foundStore, equalTo(store));
+        assertThat(foundStore)
+                .isEqualTo(store);
     }
 
     @Test
@@ -66,7 +68,8 @@ public class StoreClientTest {
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
-        assertThat(preList, hasItem(store));
+        assertThat(preList)
+                .contains(store);
 
         storeClient.delete()
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
@@ -77,7 +80,8 @@ public class StoreClientTest {
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
-        assertThat(postList, not(hasItem(store)));
+        assertThat(postList)
+                .doesNotContain(store);
     }
 
 }

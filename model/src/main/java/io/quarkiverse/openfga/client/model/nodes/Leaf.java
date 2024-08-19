@@ -4,11 +4,16 @@ import java.util.Objects;
 
 import javax.annotation.Nullable;
 
+import io.quarkiverse.openfga.client.model.utils.Preconditions;
+
 public final class Leaf {
+
     @Nullable
     private final Users users;
+
     @Nullable
     private final Computed computed;
+
     @Nullable
     private final TupleToUserset tupleToUserset;
 
@@ -16,6 +21,8 @@ public final class Leaf {
             @Nullable Users users,
             @Nullable Computed computed,
             @Nullable TupleToUserset tupleToUserset) {
+        Preconditions.oneOfNonNull("Leaf must have exactly one of users, computed, tupleToUserset", users, computed,
+                tupleToUserset);
         this.users = users;
         this.computed = computed;
         this.tupleToUserset = tupleToUserset;

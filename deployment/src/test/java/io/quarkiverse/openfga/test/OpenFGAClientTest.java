@@ -2,14 +2,14 @@ package io.quarkiverse.openfga.test;
 
 import static java.time.OffsetDateTime.now;
 import static java.time.temporal.ChronoUnit.SECONDS;
-import static org.exparity.hamcrest.date.OffsetDateTimeMatchers.within;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
-
-import java.util.stream.Collectors;
+import static org.assertj.core.api.Assertions.as;
+import static org.assertj.core.api.Assertions.within;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
 import jakarta.inject.Inject;
 
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,6 +20,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import io.quarkiverse.openfga.client.OpenFGAClient;
 import io.quarkiverse.openfga.client.api.API;
 import io.quarkiverse.openfga.client.model.Store;
+import io.quarkiverse.openfga.client.utils.PaginatedList;
 import io.quarkus.test.QuarkusUnitTest;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
@@ -33,6 +34,7 @@ public class OpenFGAClientTest {
 
     @Inject
     API api;
+
     @Inject
     OpenFGAClient client;
 
@@ -52,11 +54,15 @@ public class OpenFGAClientTest {
                 .awaitItem()
                 .getItem();
 
-        assertThat(store.getId(), not(emptyOrNullString()));
-        assertThat(store.getName(), equalTo("testing"));
-        assertThat(store.getCreatedAt(), within(5, SECONDS, now()));
-        assertThat(store.getUpdatedAt(), within(5, SECONDS, now()));
-        assertThat(store.getDeletedAt(), is(nullValue()));
+        assertThat(store)
+                .isNotNull()
+                .satisfies(s -> {
+                    assertThat(s.getId()).isNotEmpty();
+                    assertThat(s.getName()).isEqualTo("testing");
+                    assertThat(s.getCreatedAt()).isCloseTo(now(), within(5, SECONDS));
+                    assertThat(s.getUpdatedAt()).isCloseTo(now(), within(5, SECONDS));
+                    assertThat(s.getDeletedAt()).isNull();
+                });
     }
 
     @Test
@@ -70,15 +76,20 @@ public class OpenFGAClientTest {
                 .awaitItem()
                 .getItem();
 
-        assertThat(createdStores.stream().map(Store::getName).collect(Collectors.toList()),
-                containsInAnyOrder("testing1", "testing2"));
+        assertThat(createdStores)
+                .isNotNull()
+                .map(Store::getName)
+                .containsExactlyInAnyOrder("testing1", "testing2");
 
         var list = client.listStores(2, null)
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
 
-        assertThat(list.getItems(), containsInAnyOrder(createdStores.toArray()));
+        assertThat(list)
+                .isNotNull()
+                .extracting(PaginatedList::getItems, as(InstanceOfAssertFactories.collection(Store.class)))
+                .containsExactlyInAnyOrderElementsOf(createdStores);
     }
 
     @Test
@@ -92,15 +103,19 @@ public class OpenFGAClientTest {
                 .awaitItem()
                 .getItem();
 
-        assertThat(createdStores.stream().map(Store::getName).collect(Collectors.toList()),
-                containsInAnyOrder("testing1", "testing2", "testing3"));
+        assertThat(createdStores)
+                .isNotNull()
+                .map(Store::getName)
+                .containsExactlyInAnyOrder("testing1", "testing2", "testing3");
 
         var list = client.listAllStores(1)
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
 
-        assertThat(list, containsInAnyOrder(createdStores.toArray()));
+        assertThat(list)
+                .isNotNull()
+                .containsExactlyInAnyOrderElementsOf(createdStores);
     }
 
     @Test
@@ -116,7 +131,9 @@ public class OpenFGAClientTest {
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
-        assertThat(preList, hasSize(1));
+        assertThat(preList)
+                .isNotNull()
+                .hasSize(1);
 
         client.store(store.getId()).delete()
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
@@ -127,7 +144,9 @@ public class OpenFGAClientTest {
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
-        assertThat(postList, hasSize(0));
+        assertThat(postList)
+                .isNotNull()
+                .isEmpty();
     }
 
     @Test
@@ -137,7 +156,8 @@ public class OpenFGAClientTest {
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
-        assertThat(healthzResponse.getStatus(), equalTo("SERVING"));
+        assertThat(healthzResponse.getStatus())
+                .isEqualTo("SERVING");
     }
 
 }

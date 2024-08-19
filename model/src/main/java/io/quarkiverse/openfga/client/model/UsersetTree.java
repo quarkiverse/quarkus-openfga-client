@@ -10,11 +10,16 @@ import io.quarkiverse.openfga.client.model.nodes.Node;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class UsersetTree {
+
     private final Node root;
 
-    @JsonCreator
-    public UsersetTree(Node root) {
+    @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+    UsersetTree(Node root) {
         this.root = Preconditions.parameterNonNull(root, "root");
+    }
+
+    public static UsersetTree of(Node root) {
+        return new UsersetTree(root);
     }
 
     public Node getRoot() {

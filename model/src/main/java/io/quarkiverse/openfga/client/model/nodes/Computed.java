@@ -7,6 +7,7 @@ import javax.annotation.Nullable;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class Computed {
+
     private final String userset;
 
     public Computed(String userset) {

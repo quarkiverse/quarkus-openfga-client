@@ -8,7 +8,9 @@ import javax.annotation.Nullable;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class TupleToUserset {
+
     private final String tupleset;
+
     private final List<Computed> computed;
 
     public TupleToUserset(String tupleset, List<Computed> computed) {
@@ -20,7 +22,7 @@ public final class TupleToUserset {
         return tupleset;
     }
 
-    public List<Computed> getcomputed() {
+    public List<Computed> getComputed() {
         return computed;
     }
 

@@ -8,27 +8,34 @@ import javax.annotation.Nullable;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class RelationMetadata {
+public final class RelationMetadata {
 
     @JsonProperty("directly_related_user_types")
     @Nullable
-    List<RelationReference> directlyRelatedUserTypes;
+    private final List<RelationReference> directlyRelatedUserTypes;
+
     @Nullable
-    String module;
+    private final String module;
+
     @JsonProperty("source_info")
     @Nullable
-    String sourceInfo;
+    private final String sourceInfo;
 
     @JsonCreator
-    public RelationMetadata(@Nullable List<RelationReference> directlyRelatedUserTypes, @Nullable String module,
+    RelationMetadata(@Nullable List<RelationReference> directlyRelatedUserTypes, @Nullable String module,
             @Nullable String sourceInfo) {
         this.directlyRelatedUserTypes = directlyRelatedUserTypes;
         this.module = module;
         this.sourceInfo = sourceInfo;
     }
 
-    public RelationMetadata(@Nullable List<RelationReference> directlyRelatedUserTypes) {
-        this(directlyRelatedUserTypes, null, null);
+    public static RelationMetadata of(@Nullable List<RelationReference> directlyRelatedUserTypes, @Nullable String module,
+            @Nullable String sourceInfo) {
+        return new RelationMetadata(directlyRelatedUserTypes, module, sourceInfo);
+    }
+
+    public static RelationMetadata of(@Nullable List<RelationReference> directlyRelatedUserTypes) {
+        return of(directlyRelatedUserTypes, null, null);
     }
 
     @Nullable

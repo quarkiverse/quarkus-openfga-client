@@ -14,13 +14,14 @@ import io.quarkiverse.openfga.client.model.Store;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class ListStoresResponse {
+
     private final List<Store> stores;
+
     @JsonProperty("continuation_token")
-    @Nullable
     private final String continuationToken;
 
     @JsonCreator(mode = PROPERTIES)
-    public ListStoresResponse(List<Store> stores, @JsonProperty("continuation_token") @Nullable String continuationToken) {
+    public ListStoresResponse(List<Store> stores, @JsonProperty("continuation_token") String continuationToken) {
         this.stores = Preconditions.parameterNonNull(stores, "stores");
         this.continuationToken = continuationToken;
     }
@@ -30,7 +31,6 @@ public final class ListStoresResponse {
     }
 
     @JsonProperty("continuation_token")
-    @Nullable
     public String getContinuationToken() {
         return continuationToken;
     }

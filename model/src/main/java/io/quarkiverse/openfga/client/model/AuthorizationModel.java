@@ -11,19 +11,28 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class AuthorizationModel {
+
     private final String id;
+
     private final String schemaVersion;
+
     private final List<TypeDefinition> typeDefinitions;
+
     @Nullable
     private final Map<String, Condition> conditions;
 
-    public AuthorizationModel(String id, @JsonProperty("schema_version") String schemaVersion,
+    AuthorizationModel(String id, @JsonProperty("schema_version") String schemaVersion,
             @JsonProperty("type_definitions") List<TypeDefinition> typeDefinitions,
             @JsonProperty("conditions") @Nullable Map<String, Condition> conditions) {
         this.id = Preconditions.parameterNonNull(id, "id");
         this.schemaVersion = Preconditions.parameterNonNull(schemaVersion, "schemaVersion");
         this.typeDefinitions = Preconditions.parameterNonNull(typeDefinitions, "typeDefinitions");
         this.conditions = conditions;
+    }
+
+    public AuthorizationModel of(String id, String schemaVersion, List<TypeDefinition> typeDefinitions,
+            @Nullable Map<String, Condition> conditions) {
+        return new AuthorizationModel(id, schemaVersion, typeDefinitions, conditions);
     }
 
     public String getId() {

@@ -11,11 +11,36 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class CreateStoreRequest {
+
     private final String name;
 
     @JsonCreator(mode = PROPERTIES)
-    public CreateStoreRequest(String name) {
+    CreateStoreRequest(String name) {
         this.name = Preconditions.parameterNonNull(name, "name");
+    }
+
+    public static CreateStoreRequest of(String name) {
+        return new CreateStoreRequest(name);
+    }
+
+    public static final class Builder {
+        private String name;
+
+        Builder() {
+        }
+
+        public Builder name(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public CreateStoreRequest build() {
+            return new CreateStoreRequest(name);
+        }
+    }
+
+    public static Builder builder() {
+        return new Builder();
     }
 
     public String getName() {

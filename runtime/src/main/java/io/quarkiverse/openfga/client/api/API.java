@@ -22,8 +22,8 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 
-import io.quarkiverse.openfga.client.model.TupleKey;
-import io.quarkiverse.openfga.client.model.TypeDefinitions;
+import io.quarkiverse.openfga.client.model.AuthorizationModelSchema;
+import io.quarkiverse.openfga.client.model.ConditionalTupleKey;
 import io.quarkiverse.openfga.client.model.dto.*;
 import io.quarkiverse.openfga.runtime.config.OpenFGAConfig;
 import io.smallrye.mutiny.Uni;
@@ -63,33 +63,34 @@ public class API implements Closeable {
         webClient.close();
     }
 
-    public TypeDefinitions parseModel(String modelJSON) throws IOException {
-        return objectMapper.readValue(modelJSON, TypeDefinitions.class);
-    }
-
-    public List<TupleKey> parseTuples(String modelJSON) throws IOException {
+    public AuthorizationModelSchema parseModelSchema(String modelJSON) throws IOException {
         return objectMapper.readValue(modelJSON, new TypeReference<>() {
         });
     }
 
-    public Uni<ListStoresResponse> listStores(@Nullable Integer pageSize, @Nullable String continuationToken) {
+    public List<ConditionalTupleKey> parseTuples(String modelJSON) throws IOException {
+        return objectMapper.readValue(modelJSON, new TypeReference<>() {
+        });
+    }
+
+    public Uni<ListStoresResponse> listStores(ListStoresRequest request) {
         return execute(
                 request("List Stores",
                         GET,
                         STORES_URI,
                         vars(),
-                        query(PAGE_SIZE_PARAM, pageSize, CONT_TOKEN_PARAM, continuationToken)),
+                        query(PAGE_SIZE_PARAM, request.getPageSize(), CONT_TOKEN_PARAM, request.getContinuationToken())),
                 ExpectedStatus.OK,
                 ListStoresResponse.class);
     }
 
-    public Uni<CreateStoreResponse> createStore(CreateStoreRequest body) {
+    public Uni<CreateStoreResponse> createStore(CreateStoreRequest request) {
         return execute(
                 request("Create Store",
                         POST,
                         STORES_URI,
                         vars()),
-                body,
+                request,
                 ExpectedStatus.CREATED,
                 CreateStoreResponse.class);
     }
@@ -113,45 +114,26 @@ public class API implements Closeable {
                 ExpectedStatus.NO_CONTENT);
     }
 
-    public Uni<ReadAssertionsResponse> readAssertions(String storeId, @Nullable String authorizationModelId) {
-        return execute(
-                request("Read Assertions",
-                        GET,
-                        ASSERTIONS_URI,
-                        vars(STORE_ID_PARAM, storeId, AUTH_MODEL_ID_PARAM, authorizationModelId)),
-                ExpectedStatus.OK,
-                ReadAssertionsResponse.class);
-    }
-
-    public Uni<Void> writeAssertions(String storeId, String authorizationModelId, WriteAssertionsRequest body) {
-        return execute(
-                request("Write Assertions",
-                        PUT,
-                        ASSERTIONS_URI,
-                        vars(STORE_ID_PARAM, storeId, AUTH_MODEL_ID_PARAM, authorizationModelId)),
-                body,
-                ExpectedStatus.NO_CONTENT);
-    }
-
-    public Uni<ReadAuthorizationModelsResponse> readAuthorizationModels(String storeId, @Nullable Integer pageSize,
-            @Nullable String continuationToken) {
+    public Uni<ListAuthorizationModelsResponse> listAuthorizationModels(String storeId,
+            ListAuthorizationModelsRequest request) {
         return execute(
                 request("Read Auth Models",
                         GET,
                         AUTH_MODELS_URI,
                         vars(STORE_ID_PARAM, storeId),
-                        query(PAGE_SIZE_PARAM, pageSize, CONT_TOKEN_PARAM, continuationToken)),
+                        query(PAGE_SIZE_PARAM, request.getPageSize(), CONT_TOKEN_PARAM, request.getContinuationToken())),
                 ExpectedStatus.OK,
-                ReadAuthorizationModelsResponse.class);
+                ListAuthorizationModelsResponse.class);
     }
 
-    public Uni<WriteAuthorizationModelResponse> writeAuthorizationModel(String storeId, TypeDefinitions typeDefinitions) {
+    public Uni<WriteAuthorizationModelResponse> writeAuthorizationModel(String storeId,
+            WriteAuthorizationModelRequest request) {
         return execute(
                 request("Write Auth Model",
                         POST,
                         AUTH_MODELS_URI,
                         vars(STORE_ID_PARAM, storeId)),
-                typeDefinitions,
+                request,
                 ExpectedStatus.CREATED,
                 WriteAuthorizationModelResponse.class);
     }
@@ -166,71 +148,102 @@ public class API implements Closeable {
                 ReadAuthorizationModelResponse.class);
     }
 
-    public Uni<ReadChangesResponse> readChanges(String storeId, @Nullable String type, @Nullable Integer pageSize,
-            @Nullable String continuationToken) {
+    public Uni<ListChangesResponse> listChanges(String storeId, ListChangesRequest request) {
         return execute(
                 request("Read Changes",
                         GET,
                         CHANGES_URI,
                         vars(STORE_ID_PARAM, storeId),
-                        query(TYPE_PARAM, type, PAGE_SIZE_PARAM, pageSize, CONT_TOKEN_PARAM, continuationToken)),
+                        query(TYPE_PARAM, request.getType(), PAGE_SIZE_PARAM, request.getPageSize(), CONT_TOKEN_PARAM,
+                                request.getContinuationToken())),
                 ExpectedStatus.OK,
-                ReadChangesResponse.class);
+                ListChangesResponse.class);
     }
 
-    public Uni<CheckResponse> check(String storeId, CheckBody body) {
-        return execute(
-                request("Check",
-                        POST,
-                        CHECK_URI,
-                        vars(STORE_ID_PARAM, storeId)),
-                body,
-                ExpectedStatus.OK,
-                CheckResponse.class);
-    }
-
-    public Uni<ExpandResponse> expand(String storeId, ExpandBody body) {
-        return execute(
-                request("Expand",
-                        POST,
-                        EXPAND_URI,
-                        vars(STORE_ID_PARAM, storeId)),
-                body,
-                ExpectedStatus.OK,
-                ExpandResponse.class);
-    }
-
-    public Uni<ListObjectsResponse> listObjects(String storeId, ListObjectsBody body) {
-        return execute(
-                request("List Objects",
-                        POST,
-                        LIST_OBJECTS_URI,
-                        vars(STORE_ID_PARAM, storeId)),
-                body,
-                ExpectedStatus.OK,
-                ListObjectsResponse.class);
-    }
-
-    public Uni<ReadResponse> read(String storeId, ReadBody body) {
+    public Uni<ReadResponse> read(String storeId, ReadRequest request) {
         return execute(
                 request("Read",
                         POST,
                         READ_URI,
                         vars(STORE_ID_PARAM, storeId)),
-                body,
+                request,
                 ExpectedStatus.OK,
                 ReadResponse.class);
     }
 
-    public Uni<WriteResponse> write(String storeId, WriteBody body) {
+    public Uni<WriteResponse> write(String storeId, WriteRequest request) {
         return execute(
                 request("Write",
                         POST,
                         WRITE_URI,
                         vars(STORE_ID_PARAM, storeId)),
-                body,
+                request,
                 ExpectedStatus.OK,
                 WriteResponse.class);
+    }
+
+    public Uni<CheckResponse> check(String storeId, CheckRequest request) {
+        return execute(
+                request("Check",
+                        POST,
+                        CHECK_URI,
+                        vars(STORE_ID_PARAM, storeId)),
+                request,
+                ExpectedStatus.OK,
+                CheckResponse.class);
+    }
+
+    public Uni<ExpandResponse> expand(String storeId, ExpandRequest request) {
+        return execute(
+                request("Expand",
+                        POST,
+                        EXPAND_URI,
+                        vars(STORE_ID_PARAM, storeId)),
+                request,
+                ExpectedStatus.OK,
+                ExpandResponse.class);
+    }
+
+    public Uni<ListObjectsResponse> listObjects(String storeId, ListObjectsRequest request) {
+        return execute(
+                request("List Objects",
+                        POST,
+                        LIST_OBJECTS_URI,
+                        vars(STORE_ID_PARAM, storeId)),
+                request,
+                ExpectedStatus.OK,
+                ListObjectsResponse.class);
+    }
+
+    public Uni<ListUsersResponse> listUsers(String storeId, ListUsersRequest request) {
+        return execute(
+                request("List Users",
+                        POST,
+                        LIST_USERS_URI,
+                        vars(STORE_ID_PARAM, storeId)),
+                request,
+                ExpectedStatus.OK,
+                ListUsersResponse.class);
+    }
+
+    public Uni<ReadAssertionsResponse> readAssertions(String storeId, String authorizationModelId) {
+        return execute(
+                request("Read Assertions",
+                        GET,
+                        ASSERTIONS_URI,
+                        vars(STORE_ID_PARAM, storeId, AUTH_MODEL_ID_PARAM, authorizationModelId)),
+                ExpectedStatus.OK,
+                ReadAssertionsResponse.class);
+    }
+
+    public Uni<Void> writeAssertions(String storeId, WriteAssertionsRequest request) {
+        return execute(
+                request("Write Assertions",
+                        PUT,
+                        ASSERTIONS_URI,
+                        vars(STORE_ID_PARAM, storeId, AUTH_MODEL_ID_PARAM, request.getAuthorizationModelId())),
+                request,
+                ExpectedStatus.NO_CONTENT);
     }
 
     public Uni<HealthzResponse> health() {
@@ -387,6 +400,7 @@ public class API implements Closeable {
     private static final UriTemplate CHECK_URI = UriTemplate.of("/stores/{store_id}/check");
     private static final UriTemplate EXPAND_URI = UriTemplate.of("/stores/{store_id}/expand");
     private static final UriTemplate LIST_OBJECTS_URI = UriTemplate.of("/stores/{store_id}/list-objects");
+    private static final UriTemplate LIST_USERS_URI = UriTemplate.of("/stores/{store_id}/list-users");
     private static final UriTemplate READ_URI = UriTemplate.of("/stores/{store_id}/read");
     private static final UriTemplate WRITE_URI = UriTemplate.of("/stores/{store_id}/write");
     private static final UriTemplate HEALTH_URI = UriTemplate.of("/healthz");

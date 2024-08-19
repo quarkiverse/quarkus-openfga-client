@@ -8,24 +8,32 @@ import javax.annotation.Nullable;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class Metadata {
+public final class Metadata {
+
     @Nullable
-    Map<String, RelationMetadata> relations;
+    private final Map<String, RelationMetadata> relations;
+
     @Nullable
-    String module;
+    private final String module;
+
     @JsonProperty("source_info")
     @Nullable
-    String sourceInfo;
+    private final String sourceInfo;
 
     @JsonCreator
-    public Metadata(@Nullable Map<String, RelationMetadata> relations, @Nullable String module, @Nullable String sourceInfo) {
+    Metadata(@Nullable Map<String, RelationMetadata> relations, @Nullable String module, @Nullable String sourceInfo) {
         this.relations = relations;
         this.module = module;
         this.sourceInfo = sourceInfo;
     }
 
-    public Metadata(@Nullable Map<String, RelationMetadata> relations) {
-        this(relations, null, null);
+    public static Metadata of(@Nullable Map<String, RelationMetadata> relations, @Nullable String module,
+            @Nullable String sourceInfo) {
+        return new Metadata(relations, module, sourceInfo);
+    }
+
+    public static Metadata of(@Nullable Map<String, RelationMetadata> relations) {
+        return of(relations, null, null);
     }
 
     @Nullable

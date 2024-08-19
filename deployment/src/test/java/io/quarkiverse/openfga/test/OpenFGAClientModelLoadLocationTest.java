@@ -1,10 +1,10 @@
 package io.quarkiverse.openfga.test;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.assertj.core.api.AssertionsForClassTypes.*;
 
 import jakarta.inject.Inject;
 
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.DisplayName;
@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.quarkiverse.openfga.client.OpenFGAClient;
+import io.quarkiverse.openfga.client.model.AuthorizationModel;
 import io.quarkus.test.QuarkusUnitTest;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 
@@ -35,18 +36,20 @@ public class OpenFGAClientModelLoadLocationTest {
                 .awaitItem()
                 .getItem()
                 .stream().filter((s) -> s.getName().equals("store-loaded-by-location"))
-                .findFirst().orElse(null);
+                .findFirst();
 
-        assertThat(store, not(equalTo(nullValue())));
+        assertThat(store)
+                .isNotNull()
+                .map(s -> client.store(s.getId())
+                        .authorizationModels()
+                        .listAll()
+                        .subscribe()
+                        .withSubscriber(UniAssertSubscriber.create())
+                        .awaitItem()
+                        .getItem())
+                .get(InstanceOfAssertFactories.collection(AuthorizationModel.class))
+                .hasSize(1);
 
-        var models = client.store(store.getId())
-                .authorizationModels()
-                .listAll()
-                .subscribe().withSubscriber(UniAssertSubscriber.create())
-                .awaitItem()
-                .getItem();
-
-        assertThat(models, hasSize(1));
     }
 
 }

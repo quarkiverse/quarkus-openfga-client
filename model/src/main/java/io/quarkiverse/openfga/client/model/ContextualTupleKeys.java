@@ -5,20 +5,33 @@ import java.util.Objects;
 
 import javax.annotation.Nullable;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class ContextualTupleKeys {
-    @JsonProperty("tuple_keys")
-    private final List<TupleKey> tupleKeys;
 
-    public ContextualTupleKeys(@JsonProperty("tuple_keys") List<TupleKey> tupleKeys) {
+    @JsonProperty("tuple_keys")
+    private final List<ConditionalTupleKey> tupleKeys;
+
+    @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+    ContextualTupleKeys(@JsonProperty("tuple_keys") List<ConditionalTupleKey> tupleKeys) {
+        if (tupleKeys.size() > 20) {
+            throw new IllegalStateException("tupleKeys must have at most 20 items");
+        }
         this.tupleKeys = Preconditions.parameterNonNull(tupleKeys, "tupleKeys");
     }
 
+    public static ContextualTupleKeys of(@Nullable List<ConditionalTupleKey> tupleKeys) {
+        if (tupleKeys == null) {
+            return null;
+        }
+        return new ContextualTupleKeys(tupleKeys);
+    }
+
     @JsonProperty("tuple_keys")
-    public List<TupleKey> getTupleKeys() {
+    public List<ConditionalTupleKey> getTupleKeys() {
         return tupleKeys;
     }
 

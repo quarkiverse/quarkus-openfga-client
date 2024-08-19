@@ -7,18 +7,21 @@ import javax.annotation.Nullable;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class Node {
+
     private final String name;
-    @Nullable
+
     private final Leaf leaf;
-    @Nullable
+
     private final Difference difference;
-    @Nullable
+
     private final Nodes union;
-    @Nullable
+
     private final Nodes intersection;
 
     public Node(String name, @Nullable Leaf leaf, @Nullable Difference difference, @Nullable Nodes union,
             @Nullable Nodes intersection) {
+        Preconditions.oneOfNonNull("Node must have exactly one of leaf, difference, union, intersection", leaf, difference,
+                union, intersection);
         this.name = Preconditions.parameterNonNull(name, "name");
         this.leaf = leaf;
         this.difference = difference;

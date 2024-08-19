@@ -8,6 +8,7 @@ import javax.annotation.Nullable;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class Users {
+
     private final List<String> users;
 
     public Users(List<String> users) {

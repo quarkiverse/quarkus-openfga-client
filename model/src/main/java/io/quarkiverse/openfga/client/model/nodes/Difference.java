@@ -7,7 +7,9 @@ import javax.annotation.Nullable;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class Difference {
+
     private final Node base;
+
     private final Node subtract;
 
     public Difference(Node base, Node subtract) {

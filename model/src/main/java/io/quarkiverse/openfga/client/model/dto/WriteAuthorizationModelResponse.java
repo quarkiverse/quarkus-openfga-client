@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class WriteAuthorizationModelResponse {
+
     @JsonProperty("authorization_model_id")
     private final String authorizationModelId;
 

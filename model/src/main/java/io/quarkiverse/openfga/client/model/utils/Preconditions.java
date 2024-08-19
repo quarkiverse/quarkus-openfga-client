@@ -10,4 +10,13 @@ public class Preconditions {
         return Objects.requireNonNull(value, name + " parameter must not be null");
     }
 
+    public static void oneOfNonNull(String message, Object... values) {
+        for (Object value : values) {
+            if (value != null) {
+                return;
+            }
+        }
+        throw new NullPointerException(message);
+    }
+
 }

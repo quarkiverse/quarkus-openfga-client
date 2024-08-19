@@ -13,6 +13,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class ListObjectsResponse {
+
     @JsonProperty("object_ids")
     private final List<String> objects;
 

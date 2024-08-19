@@ -12,6 +12,7 @@ import io.quarkiverse.openfga.client.model.UsersetTree;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class ExpandResponse {
+
     private final UsersetTree tree;
 
     @JsonCreator(mode = PROPERTIES)

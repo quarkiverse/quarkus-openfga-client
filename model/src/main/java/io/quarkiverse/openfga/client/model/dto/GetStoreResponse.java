@@ -14,12 +14,17 @@ import io.quarkiverse.openfga.client.model.Store;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class GetStoreResponse {
+
     private final String id;
+
     private final String name;
+
     @JsonProperty("created_at")
     private final OffsetDateTime createdAt;
+
     @JsonProperty("updated_at")
     private final OffsetDateTime updatedAt;
+
     @JsonProperty("deleted_at")
     @Nullable
     private final OffsetDateTime deletedAt;
@@ -36,7 +41,7 @@ public final class GetStoreResponse {
     }
 
     public Store asStore() {
-        return new Store(id, name, createdAt, updatedAt, null);
+        return Store.of(id, name, createdAt, updatedAt, null);
     }
 
     public String getId() {
