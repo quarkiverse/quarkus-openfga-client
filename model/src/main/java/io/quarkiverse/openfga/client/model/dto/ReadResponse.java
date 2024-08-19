@@ -14,15 +14,16 @@ import io.quarkiverse.openfga.client.model.Tuple;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class ReadResponse {
+
     private final List<Tuple> tuples;
+
     @JsonProperty("continuation_token")
-    @Nullable
     private final String continuationToken;
 
     @JsonCreator(mode = PROPERTIES)
-    public ReadResponse(List<Tuple> tuples, @JsonProperty("continuation_token") @Nullable String continuationToken) {
+    public ReadResponse(List<Tuple> tuples, @JsonProperty("continuation_token") String continuationToken) {
         this.tuples = Preconditions.parameterNonNull(tuples, "tuples");
-        this.continuationToken = continuationToken;
+        this.continuationToken = Preconditions.parameterNonNull(continuationToken, "continuationToken");
     }
 
     public List<Tuple> getTuples() {
@@ -30,7 +31,6 @@ public final class ReadResponse {
     }
 
     @JsonProperty("continuation_token")
-    @Nullable
     public String getContinuationToken() {
         return continuationToken;
     }

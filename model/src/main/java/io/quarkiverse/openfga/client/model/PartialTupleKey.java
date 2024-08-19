@@ -4,18 +4,21 @@ import java.util.Objects;
 
 import javax.annotation.Nullable;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 public final class PartialTupleKey {
+
     @Nullable
     private final String object;
+
     @Nullable
     private final String relation;
+
     @Nullable
     private final String user;
 
-    public PartialTupleKey(
-            @Nullable String object,
-            @Nullable String relation,
-            @Nullable String user) {
+    @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+    PartialTupleKey(@Nullable String object, @Nullable String relation, @Nullable String user) {
         this.object = object;
         this.relation = relation;
         this.user = user;
@@ -23,6 +26,38 @@ public final class PartialTupleKey {
 
     public static PartialTupleKey of(@Nullable String object, @Nullable String relation, @Nullable String user) {
         return new PartialTupleKey(object, relation, user);
+    }
+
+    public static final class Builder {
+        private String object;
+        private String relation;
+        private String user;
+
+        public Builder() {
+        }
+
+        public Builder object(@Nullable String object) {
+            this.object = object;
+            return this;
+        }
+
+        public Builder relation(@Nullable String relation) {
+            this.relation = relation;
+            return this;
+        }
+
+        public Builder user(@Nullable String user) {
+            this.user = user;
+            return this;
+        }
+
+        public PartialTupleKey build() {
+            return new PartialTupleKey(object, relation, user);
+        }
+    }
+
+    public static Builder builder() {
+        return new Builder();
     }
 
     @Nullable

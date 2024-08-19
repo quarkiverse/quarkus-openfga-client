@@ -12,12 +12,21 @@ public final class ObjectRelation {
 
     @Nullable
     private final String object;
+
     private final String relation;
 
     @JsonCreator
-    public ObjectRelation(@Nullable String object, String relation) {
+    ObjectRelation(@Nullable String object, String relation) {
         this.object = object;
         this.relation = Preconditions.parameterNonNull(relation, "relation");
+    }
+
+    public static ObjectRelation of(@Nullable String object, String relation) {
+        return new ObjectRelation(object, relation);
+    }
+
+    public static ObjectRelation of(String relation) {
+        return of(null, relation);
     }
 
     @Nullable

@@ -5,14 +5,17 @@ import java.util.Objects;
 
 import javax.annotation.Nullable;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class TupleKeys {
+
     private final List<TupleKey> tupleKeys;
 
-    public TupleKeys(@JsonProperty("tuple_keys") List<TupleKey> tupleKeys) {
+    @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+    TupleKeys(@JsonProperty("tuple_keys") List<TupleKey> tupleKeys) {
         if (tupleKeys.isEmpty()) {
             throw new IllegalStateException("tupleKeys requires a minimum of 1 item");
         }

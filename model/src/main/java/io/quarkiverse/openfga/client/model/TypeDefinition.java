@@ -10,25 +10,32 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class TypeDefinition {
+
     private final String type;
+
     @Nullable
     private final Map<String, Userset> relations;
+
     @Nullable
     private final Metadata metadata;
 
     @JsonCreator
-    public TypeDefinition(String type, @Nullable Map<String, Userset> relations, @Nullable Metadata metadata) {
+    TypeDefinition(String type, @Nullable Map<String, Userset> relations, @Nullable Metadata metadata) {
         this.type = Preconditions.parameterNonNull(type, "type");
         this.relations = relations;
         this.metadata = metadata;
     }
 
-    public TypeDefinition(String type, @Nullable Map<String, Userset> relations) {
-        this(type, relations, null);
+    public static TypeDefinition of(String type, @Nullable Map<String, Userset> relations, @Nullable Metadata metadata) {
+        return new TypeDefinition(type, relations, metadata);
     }
 
-    public TypeDefinition(String type) {
-        this(type, null, null);
+    public static TypeDefinition of(String type, @Nullable Map<String, Userset> relations) {
+        return of(type, relations, null);
+    }
+
+    public static TypeDefinition of(String type) {
+        return of(type, null, null);
     }
 
     public String getType() {

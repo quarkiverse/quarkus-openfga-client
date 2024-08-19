@@ -5,22 +5,29 @@ import java.util.Objects;
 
 import javax.annotation.Nullable;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class Store {
+
     private final String id;
+
     private final String name;
+
     @JsonProperty("created_at")
     private final OffsetDateTime createdAt;
+
     @JsonProperty("updated_at")
     private final OffsetDateTime updatedAt;
+
     @JsonProperty("deleted_at")
     @Nullable
     private final OffsetDateTime deletedAt;
 
-    public Store(String id, String name, @JsonProperty("created_at") OffsetDateTime createdAt,
+    @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+    Store(String id, String name, @JsonProperty("created_at") OffsetDateTime createdAt,
             @JsonProperty("updated_at") OffsetDateTime updatedAt,
             @JsonProperty("deleted_at") @Nullable OffsetDateTime deletedAt) {
         this.id = Preconditions.parameterNonNull(id, "id");
@@ -28,6 +35,15 @@ public final class Store {
         this.createdAt = Preconditions.parameterNonNull(createdAt, "createdAt");
         this.updatedAt = Preconditions.parameterNonNull(updatedAt, "updatedAt");
         this.deletedAt = deletedAt;
+    }
+
+    public static Store of(String id, String name, OffsetDateTime createdAt, OffsetDateTime updatedAt,
+            @Nullable OffsetDateTime deletedAt) {
+        return new Store(id, name, createdAt, updatedAt, deletedAt);
+    }
+
+    public static Store of(String id, String name, OffsetDateTime createdAt, OffsetDateTime updatedAt) {
+        return of(id, name, createdAt, updatedAt, null);
     }
 
     public String getId() {

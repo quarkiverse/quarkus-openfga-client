@@ -11,7 +11,9 @@ import io.quarkiverse.openfga.client.model.utils.Preconditions;
 public class V1 {
 
     public static final class TupleToUserset {
+
         private final ObjectRelation tupleset;
+
         private final ObjectRelation computedUserset;
 
         public TupleToUserset(ObjectRelation tupleset, ObjectRelation computedUserset) {
@@ -53,7 +55,9 @@ public class V1 {
     }
 
     public static final class Difference {
+
         private final Userset base;
+
         private final Userset subtract;
 
         public Difference(Userset base, Userset subtract) {

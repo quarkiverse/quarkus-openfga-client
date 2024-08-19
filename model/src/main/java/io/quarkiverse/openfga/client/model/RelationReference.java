@@ -6,29 +6,38 @@ import javax.annotation.Nullable;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 
-public class RelationReference {
-    String type;
-    @Nullable
-    String relation;
-    @Nullable
-    Object wildcard;
-    @Nullable
-    String condition;
+public final class RelationReference {
 
-    @JsonCreator
-    public RelationReference(String type, @Nullable String relation, @Nullable Object wildcard, @Nullable String condition) {
+    private final String type;
+
+    @Nullable
+    private final String relation;
+
+    @Nullable
+    private final Object wildcard;
+
+    @Nullable
+    private final String condition;
+
+    @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+    RelationReference(String type, @Nullable String relation, @Nullable Object wildcard, @Nullable String condition) {
         this.type = type;
         this.relation = relation;
         this.wildcard = wildcard;
         this.condition = condition;
     }
 
-    public RelationReference(String type) {
-        this(type, null, null, null);
+    public static RelationReference of(String type, @Nullable String relation, @Nullable Object wildcard,
+            @Nullable String condition) {
+        return new RelationReference(type, relation, wildcard, condition);
     }
 
-    public RelationReference(String type, String relation) {
-        this(type, relation, null, null);
+    public static RelationReference of(String type) {
+        return of(type, null, null, null);
+    }
+
+    public static RelationReference of(String type, String relation) {
+        return of(type, relation, null, null);
     }
 
     public String getType() {

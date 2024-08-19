@@ -14,6 +14,7 @@ import io.quarkiverse.openfga.client.api.API;
 import io.quarkiverse.openfga.client.model.Store;
 import io.quarkiverse.openfga.client.model.dto.CreateStoreRequest;
 import io.quarkiverse.openfga.client.model.dto.CreateStoreResponse;
+import io.quarkiverse.openfga.client.model.dto.ListStoresRequest;
 import io.quarkiverse.openfga.client.utils.PaginatedList;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -27,7 +28,11 @@ public class OpenFGAClient {
     }
 
     public Uni<PaginatedList<Store>> listStores(@Nullable Integer pageSize, @Nullable String continuationToken) {
-        return api.listStores(pageSize, continuationToken)
+        var request = ListStoresRequest.builder()
+                .pageSize(pageSize)
+                .continuationToken(continuationToken)
+                .build();
+        return api.listStores(request)
                 .map(res -> new PaginatedList<>(res.getStores(), res.getContinuationToken()));
     }
 
@@ -40,7 +45,10 @@ public class OpenFGAClient {
     }
 
     public Uni<Store> createStore(String name) {
-        return api.createStore(new CreateStoreRequest(name)).map(CreateStoreResponse::asStore);
+        var request = CreateStoreRequest.builder()
+                .name(name)
+                .build();
+        return api.createStore(request).map(CreateStoreResponse::toStore);
     }
 
     public StoreClient store(String storeId) {
@@ -70,7 +78,10 @@ public class OpenFGAClient {
 
         return Multi.createBy()
                 .repeating().uni(AtomicReference<String>::new, lastToken -> {
-                    return api.listStores(null, lastToken.get())
+                    var request = ListStoresRequest.builder()
+                            .continuationToken(lastToken.get())
+                            .build();
+                    return api.listStores(request)
                             .onItem().invoke(list -> lastToken.set(list.getContinuationToken()))
                             .map(response -> {
 

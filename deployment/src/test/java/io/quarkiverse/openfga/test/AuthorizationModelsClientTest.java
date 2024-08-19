@@ -1,8 +1,7 @@
 package io.quarkiverse.openfga.test;
 
 import static java.time.Duration.ofSeconds;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
 import java.util.List;
 import java.util.Map;
@@ -35,7 +34,9 @@ public class AuthorizationModelsClientTest {
     OpenFGAClient openFGAClient;
 
     Store store;
+
     StoreClient storeClient;
+
     AuthorizationModelsClient authorizationModelsClient;
 
     @BeforeEach
@@ -56,16 +57,16 @@ public class AuthorizationModelsClientTest {
     @DisplayName("Can List Models")
     public void canList() {
 
-        var userTypeDef = new TypeDefinition("user");
-        var documentTypeDef = new TypeDefinition("document", Map.of(
+        var userTypeDef = TypeDefinition.of("user");
+        var documentTypeDef = TypeDefinition.of("document", Map.of(
                 "reader", Userset.direct("a", 1)),
-                new Metadata(
-                        Map.of("reader", new RelationMetadata(List.of(new RelationReference("user"))))));
+                Metadata.of(
+                        Map.of("reader", RelationMetadata.of(List.of(RelationReference.of("user"))))));
 
-        var typeDefinitions = new TypeDefinitions("1.1", List.of(userTypeDef, documentTypeDef));
+        var schema = AuthorizationModelSchema.of(List.of(userTypeDef, documentTypeDef), null);
 
         for (int c = 0; c < 4; c++) {
-            authorizationModelsClient.create(typeDefinitions)
+            authorizationModelsClient.create(schema)
                     .subscribe().withSubscriber(UniAssertSubscriber.create())
                     .awaitItem();
         }
@@ -75,6 +76,7 @@ public class AuthorizationModelsClientTest {
                 .awaitItem()
                 .getItem();
 
-        assertThat(models, hasSize(4));
+        assertThat(models)
+                .hasSize(4);
     }
 }

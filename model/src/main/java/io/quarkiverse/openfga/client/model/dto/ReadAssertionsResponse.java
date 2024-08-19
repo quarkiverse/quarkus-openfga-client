@@ -14,8 +14,10 @@ import io.quarkiverse.openfga.client.model.Assertion;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class ReadAssertionsResponse {
+
     @JsonProperty("authorization_model_id")
     private final String authorizationModelId;
+
     private final List<Assertion> assertions;
 
     @JsonCreator(mode = PROPERTIES)

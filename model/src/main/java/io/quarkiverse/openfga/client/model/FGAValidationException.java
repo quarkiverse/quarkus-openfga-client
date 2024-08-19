@@ -1,6 +1,7 @@
 package io.quarkiverse.openfga.client.model;
 
 import static com.fasterxml.jackson.annotation.JsonCreator.Mode.PROPERTIES;
+import static java.lang.String.format;
 
 import javax.annotation.Nullable;
 
@@ -159,7 +160,7 @@ public class FGAValidationException extends FGAException {
 
     @JsonCreator(mode = PROPERTIES)
     public FGAValidationException(@JsonProperty("code") Code code, @JsonProperty("message") @Nullable String message) {
-        super(message);
+        super(format("%s (%s)", message, code.name().toLowerCase()));
         this.code = code;
     }
 

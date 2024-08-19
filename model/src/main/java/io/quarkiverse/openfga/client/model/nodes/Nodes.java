@@ -8,6 +8,7 @@ import javax.annotation.Nullable;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class Nodes {
+
     private final List<Node> nodes;
 
     public Nodes(List<Node> nodes) {

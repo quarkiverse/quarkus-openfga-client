@@ -8,20 +8,34 @@ import java.util.Objects;
 import javax.annotation.Nullable;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.quarkiverse.openfga.client.model.TupleChange;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
-public final class ReadChangesResponse {
+public final class ListChangesResponse {
+
     private final List<TupleChange> changes;
 
+    @JsonProperty("continuation_token")
+    @Nullable
+    private final String continuationToken;
+
     @JsonCreator(mode = PROPERTIES)
-    public ReadChangesResponse(List<TupleChange> changes) {
+    public ListChangesResponse(List<TupleChange> changes,
+            @JsonProperty("continuation_token") @Nullable String continuationToken) {
         this.changes = Preconditions.parameterNonNull(changes, "changes");
+        this.continuationToken = continuationToken;
     }
 
     public List<TupleChange> getChanges() {
         return changes;
+    }
+
+    @JsonProperty("continuation_token")
+    @Nullable
+    public String getContinuationToken() {
+        return continuationToken;
     }
 
     @Override
@@ -30,19 +44,21 @@ public final class ReadChangesResponse {
             return true;
         if (obj == null || obj.getClass() != this.getClass())
             return false;
-        var that = (ReadChangesResponse) obj;
-        return Objects.equals(this.changes, that.changes);
+        var that = (ListChangesResponse) obj;
+        return Objects.equals(this.changes, that.changes) &&
+                Objects.equals(this.continuationToken, that.continuationToken);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(changes);
+        return Objects.hash(changes, continuationToken);
     }
 
     @Override
     public String toString() {
         return "ReadChangesResponse[" +
-                "changes=" + changes + ']';
+                "changes=" + changes + ", " +
+                "continuationToken=" + continuationToken + ']';
     }
 
 }

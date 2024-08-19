@@ -29,7 +29,7 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <quarkus.version>3.13.0</quarkus.version>
     <jandex-maven-plugin.version>1.2.3</jandex-maven-plugin.version>
-    <hamcrest.date.version>2.0.8</hamcrest.date.version>
+    <assertj.version>3.26.3</assertj.version>
   </properties>
   <dependencyManagement>
     <dependencies>

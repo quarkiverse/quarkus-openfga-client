@@ -5,23 +5,33 @@ import java.util.Objects;
 
 import javax.annotation.Nullable;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class TupleChange {
-    private final TupleKey tupleKey;
+
+    private final ConditionalTupleKey tupleKey;
+
     private final TupleOperation operation;
+
     private final OffsetDateTime timestamp;
 
-    public TupleChange(@JsonProperty("tuple_key") TupleKey tupleKey, TupleOperation operation, OffsetDateTime timestamp) {
+    @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+    TupleChange(@JsonProperty("tuple_key") ConditionalTupleKey tupleKey, TupleOperation operation,
+            OffsetDateTime timestamp) {
         this.tupleKey = Preconditions.parameterNonNull(tupleKey, "tupleKey");
         this.operation = Preconditions.parameterNonNull(operation, "operation");
         this.timestamp = Preconditions.parameterNonNull(timestamp, "timestamp");
     }
 
+    public static TupleChange of(ConditionalTupleKey tupleKey, TupleOperation operation, OffsetDateTime timestamp) {
+        return new TupleChange(tupleKey, operation, timestamp);
+    }
+
     @JsonProperty("tuple_key")
-    public TupleKey getTupleKey() {
+    public ConditionalTupleKey getTupleKey() {
         return tupleKey;
     }
 

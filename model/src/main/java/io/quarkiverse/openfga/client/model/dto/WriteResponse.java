@@ -7,7 +7,8 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public class WriteResponse {
+public final class WriteResponse {
+
     @JsonValue
     private final Map<String, Object> values;
 

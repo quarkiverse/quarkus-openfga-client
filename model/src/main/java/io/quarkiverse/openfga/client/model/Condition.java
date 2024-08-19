@@ -6,16 +6,20 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class Condition {
+public final class Condition {
 
-    public static class Parameter {
+    public static final class Parameter {
 
         private final String typeName;
         private final List<String> genericTypes;
 
-        public Parameter(@JsonProperty("type_name") String typeName, @JsonProperty("generic_types") List<String> genericTypes) {
+        Parameter(@JsonProperty("type_name") String typeName, @JsonProperty("generic_types") List<String> genericTypes) {
             this.typeName = typeName;
             this.genericTypes = genericTypes;
+        }
+
+        public static Parameter of(String typeName, List<String> genericTypes) {
+            return new Parameter(typeName, genericTypes);
         }
 
         @JsonProperty("type_name")

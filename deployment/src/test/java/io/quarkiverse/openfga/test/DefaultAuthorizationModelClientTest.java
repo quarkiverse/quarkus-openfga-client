@@ -4,9 +4,8 @@ import static java.time.Duration.ofSeconds;
 import static java.time.OffsetDateTime.now;
 import static java.time.temporal.ChronoUnit.SECONDS;
 import static java.util.Collections.emptyList;
-import static org.exparity.hamcrest.date.OffsetDateTimeMatchers.within;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.assertj.core.api.Assertions.within;
+import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
 import java.util.List;
 import java.util.Map;
@@ -40,6 +39,7 @@ public class DefaultAuthorizationModelClientTest {
     OpenFGAClient openFGAClient;
 
     Store store;
+
     StoreClient storeClient;
 
     AuthorizationModelClient authorizationModelClient;
@@ -50,23 +50,27 @@ public class DefaultAuthorizationModelClientTest {
         storeClient = openFGAClient.store(store.getId());
 
         // ensure it has an auth model
-        var userTypeDef = new TypeDefinition("user");
+        var userTypeDef = TypeDefinition.of("user");
 
-        var documentTypeDef = new TypeDefinition("document", Map.of(
+        var documentTypeDef = TypeDefinition.of("document", Map.of(
                 "reader", Userset.direct("a", 1),
                 "writer", Userset.direct("b", 2)),
-                new Metadata(
-                        Map.of("reader", new RelationMetadata(List.of(new RelationReference("user"))),
-                                "writer", new RelationMetadata(List.of(new RelationReference("user"))))));
+                Metadata.of(
+                        Map.of("reader", RelationMetadata.of(List.of(RelationReference.of("user"))),
+                                "writer", RelationMetadata.of(List.of(RelationReference.of("user"))))));
 
-        var documentTypeDefs = new TypeDefinitions("1.1", List.of(userTypeDef, documentTypeDef));
+        var documentTypeDefs = AuthorizationModelSchema.of(List.of(userTypeDef, documentTypeDef), null);
 
+        //noinspection ResultOfMethodCallIgnored
         storeClient.authorizationModels().create(documentTypeDefs)
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
 
-        authorizationModelClient = storeClient.authorizationModels().defaultModel();
+        authorizationModelClient = storeClient.authorizationModels().defaultModel().subscribe()
+                .withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
     }
 
     @AfterEach
@@ -81,12 +85,13 @@ public class DefaultAuthorizationModelClientTest {
     public void canReadWriteTuples() {
 
         var tuples = List.of(
-                TupleKey.of("document:123", "reader", "user:me"));
+                ConditionalTupleKey.of("document:123", "reader", "user:me"));
         var writes = authorizationModelClient.write(tuples, emptyList())
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
-        assertThat(writes.entrySet(), hasSize(0));
+        assertThat(writes.entrySet())
+                .hasSize(0);
 
         var foundTuples = storeClient.readAllTuples()
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
@@ -94,34 +99,37 @@ public class DefaultAuthorizationModelClientTest {
                 .getItem()
                 .stream().map(Tuple::getKey).collect(Collectors.toList());
 
-        assertThat(foundTuples, equalTo(tuples));
+        assertThat(foundTuples)
+                .isEqualTo(tuples);
     }
 
     @Test
     @DisplayName("Can Execute Checks")
     public void canExecuteChecks() {
 
-        var tuple = TupleKey.of("document:123", "reader", "user:me");
+        var tuple = ConditionalTupleKey.of("document:123", "reader", "user:me");
 
         var writes = authorizationModelClient.write(List.of(tuple), emptyList())
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
-        assertThat(writes.entrySet(), hasSize(0));
+        assertThat(writes.entrySet())
+                .hasSize(0);
 
-        var allowed = authorizationModelClient.check(tuple, null)
+        var allowed = authorizationModelClient.check(tuple.withoutCondition(), null)
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
-        assertThat(allowed, equalTo(true));
+        assertThat(allowed)
+                .isEqualTo(true);
     }
 
     @Test
     @DisplayName("Can Read All Relationships for an Object")
     public void canReadAllRelationshipsForObject() {
 
-        var readerTuple = TupleKey.of("document:123", "reader", "user:me");
-        var writerTuple = TupleKey.of("document:123", "writer", "user:me");
+        var readerTuple = ConditionalTupleKey.of("document:123", "reader", "user:me");
+        var writerTuple = ConditionalTupleKey.of("document:123", "writer", "user:me");
 
         authorizationModelClient.write(List.of(readerTuple), emptyList())
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
@@ -130,25 +138,28 @@ public class DefaultAuthorizationModelClientTest {
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem();
 
-        var objects = authorizationModelClient.queryAllTuples(PartialTupleKey.of("document:123", null, null))
+        var tuples = authorizationModelClient.queryAllTuples(PartialTupleKey.of("document:123", null, null))
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
-        assertThat(objects, containsInAnyOrder(
-                allOf(
-                        hasProperty("key", equalTo(readerTuple)),
-                        hasProperty("timestamp", within(5, SECONDS, now()))),
-                allOf(
-                        hasProperty("key", equalTo(writerTuple)),
-                        hasProperty("timestamp", within(5, SECONDS, now())))));
+        assertThat(tuples)
+                .hasSize(2)
+                .anySatisfy(tuple -> {
+                    assertThat(tuple.getKey()).isEqualTo(readerTuple);
+                    assertThat(tuple.getTimestamp()).isCloseTo(now(), within(5, SECONDS));
+                })
+                .anySatisfy(tuple -> {
+                    assertThat(tuple.getKey()).isEqualTo(writerTuple);
+                    assertThat(tuple.getTimestamp()).isCloseTo(now(), within(5, SECONDS));
+                });
     }
 
     @Test
     @DisplayName("Can Read All Relationships for an Object, and Relation")
     public void canReadAllRelationshipsForObjectAndRelation() {
 
-        var meTuple = TupleKey.of("document:123", "reader", "user:me");
-        var youTuple = TupleKey.of("document:123", "reader", "user:you");
+        var meTuple = ConditionalTupleKey.of("document:123", "reader", "user:me");
+        var youTuple = ConditionalTupleKey.of("document:123", "reader", "user:you");
 
         authorizationModelClient.write(List.of(meTuple), emptyList())
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
@@ -157,25 +168,28 @@ public class DefaultAuthorizationModelClientTest {
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem();
 
-        var objects = authorizationModelClient.queryAllTuples(PartialTupleKey.of("document:123", "reader", null))
+        var tuples = authorizationModelClient.queryAllTuples(PartialTupleKey.of("document:123", "reader", null))
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
-        assertThat(objects, containsInAnyOrder(
-                allOf(
-                        hasProperty("key", equalTo(meTuple)),
-                        hasProperty("timestamp", within(5, SECONDS, now()))),
-                allOf(
-                        hasProperty("key", equalTo(youTuple)),
-                        hasProperty("timestamp", within(5, SECONDS, now())))));
+        assertThat(tuples)
+                .hasSize(2)
+                .anySatisfy(tuple -> {
+                    assertThat(tuple.getKey()).isEqualTo(meTuple);
+                    assertThat(tuple.getTimestamp()).isCloseTo(now(), within(5, SECONDS));
+                })
+                .anySatisfy(tuple -> {
+                    assertThat(tuple.getKey()).isEqualTo(youTuple);
+                    assertThat(tuple.getTimestamp()).isCloseTo(now(), within(5, SECONDS));
+                });
     }
 
     @Test
     @DisplayName("Can Read All Relationships for an Object, and User")
     public void canReadAllRelationshipsForObjectAndUser() {
 
-        var readerTuple = TupleKey.of("document:123", "reader", "user:me");
-        var writerTuple = TupleKey.of("document:123", "writer", "user:me");
+        var readerTuple = ConditionalTupleKey.of("document:123", "reader", "user:me");
+        var writerTuple = ConditionalTupleKey.of("document:123", "writer", "user:me");
 
         authorizationModelClient.write(List.of(readerTuple), emptyList())
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
@@ -184,25 +198,28 @@ public class DefaultAuthorizationModelClientTest {
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem();
 
-        var objects = authorizationModelClient.queryAllTuples(PartialTupleKey.of("document:123", null, "user:me"))
+        var tuples = authorizationModelClient.queryAllTuples(PartialTupleKey.of("document:123", null, "user:me"))
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
-        assertThat(objects, containsInAnyOrder(
-                allOf(
-                        hasProperty("key", equalTo(readerTuple)),
-                        hasProperty("timestamp", within(5, SECONDS, now()))),
-                allOf(
-                        hasProperty("key", equalTo(writerTuple)),
-                        hasProperty("timestamp", within(5, SECONDS, now())))));
+        assertThat(tuples)
+                .hasSize(2)
+                .anySatisfy(tuple -> {
+                    assertThat(tuple.getKey()).isEqualTo(readerTuple);
+                    assertThat(tuple.getTimestamp()).isCloseTo(now(), within(5, SECONDS));
+                })
+                .anySatisfy(tuple -> {
+                    assertThat(tuple.getKey()).isEqualTo(writerTuple);
+                    assertThat(tuple.getTimestamp()).isCloseTo(now(), within(5, SECONDS));
+                });
     }
 
     @Test
     @DisplayName("Can Read All Relationships for an Object Type, and User")
     public void canReadAllRelationshipsForObjectTypeAndUser() {
 
-        var readerTuple = TupleKey.of("document:123", "reader", "user:me");
-        var writerTuple = TupleKey.of("document:123", "writer", "user:me");
+        var readerTuple = ConditionalTupleKey.of("document:123", "reader", "user:me");
+        var writerTuple = ConditionalTupleKey.of("document:123", "writer", "user:me");
 
         authorizationModelClient.write(List.of(readerTuple), emptyList())
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
@@ -210,29 +227,32 @@ public class DefaultAuthorizationModelClientTest {
         authorizationModelClient.write(List.of(writerTuple), emptyList())
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem();
-        authorizationModelClient.write(List.of(TupleKey.of("document:123", "writer", "user:you")), emptyList())
+        authorizationModelClient.write(List.of(ConditionalTupleKey.of("document:123", "writer", "user:you")), emptyList())
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem();
 
-        var objects = authorizationModelClient.queryAllTuples(PartialTupleKey.of("document:", null, "user:me"))
+        var tuples = authorizationModelClient.queryAllTuples(PartialTupleKey.of("document:", null, "user:me"))
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
-        assertThat(objects, containsInAnyOrder(
-                allOf(
-                        hasProperty("key", equalTo(readerTuple)),
-                        hasProperty("timestamp", within(5, SECONDS, now()))),
-                allOf(
-                        hasProperty("key", equalTo(writerTuple)),
-                        hasProperty("timestamp", within(5, SECONDS, now())))));
+        assertThat(tuples)
+                .hasSize(2)
+                .anySatisfy(tuple -> {
+                    assertThat(tuple.getKey()).isEqualTo(readerTuple);
+                    assertThat(tuple.getTimestamp()).isCloseTo(now(), within(5, SECONDS));
+                })
+                .anySatisfy(tuple -> {
+                    assertThat(tuple.getKey()).isEqualTo(writerTuple);
+                    assertThat(tuple.getTimestamp()).isCloseTo(now(), within(5, SECONDS));
+                });
     }
 
     @Test
     @DisplayName("Can List All Objects for an Object Type, Relation, and User")
     public void canListAllRelationshipsForObjectTypeRelationAndUser() {
 
-        var aTuple = TupleKey.of("document:123", "writer", "user:me");
-        var bTuple = TupleKey.of("document:456", "writer", "user:me");
+        var aTuple = ConditionalTupleKey.of("document:123", "writer", "user:me");
+        var bTuple = ConditionalTupleKey.of("document:456", "writer", "user:me");
 
         authorizationModelClient.write(List.of(aTuple), emptyList())
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
@@ -241,10 +261,11 @@ public class DefaultAuthorizationModelClientTest {
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem();
 
-        var objects = authorizationModelClient.listObjects("document", "writer", "user:me", null)
+        var tuples = authorizationModelClient.listObjects("document", "writer", "user:me", null)
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
-        assertThat(objects, containsInAnyOrder("document:123", "document:456"));
+        assertThat(tuples)
+                .containsExactlyInAnyOrder("document:123", "document:456");
     }
 }

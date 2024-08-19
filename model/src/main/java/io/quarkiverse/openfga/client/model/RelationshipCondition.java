@@ -2,20 +2,41 @@ package io.quarkiverse.openfga.client.model;
 
 import java.util.Objects;
 
+import javax.annotation.Nullable;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 public class RelationshipCondition {
 
     private final String name;
+
     private final Object context;
 
-    public RelationshipCondition(String name, Object context) {
+    @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+    RelationshipCondition(String name, @Nullable Object context) {
         this.name = name;
         this.context = context;
+    }
+
+    public static RelationshipCondition of(String name, @Nullable Object context) {
+        return new RelationshipCondition(name, context);
+    }
+
+    public static RelationshipCondition of(String name) {
+        return of(name, null);
     }
 
     public String getName() {
         return name;
     }
 
+    /**
+     * Additional context/data to persist along with the condition.
+     *
+     * The keys must match the parameters defined by the condition, and the value types must
+     * match the parameter type definitions.
+     */
+    @Nullable
     public Object getContext() {
         return context;
     }

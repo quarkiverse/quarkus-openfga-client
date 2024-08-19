@@ -11,8 +11,9 @@ import io.quarkiverse.openfga.client.model.Store;
 import io.quarkiverse.openfga.client.model.Tuple;
 import io.quarkiverse.openfga.client.model.TupleChange;
 import io.quarkiverse.openfga.client.model.dto.GetStoreResponse;
-import io.quarkiverse.openfga.client.model.dto.ReadBody;
-import io.quarkiverse.openfga.client.model.dto.ReadChangesResponse;
+import io.quarkiverse.openfga.client.model.dto.ListChangesRequest;
+import io.quarkiverse.openfga.client.model.dto.ListChangesResponse;
+import io.quarkiverse.openfga.client.model.dto.ReadRequest;
 import io.quarkiverse.openfga.client.utils.PaginatedList;
 import io.smallrye.mutiny.Uni;
 
@@ -35,14 +36,23 @@ public class StoreClient {
         return storeId.flatMap(api::deleteStore);
     }
 
-    public Uni<List<TupleChange>> changes(@Nullable String type, @Nullable Integer pageSize,
+    public Uni<List<TupleChange>> listChanges(@Nullable String type, @Nullable Integer pageSize,
             @Nullable String continuationToken) {
-        return storeId.flatMap(storeId -> api.readChanges(storeId, type, pageSize, continuationToken))
-                .map(ReadChangesResponse::getChanges);
+        var request = ListChangesRequest.builder()
+                .type(type)
+                .pageSize(pageSize)
+                .continuationToken(continuationToken)
+                .build();
+        return storeId.flatMap(storeId -> api.listChanges(storeId, request))
+                .map(ListChangesResponse::getChanges);
     }
 
-    public Uni<PaginatedList<Tuple>> readTuples(@Nullable Integer pageSize, @Nullable String pagingToken) {
-        return storeId.flatMap(storeId -> api.read(storeId, new ReadBody(null, null, pageSize, pagingToken)))
+    public Uni<PaginatedList<Tuple>> readTuples(@Nullable Integer pageSize, @Nullable String continuationToken) {
+        var request = ReadRequest.builder()
+                .pageSize(pageSize)
+                .continuationToken(continuationToken)
+                .build();
+        return storeId.flatMap(storeId -> api.read(storeId, request))
                 .map(res -> new PaginatedList<>(res.getTuples(), res.getContinuationToken()));
     }
 

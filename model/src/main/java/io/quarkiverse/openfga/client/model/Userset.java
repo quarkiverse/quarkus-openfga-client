@@ -10,22 +10,28 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.quarkiverse.openfga.client.model.nodes.V1;
 
 public final class Userset {
+
     @Nullable
     @JsonProperty("this")
     private final DirectUserset directUserset;
+
     @Nullable
     private final ObjectRelation computedUserset;
+
     @Nullable
     private final V1.TupleToUserset tupleToUserset;
+
     @Nullable
     private final Usersets union;
+
     @Nullable
     private final Usersets intersection;
+
     @Nullable
     private final V1.Difference difference;
 
-    @JsonCreator
-    public Userset(
+    @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+    Userset(
             @Nullable @JsonProperty("this") DirectUserset directUserset,
             @Nullable ObjectRelation computedUserset,
             @Nullable V1.TupleToUserset tupleToUserset,

@@ -13,15 +13,17 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.quarkiverse.openfga.client.model.AuthorizationModel;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
-public final class ReadAuthorizationModelsResponse {
+public final class ListAuthorizationModelsResponse {
+
     @JsonProperty("authorization_models")
     private final List<AuthorizationModel> authorizationModels;
+
     @JsonProperty("continuation_token")
     @Nullable
     private final String continuationToken;
 
     @JsonCreator(mode = PROPERTIES)
-    public ReadAuthorizationModelsResponse(@JsonProperty("authorization_models") List<AuthorizationModel> authorizationModels,
+    public ListAuthorizationModelsResponse(@JsonProperty("authorization_models") List<AuthorizationModel> authorizationModels,
             @JsonProperty("continuation_token") @Nullable String continuationToken) {
         this.authorizationModels = Preconditions.parameterNonNull(authorizationModels, "authorizationModels");
         this.continuationToken = continuationToken;
@@ -44,7 +46,7 @@ public final class ReadAuthorizationModelsResponse {
             return true;
         if (obj == null || obj.getClass() != this.getClass())
             return false;
-        var that = (ReadAuthorizationModelsResponse) obj;
+        var that = (ListAuthorizationModelsResponse) obj;
         return Objects.equals(this.authorizationModels, that.authorizationModels) &&
                 Objects.equals(this.continuationToken, that.continuationToken);
     }

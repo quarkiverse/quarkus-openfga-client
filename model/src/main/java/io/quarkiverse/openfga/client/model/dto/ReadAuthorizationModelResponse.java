@@ -13,6 +13,7 @@ import io.quarkiverse.openfga.client.model.AuthorizationModel;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class ReadAuthorizationModelResponse {
+
     @JsonProperty("authorization_model")
     private final AuthorizationModel authorizationModel;
 
