@@ -24,11 +24,13 @@ public class AuthorizationModelsClient {
     }
 
     public Uni<PaginatedList<AuthorizationModel>> list(@Nullable Integer pageSize, @Nullable String pagingToken) {
-        var request = ListAuthorizationModelsRequest.builder()
-                .pageSize(pageSize)
-                .continuationToken(pagingToken)
-                .build();
-        return storeId.flatMap(storeId -> api.listAuthorizationModels(storeId, request))
+        return storeId.flatMap(storeId -> {
+            var request = ListAuthorizationModelsRequest.builder()
+                    .pageSize(pageSize)
+                    .continuationToken(pagingToken)
+                    .build();
+            return api.listAuthorizationModels(storeId, request);
+        })
                 .map(res -> new PaginatedList<>(res.getAuthorizationModels(), res.getContinuationToken()));
     }
 
@@ -56,24 +58,13 @@ public class AuthorizationModelsClient {
     }
 
     public AuthorizationModelClient model(String authorizationModelId) {
-        return new AuthorizationModelClient(api, storeId, authorizationModelId);
+        return new AuthorizationModelClient(api, storeId.map(storeId -> new ClientConfig(storeId, authorizationModelId)));
     }
 
-    public Uni<AuthorizationModelClient> defaultModel() {
-        return storeId.flatMap(storeId -> {
-            return api.listAuthorizationModels(storeId, ListAuthorizationModelsRequest.builder().pageSize(1).build())
-                    .map(ListAuthorizationModelsResponse::getAuthorizationModels)
-                    .flatMap(models -> {
-                        if (models.isEmpty()) {
-                            var notFound = new FGAValidationException(
-                                    FGAValidationException.Code.LATEST_AUTHORIZATION_MODEL_NOT_FOUND,
-                                    "No default authorization model found");
-                            return Uni.createFrom().failure(notFound);
-                        }
-                        return Uni.createFrom().item(models.get(0).getId());
-                    })
-                    .map(id -> new AuthorizationModelClient(api, Uni.createFrom().item(storeId), id));
-        });
+    public AuthorizationModelClient defaultModel() {
+        var config = storeId.flatMap(storeId -> OpenFGAClient.authorizationModelIdResolver(api, storeId)
+                .map(modelId -> new ClientConfig(storeId, modelId)));
+        return new AuthorizationModelClient(api, config);
     }
 
 }

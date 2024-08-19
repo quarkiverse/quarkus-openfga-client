@@ -59,7 +59,7 @@ class OpenFGAProcessor {
             BuildProducer<ExtensionSslNativeSupportBuildItem> sslNativeSupport) {
 
         RuntimeValue<API> apiValue = recorder.createAPI(
-                runtimeConfig, buildTimeConfig.tracingEnabled,
+                runtimeConfig, buildTimeConfig.tracing().enabled(),
                 vertx.getVertx(), shutdownContextBuildItem);
 
         sslNativeSupport.produce(new ExtensionSslNativeSupportBuildItem(FEATURE));
@@ -103,7 +103,7 @@ class OpenFGAProcessor {
 
         if (capabilities.isPresent(SMALLRYE_HEALTH)) {
 
-            health.produce(new HealthBuildItem(OpenFGAHealthCheck.class.getName(), buildTimeConfig.healthEnabled));
+            health.produce(new HealthBuildItem(OpenFGAHealthCheck.class.getName(), buildTimeConfig.health().enabled()));
         }
 
     }

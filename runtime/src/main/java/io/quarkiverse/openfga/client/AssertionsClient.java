@@ -11,26 +11,26 @@ import io.smallrye.mutiny.Uni;
 public class AssertionsClient {
 
     private final API api;
-    private final Uni<String> storeId;
-    private final String authorizationModelId;
+    private final Uni<ClientConfig> config;
 
-    public AssertionsClient(API api, Uni<String> storeId, String authorizationModelId) {
+    public AssertionsClient(API api, Uni<ClientConfig> config) {
         this.api = api;
-        this.storeId = storeId;
-        this.authorizationModelId = authorizationModelId;
+        this.config = config;
     }
 
     public Uni<List<Assertion>> list() {
-        return storeId.flatMap(storeId -> api.readAssertions(storeId, authorizationModelId))
+        return config.flatMap(config -> api.readAssertions(config.getStoreId(), config.getAuthorizationModelId()))
                 .map(ReadAssertionsResponse::getAssertions);
     }
 
     public Uni<Void> update(List<Assertion> assertions) {
-        var request = WriteAssertionsRequest.builder()
-                .authorizationModelId(authorizationModelId)
-                .assertions(assertions)
-                .build();
-        return storeId.flatMap(storeId -> api.writeAssertions(storeId, request));
+        return config.flatMap(config -> {
+            var request = WriteAssertionsRequest.builder()
+                    .authorizationModelId(config.getAuthorizationModelId())
+                    .assertions(assertions)
+                    .build();
+            return api.writeAssertions(config.getStoreId(), request);
+        });
     }
 
 }

@@ -78,7 +78,7 @@ public class DevServicesOpenFGAProcessor {
             GlobalDevServicesConfig devServicesConfig,
             BuildProducer<DevServicesResultBuildItem> devServicesResults) {
 
-        DevServicesOpenFGAConfig currentDevServicesConfiguration = config.devservices;
+        DevServicesOpenFGAConfig currentDevServicesConfiguration = config.devservices();
 
         // figure out if we need to shut down and restart any existing OpenFGA container
         // if not and the OpenFGA container have already started we just return
@@ -146,7 +146,7 @@ public class DevServicesOpenFGAProcessor {
 
     private RunningDevService startContainer(DockerStatusBuildItem dockerStatusBuildItem,
             DevServicesOpenFGAConfig devServicesConfig, LaunchModeBuildItem launchMode, Optional<Duration> timeout) {
-        if (!devServicesConfig.enabled.orElse(true)) {
+        if (!devServicesConfig.enabled().orElse(true)) {
             // explicitly disabled
             log.debug("Not starting devservices for OpenFGA as it has been disabled in the config");
             return null;
@@ -163,14 +163,14 @@ public class DevServicesOpenFGAProcessor {
             return null;
         }
 
-        DockerImageName dockerImageName = DockerImageName.parse(devServicesConfig.imageName.orElse(OPEN_FGA_IMAGE))
+        DockerImageName dockerImageName = DockerImageName.parse(devServicesConfig.imageName().orElse(OPEN_FGA_IMAGE))
                 .asCompatibleSubstituteFor(OPEN_FGA_IMAGE);
 
         final Supplier<RunningDevService> defaultOpenFGAInstanceSupplier = () -> {
 
-            OpenFGAContainer container = new QuarkusOpenFGAContainer(dockerImageName, devServicesConfig.httpPort,
-                    devServicesConfig.grpcPort, devServicesConfig.playgroundPort,
-                    devServicesConfig.serviceName)
+            OpenFGAContainer container = new QuarkusOpenFGAContainer(dockerImageName, devServicesConfig.httpPort(),
+                    devServicesConfig.grpcPort(), devServicesConfig.playgroundPort(),
+                    devServicesConfig.serviceName())
                     .withNetwork(Network.SHARED);
 
             timeout.ifPresent(container::withStartupTimeout);
@@ -190,7 +190,7 @@ public class DevServicesOpenFGAProcessor {
 
                     log.info("Initializing authorization store...");
 
-                    storeId = api.createStore(CreateStoreRequest.of(devServicesConfig.storeName))
+                    storeId = api.createStore(CreateStoreRequest.of(devServicesConfig.storeName()))
                             .await().atMost(INIT_OP_MAX_WAIT)
                             .getId();
 
@@ -237,8 +237,8 @@ public class DevServicesOpenFGAProcessor {
                                         }
                                     });
                         }, () -> {
-                            if (devServicesConfig.authorizationTuples.isPresent()
-                                    || devServicesConfig.authorizationTuplesLocation.isPresent()) {
+                            if (devServicesConfig.authorizationTuples().isPresent()
+                                    || devServicesConfig.authorizationTuplesLocation().isPresent()) {
                                 log.warn("No authorization model configured, no tuples will not be initialized");
                             }
                         });
@@ -250,7 +250,7 @@ public class DevServicesOpenFGAProcessor {
         };
 
         return openFGAContainerLocator
-                .locateContainer(devServicesConfig.serviceName, devServicesConfig.shared, launchMode.getLaunchMode())
+                .locateContainer(devServicesConfig.serviceName(), devServicesConfig.shared(), launchMode.getLaunchMode())
                 .map(containerAddress -> {
 
                     Map<String, String> devServicesConfigProperties = new HashMap<>();
@@ -264,7 +264,7 @@ public class DevServicesOpenFGAProcessor {
                             var client = new OpenFGAClient(api);
 
                             storeId = client.listAllStores().await().atMost(INIT_OP_MAX_WAIT)
-                                    .stream().filter(store -> store.getName().equals(devServicesConfig.storeName))
+                                    .stream().filter(store -> store.getName().equals(devServicesConfig.storeName()))
                                     .map(Store::getId)
                                     .findFirst()
                                     .orElseThrow();
@@ -273,7 +273,7 @@ public class DevServicesOpenFGAProcessor {
 
                         } catch (Throwable x) {
                             throw new ConfigurationException(format("Could not find store '%s' in shared DevServices instance",
-                                    devServicesConfig.storeName));
+                                    devServicesConfig.storeName()));
                         }
 
                         loadAuthorizationModelDefinition(api, devServicesConfig)
@@ -307,9 +307,9 @@ public class DevServicesOpenFGAProcessor {
 
     private static Optional<AuthorizationModelSchema> loadAuthorizationModelDefinition(API api,
             DevServicesOpenFGAConfig devServicesConfig) {
-        return devServicesConfig.authorizationModel
+        return devServicesConfig.authorizationModel()
                 .or(() -> {
-                    return devServicesConfig.authorizationModelLocation
+                    return devServicesConfig.authorizationModelLocation()
                             .map(location -> {
                                 try {
                                     var authModelPath = resolveModelPath(location);
@@ -331,9 +331,9 @@ public class DevServicesOpenFGAProcessor {
 
     private static Optional<List<ConditionalTupleKey>> loadAuthorizationTuples(API api,
             DevServicesOpenFGAConfig devServicesConfig) {
-        return devServicesConfig.authorizationTuples
+        return devServicesConfig.authorizationTuples()
                 .or(() -> {
-                    return devServicesConfig.authorizationTuplesLocation
+                    return devServicesConfig.authorizationTuplesLocation()
                             .map(location -> {
                                 try {
                                     var authModelPath = resolveModelPath(location);

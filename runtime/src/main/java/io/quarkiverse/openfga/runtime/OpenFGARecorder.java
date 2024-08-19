@@ -5,6 +5,7 @@ import static io.quarkiverse.openfga.client.OpenFGAClient.storeIdResolver;
 import org.eclipse.microprofile.config.ConfigProvider;
 
 import io.quarkiverse.openfga.client.AuthorizationModelClient;
+import io.quarkiverse.openfga.client.ClientConfig;
 import io.quarkiverse.openfga.client.OpenFGAClient;
 import io.quarkiverse.openfga.client.StoreClient;
 import io.quarkiverse.openfga.client.api.API;
@@ -32,15 +33,16 @@ public class OpenFGARecorder {
     }
 
     public RuntimeValue<StoreClient> createStoreClient(RuntimeValue<API> api, OpenFGAConfig config) {
-        var storeIdResolver = storeIdResolver(api.getValue(), config.store, config.alwaysResolveStoreId);
+        var storeIdResolver = storeIdResolver(api.getValue(), config.store(), config.alwaysResolveStoreId());
         StoreClient storeClient = new StoreClient(api.getValue(), storeIdResolver);
         return new RuntimeValue<>(storeClient);
     }
 
     public RuntimeValue<AuthorizationModelClient> createAuthModelClient(RuntimeValue<API> api, OpenFGAConfig config) {
-        var storeIdResolver = storeIdResolver(api.getValue(), config.store, config.alwaysResolveStoreId);
-        AuthorizationModelClient authModelClient = new AuthorizationModelClient(api.getValue(), storeIdResolver,
-                config.authorizationModelId.orElse(null));
+        var configResolver = storeIdResolver(api.getValue(), config.store(), config.alwaysResolveStoreId())
+                .flatMap(storeId -> OpenFGAClient.authorizationModelIdResolver(api.getValue(), storeId)
+                        .map(modelId -> new ClientConfig(storeId, modelId)));
+        var authModelClient = new AuthorizationModelClient(api.getValue(), configResolver);
         return new RuntimeValue<>(authModelClient);
     }
 }

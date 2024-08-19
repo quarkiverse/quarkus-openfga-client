@@ -1,7 +1,5 @@
 package io.quarkiverse.openfga.runtime.config;
 
-import static io.quarkiverse.openfga.runtime.config.OpenFGAConfig.NAME;
-
 import java.net.URL;
 import java.time.Duration;
 import java.util.List;
@@ -10,32 +8,32 @@ import java.util.Optional;
 import io.quarkiverse.openfga.client.AuthorizationModelClient;
 import io.quarkiverse.openfga.client.StoreClient;
 import io.quarkus.runtime.annotations.ConfigDocSection;
-import io.quarkus.runtime.annotations.ConfigItem;
 import io.quarkus.runtime.annotations.ConfigPhase;
 import io.quarkus.runtime.annotations.ConfigRoot;
+import io.smallrye.config.ConfigMapping;
+import io.smallrye.config.WithDefault;
 
-@ConfigRoot(name = NAME, phase = ConfigPhase.RUN_TIME)
-public class OpenFGAConfig {
+@ConfigMapping(prefix = OpenFGAConfig.PREFIX)
+@ConfigRoot(phase = ConfigPhase.RUN_TIME)
+public interface OpenFGAConfig {
 
-    public static final String NAME = "openfga";
-    public static final String DEFAULT_CONNECT_TIMEOUT = "5S";
-    public static final String DEFAULT_READ_TIMEOUT = "5S";
+    String PREFIX = "quarkus.openfga";
+    String DEFAULT_CONNECT_TIMEOUT = "5S";
+    String DEFAULT_READ_TIMEOUT = "5S";
 
     /**
      * OpenFGA server URL.
      * <p>
-     * Example: http://openfga:8080
+     * Example: <a href="http://openfga:8080">http://openfga:8080</a>
      */
-    @ConfigItem
-    public URL url;
+    URL url();
 
     /**
      * Shared authentication key.
      * <p>
      * If none provided unauthenticated access will be attempted.
      */
-    @ConfigItem
-    public Optional<String> sharedKey;
+    Optional<String> sharedKey();
 
     /**
      * Store id or name for default {@link StoreClient} bean.
@@ -47,8 +45,7 @@ public class OpenFGAConfig {
      *
      * @see #alwaysResolveStoreId
      */
-    @ConfigItem
-    public String store;
+    String store();
 
     /**
      * Always Treat {@link #store} as the name of a store and resolve the
@@ -62,35 +59,33 @@ public class OpenFGAConfig {
      *
      * @see #store
      */
-    @ConfigItem(defaultValue = "false")
-    public boolean alwaysResolveStoreId;
+    @WithDefault("false")
+    boolean alwaysResolveStoreId();
 
     /**
      * Authorization model id for default {@link AuthorizationModelClient} bean.
      * <p>
      * If none is provided the default bean will target the default authorization model for the store.
      */
-    @ConfigItem
-    public Optional<String> authorizationModelId;
+    Optional<String> authorizationModelId();
 
     /**
      * TLS configuration.
      */
-    @ConfigItem
     @ConfigDocSection
-    public OpenFGATLSConfig tls;
+    OpenFGATLSConfig tls();
 
     /**
      * Timeout to establish a connection with OpenFGA.
      */
-    @ConfigItem(defaultValue = DEFAULT_CONNECT_TIMEOUT)
-    public Duration connectTimeout;
+    @WithDefault(DEFAULT_CONNECT_TIMEOUT)
+    Duration connectTimeout();
 
     /**
      * Request timeout on OpenFGA.
      */
-    @ConfigItem(defaultValue = DEFAULT_READ_TIMEOUT)
-    public Duration readTimeout;
+    @WithDefault(DEFAULT_READ_TIMEOUT)
+    Duration readTimeout();
 
     /**
      * List of remote hosts that are not proxied when the client is configured to use a proxy. This
@@ -100,6 +95,5 @@ public class OpenFGAConfig {
      * Entries can use the <i>*</i> wildcard character for pattern matching, e.g <i>*.example.com</i> matches
      * <i>www.example.com</i>.
      */
-    @ConfigItem
-    public Optional<List<String>> nonProxyHosts;
+    Optional<List<String>> nonProxyHosts();
 }

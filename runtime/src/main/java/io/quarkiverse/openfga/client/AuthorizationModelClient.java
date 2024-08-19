@@ -16,17 +16,15 @@ import io.smallrye.mutiny.Uni;
 public class AuthorizationModelClient {
 
     private final API api;
-    private final Uni<String> storeId;
-    private final String authorizationModelId;
+    private final Uni<ClientConfig> config;
 
-    public AuthorizationModelClient(API api, Uni<String> storeId, String authorizationModelId) {
+    public AuthorizationModelClient(API api, Uni<ClientConfig> config) {
         this.api = api;
-        this.storeId = storeId;
-        this.authorizationModelId = authorizationModelId;
+        this.config = config;
     }
 
     public Uni<AuthorizationModel> get() {
-        return storeId.flatMap(storeId -> api.readAuthorizationModel(storeId, authorizationModelId))
+        return config.flatMap(config -> api.readAuthorizationModel(config.getStoreId(), config.getAuthorizationModelId()))
                 .map(ReadAuthorizationModelResponse::getAuthorizationModel);
     }
 
@@ -45,16 +43,17 @@ public class AuthorizationModelClient {
 
     public Uni<Boolean> check(TupleKey tupleKey, @Nullable List<ConditionalTupleKey> conditionalTuples,
             @Nullable Object context, @Nullable ConsistencyPreference consistency) {
-        var request = CheckRequest.builder()
-                .authorizationModelId(authorizationModelId)
-                .tupleKey(tupleKey)
-                .contextualTuples(ContextualTupleKeys.of(conditionalTuples))
-                .context(context)
-                .consistency(consistency)
-                .build();
-        return storeId
-                .flatMap(
-                        storeId -> api.check(storeId, request))
+        return config
+                .flatMap(config -> {
+                    var request = CheckRequest.builder()
+                            .authorizationModelId(config.getAuthorizationModelId())
+                            .tupleKey(tupleKey)
+                            .contextualTuples(ContextualTupleKeys.of(conditionalTuples))
+                            .context(context)
+                            .consistency(consistency)
+                            .build();
+                    return api.check(config.getStoreId(), request);
+                })
                 .map(CheckResponse::getAllowed);
     }
 
@@ -63,12 +62,14 @@ public class AuthorizationModelClient {
     }
 
     public Uni<UsersetTree> expand(ExpandTupleKey tupleKey, @Nullable ConsistencyPreference consistency) {
-        var request = ExpandRequest.builder()
-                .tupleKey(tupleKey)
-                .authorizationModelId(authorizationModelId)
-                .consistency(consistency)
-                .build();
-        return storeId.flatMap(storeId -> api.expand(storeId, request))
+        return config.flatMap(config -> {
+            var request = ExpandRequest.builder()
+                    .tupleKey(tupleKey)
+                    .authorizationModelId(config.getAuthorizationModelId())
+                    .consistency(consistency)
+                    .build();
+            return api.expand(config.getStoreId(), request);
+        })
                 .map(ExpandResponse::getTree);
     }
 
@@ -104,17 +105,19 @@ public class AuthorizationModelClient {
     }
 
     public Uni<List<String>> listObjects(String type, String relation, String user, @Nullable Options options) {
-        options = options == null ? new Options() : options;
-        var request = ListObjectsRequest.builder()
-                .authorizationModelId(authorizationModelId)
-                .type(type)
-                .relation(relation)
-                .user(user)
-                .contextualTuples(ContextualTupleKeys.of(options.contextualTuples))
-                .context(options.context)
-                .consistency(options.consistency)
-                .build();
-        return storeId.flatMap(storeId -> api.listObjects(storeId, request))
+        return config.flatMap(config -> {
+            var opts = options == null ? new Options() : options;
+            var request = ListObjectsRequest.builder()
+                    .authorizationModelId(config.getAuthorizationModelId())
+                    .type(type)
+                    .relation(relation)
+                    .user(user)
+                    .contextualTuples(ContextualTupleKeys.of(opts.contextualTuples))
+                    .context(opts.context)
+                    .consistency(opts.consistency)
+                    .build();
+            return api.listObjects(config.getStoreId(), request);
+        })
                 .map(ListObjectsResponse::getObjects);
     }
 
@@ -124,30 +127,34 @@ public class AuthorizationModelClient {
 
     public Uni<List<User>> listUsers(AnyObject object, String relation, List<UserTypeFilter> userFilters,
             @Nullable Options options) {
-        options = options == null ? new Options() : options;
-        var request = ListUsersRequest.builder()
-                .authorizationModelId(authorizationModelId)
-                .object(object)
-                .relation(relation)
-                .userFilters(userFilters)
-                .contextualTuples(ContextualTupleKeys.of(options.contextualTuples))
-                .context(options.context)
-                .consistency(options.consistency)
-                .build();
-        return storeId.flatMap(storeId -> api.listUsers(storeId, request))
+        return config.flatMap(config -> {
+            var opts = options == null ? new Options() : options;
+            var request = ListUsersRequest.builder()
+                    .authorizationModelId(config.getAuthorizationModelId())
+                    .object(object)
+                    .relation(relation)
+                    .userFilters(userFilters)
+                    .contextualTuples(ContextualTupleKeys.of(opts.contextualTuples))
+                    .context(opts.context)
+                    .consistency(opts.consistency)
+                    .build();
+            return api.listUsers(config.getStoreId(), request);
+        })
                 .map(ListUsersResponse::getUsers);
     }
 
     public Uni<PaginatedList<Tuple>> queryTuples(PartialTupleKey tupleKey, @Nullable Integer pageSize,
             @Nullable String continuationToken) {
-        var request = ReadRequest.builder()
-                .tupleKey(tupleKey)
-                .authorizationModelId(authorizationModelId)
-                .pageSize(pageSize)
-                .continuationToken(continuationToken)
-                .build();
-        return storeId
-                .flatMap(storeId -> api.read(storeId, request))
+        return config
+                .flatMap(config -> {
+                    var request = ReadRequest.builder()
+                            .tupleKey(tupleKey)
+                            .authorizationModelId(config.getAuthorizationModelId())
+                            .pageSize(pageSize)
+                            .continuationToken(continuationToken)
+                            .build();
+                    return api.read(config.getStoreId(), request);
+                })
                 .map(res -> new PaginatedList<>(res.getTuples(), res.getContinuationToken()));
     }
 
@@ -162,12 +169,14 @@ public class AuthorizationModelClient {
     }
 
     public Uni<PaginatedList<Tuple>> readTuples(@Nullable Integer pageSize, @Nullable String continuationToken) {
-        var request = ReadRequest.builder()
-                .authorizationModelId(authorizationModelId)
-                .pageSize(pageSize)
-                .continuationToken(continuationToken)
-                .build();
-        return storeId.flatMap(storeId -> api.read(storeId, request))
+        return config.flatMap(config -> {
+            var request = ReadRequest.builder()
+                    .authorizationModelId(config.getAuthorizationModelId())
+                    .pageSize(pageSize)
+                    .continuationToken(continuationToken)
+                    .build();
+            return api.read(config.getStoreId(), request);
+        })
                 .map(res -> new PaginatedList<>(res.getTuples(), res.getContinuationToken()));
     }
 
@@ -185,12 +194,14 @@ public class AuthorizationModelClient {
     }
 
     public Uni<Map<String, Object>> write(@Nullable List<ConditionalTupleKey> writes, @Nullable List<TupleKey> deletes) {
-        var request = WriteRequest.builder()
-                .authorizationModelId(authorizationModelId)
-                .writes(WriteRequest.Writes.of(writes))
-                .deletes(WriteRequest.Deletes.of(deletes))
-                .build();
-        return storeId.flatMap(storeId -> api.write(storeId, request))
+        return config.flatMap(config -> {
+            var request = WriteRequest.builder()
+                    .authorizationModelId(config.getAuthorizationModelId())
+                    .writes(WriteRequest.Writes.of(writes))
+                    .deletes(WriteRequest.Deletes.of(deletes))
+                    .build();
+            return api.write(config.getStoreId(), request);
+        })
                 .map(WriteResponse::getValues);
     }
 
