@@ -67,10 +67,7 @@ public class DefaultAuthorizationModelClientTest {
                 .awaitItem()
                 .getItem();
 
-        authorizationModelClient = storeClient.authorizationModels().defaultModel().subscribe()
-                .withSubscriber(UniAssertSubscriber.create())
-                .awaitItem()
-                .getItem();
+        authorizationModelClient = storeClient.authorizationModels().defaultModel();
     }
 
     @AfterEach

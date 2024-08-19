@@ -1,28 +1,50 @@
 package io.quarkiverse.openfga.deployment;
 
 import io.quarkiverse.openfga.runtime.config.OpenFGAConfig;
-import io.quarkus.runtime.annotations.ConfigItem;
 import io.quarkus.runtime.annotations.ConfigPhase;
 import io.quarkus.runtime.annotations.ConfigRoot;
+import io.smallrye.config.ConfigMapping;
+import io.smallrye.config.WithDefault;
 
-@ConfigRoot(name = OpenFGAConfig.NAME, phase = ConfigPhase.BUILD_TIME)
-public class OpenFGABuildTimeConfig {
-
-    /**
-     * Whether a health check is published in case the smallrye-health extension is present.
-     */
-    @ConfigItem(name = "health.enabled", defaultValue = "true")
-    public boolean healthEnabled;
+@ConfigMapping(prefix = OpenFGAConfig.PREFIX)
+@ConfigRoot(phase = ConfigPhase.BUILD_TIME)
+public interface OpenFGABuildTimeConfig {
 
     /**
-     * Whether tracing spans of client commands are reported.
+     * Health check configuration.
      */
-    @ConfigItem(name = "tracing.enabled")
-    public boolean tracingEnabled;
+    interface Health {
+        /**
+         * Whether a health check is published in case the smallrye-health extension is present.
+         */
+        @WithDefault("true")
+        boolean enabled();
+    }
+
+    /**
+     * Health check configuration.
+     */
+    Health health();
+
+    /**
+     * Tracing configuration.
+     */
+    interface Tracing {
+        /**
+         * Whether tracing spans of client commands are reported.
+         */
+        @WithDefault("true")
+        boolean enabled();
+    }
+
+    /**
+     * Tracing configuration.
+     */
+    Tracing tracing();
 
     /**
      * Dev services configuration.
      */
-    @ConfigItem
-    public DevServicesOpenFGAConfig devservices;
+    DevServicesOpenFGAConfig devservices();
+
 }

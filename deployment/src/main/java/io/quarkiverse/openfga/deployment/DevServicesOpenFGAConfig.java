@@ -3,11 +3,9 @@ package io.quarkiverse.openfga.deployment;
 import java.util.Optional;
 import java.util.OptionalInt;
 
-import io.quarkus.runtime.annotations.ConfigGroup;
-import io.quarkus.runtime.annotations.ConfigItem;
+import io.smallrye.config.WithDefault;
 
-@ConfigGroup
-public class DevServicesOpenFGAConfig {
+public interface DevServicesOpenFGAConfig {
 
     /**
      * If DevServices has been explicitly enabled or disabled. DevServices is generally enabled
@@ -16,14 +14,12 @@ public class DevServicesOpenFGAConfig {
      * When DevServices is enabled Quarkus will attempt to automatically configure and start
      * a database when running in 'dev' or 'test' mode.
      */
-    @ConfigItem
-    public Optional<Boolean> enabled;
+    Optional<Boolean> enabled();
 
     /**
      * The container image name to use, for container based DevServices providers.
      */
-    @ConfigItem
-    public Optional<String> imageName;
+    Optional<String> imageName();
 
     /**
      * Indicates if the OpenFGA instance managed by Quarkus DevServices is shared.
@@ -36,8 +32,8 @@ public class DevServicesOpenFGAConfig {
      * <p>
      * Container sharing is only used in 'dev' mode.
      */
-    @ConfigItem(defaultValue = "true")
-    public boolean shared;
+    @WithDefault("true")
+    boolean shared();
 
     /**
      * The value of the {@code quarkus-dev-service-openfga} label attached to the started container.
@@ -49,46 +45,42 @@ public class DevServicesOpenFGAConfig {
      * <p>
      * This property is used when you need multiple shared OpenFGA instances.
      */
-    @ConfigItem(defaultValue = "openfga")
-    public String serviceName;
+    @WithDefault("openfga")
+    String serviceName();
 
     /**
      * Optional fixed port the HTTP service will be bound to.
      * <p>
      * If not defined, the port will be chosen randomly.
      */
-    @ConfigItem
-    public OptionalInt httpPort;
+    OptionalInt httpPort();
 
     /**
      * Optional fixed port the gRPC service will be bound to.
      * <p>
      * If not defined, the port will be chosen randomly.
      */
-    @ConfigItem
-    public OptionalInt grpcPort;
+    OptionalInt grpcPort();
 
     /**
      * Optional fixed port the Playground service will be bound to.
      * <p>
      * If not defined, the port will be chosen randomly.
      */
-    @ConfigItem
-    public OptionalInt playgroundPort;
+    OptionalInt playgroundPort();
 
     /**
      * Name of authorization store to create for DevServices.
      * <p>
      * Defaults to "dev".
      */
-    @ConfigItem(defaultValue = "dev")
-    public String storeName;
+    @WithDefault("dev")
+    String storeName();
 
     /**
      * JSON formatted authorization model to upload during DevServices initialization.
      */
-    @ConfigItem
-    public Optional<String> authorizationModel;
+    Optional<String> authorizationModel();
 
     /**
      * Location of JSON formatted authorization model file to upload during DevServices initialization.
@@ -96,8 +88,7 @@ public class DevServicesOpenFGAConfig {
      * The location can be prefixed with {@code classpath:} or {@code filesystem:} to specify where the file
      * will be read from; if not prefixed, it will be read from the classpath.
      */
-    @ConfigItem
-    public Optional<String> authorizationModelLocation;
+    Optional<String> authorizationModelLocation();
 
     /**
      * JSON formatted authorization tuples to upload during DevServices initialization.
@@ -106,8 +97,7 @@ public class DevServicesOpenFGAConfig {
      * @implNote Initialization of tuples will only happen if an authorization model is also defined via
      *           {@link #authorizationModel} or {@link #authorizationModelLocation}.
      */
-    @ConfigItem
-    public Optional<String> authorizationTuples;
+    Optional<String> authorizationTuples();
 
     /**
      * Location of JSON formatted authorization tuples file to upload during DevServices initialization.
@@ -119,6 +109,5 @@ public class DevServicesOpenFGAConfig {
      * @implNote Initialization of tuples will only happen if an authorization model is also defined via
      *           {@link #authorizationModel} or {@link #authorizationModelLocation}.
      */
-    @ConfigItem
-    public Optional<String> authorizationTuplesLocation;
+    Optional<String> authorizationTuplesLocation();
 }

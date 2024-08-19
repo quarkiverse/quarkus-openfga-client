@@ -50,7 +50,7 @@ public class API implements Closeable {
 
     public API(OpenFGAConfig config, boolean globalTrustAll, boolean tracingEnabled, Vertx vertx) {
         this(VertxWebClientFactory.create(config, globalTrustAll, tracingEnabled, vertx),
-                config.sharedKey.map(TokenCredentials::new));
+                config.sharedKey().map(TokenCredentials::new));
     }
 
     public API(WebClient webClient, Optional<Credentials> credentials) {

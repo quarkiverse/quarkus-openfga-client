@@ -69,7 +69,7 @@ public class StoreClient {
     }
 
     public AssertionsClient assertions(String authorizationModelId) {
-        return new AssertionsClient(api, storeId, authorizationModelId);
+        return new AssertionsClient(api, storeId.map(storeId -> new ClientConfig(storeId, authorizationModelId)));
     }
 
 }

@@ -19,23 +19,24 @@ public class VertxWebClientFactory {
 
     public static WebClient create(OpenFGAConfig config, boolean globalTrustAll, boolean tracingEnabled, Vertx vertx) {
 
-        var url = config.url;
+        var url = config.url();
 
         var options = new WebClientOptions()
                 .setSsl("https".equals(url.getProtocol()))
                 .setDefaultHost(url.getHost())
                 .setDefaultPort(url.getPort() != -1 ? url.getPort() : url.getDefaultPort())
-                .setConnectTimeout((int) config.connectTimeout.toMillis())
-                .setIdleTimeout((int) config.readTimeout.getSeconds() * 2)
+                .setConnectTimeout((int) config.connectTimeout().toMillis())
+                .setIdleTimeout((int) config.readTimeout().getSeconds() * 2)
                 .setTracingPolicy(tracingEnabled ? TracingPolicy.PROPAGATE : TracingPolicy.IGNORE);
 
-        config.nonProxyHosts.ifPresent(options::setNonProxyHosts);
+        config.nonProxyHosts().ifPresent(options::setNonProxyHosts);
 
-        boolean trustAll = config.tls.skipVerify.orElseGet(() -> globalTrustAll);
+        var tls = config.tls();
+        boolean trustAll = tls.skipVerify().orElseGet(() -> globalTrustAll);
         if (trustAll) {
             skipVerify(options);
         } else {
-            config.tls.caCert.ifPresent(caCert -> cacert(options, caCert));
+            tls.caCert().ifPresent(caCert -> cacert(options, caCert));
         }
 
         return WebClient.create(vertx, options);
