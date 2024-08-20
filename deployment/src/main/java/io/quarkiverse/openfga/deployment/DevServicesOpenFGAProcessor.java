@@ -16,7 +16,9 @@ import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
 import org.jboss.logging.Logger;
+import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.Network;
+import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.openfga.OpenFGAContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -166,11 +168,13 @@ public class DevServicesOpenFGAProcessor {
         DockerImageName dockerImageName = DockerImageName.parse(devServicesConfig.imageName().orElse(OPEN_FGA_IMAGE))
                 .asCompatibleSubstituteFor(OPEN_FGA_IMAGE);
 
+        var tlsEnabled = devServicesConfig.tls().pemCertificatePath().isPresent();
+
         final Supplier<RunningDevService> defaultOpenFGAInstanceSupplier = () -> {
 
-            OpenFGAContainer container = new QuarkusOpenFGAContainer(dockerImageName, devServicesConfig.httpPort(),
-                    devServicesConfig.grpcPort(), devServicesConfig.playgroundPort(),
-                    devServicesConfig.serviceName())
+            var container = (QuarkusOpenFGAContainer) new QuarkusOpenFGAContainer(dockerImageName,
+                    devServicesConfig.httpPort(), devServicesConfig.grpcPort(), devServicesConfig.playgroundPort(),
+                    devServicesConfig.serviceName(), devServicesConfig.tls())
                     .withNetwork(Network.SHARED);
 
             timeout.ifPresent(container::withStartupTimeout);
@@ -181,7 +185,7 @@ public class DevServicesOpenFGAProcessor {
 
             var devServicesConfigProperties = new HashMap<String, String>();
 
-            withAPI(container.getHost(), ((QuarkusOpenFGAContainer) container).getHttpPort(), (instanceURL, api) -> {
+            withAPI(container.getHost(), container.getHttpPort(), tlsEnabled, (instanceURL, api) -> {
 
                 devServicesConfigProperties.put(URL_CONFIG_KEY, instanceURL.toExternalForm());
 
@@ -255,7 +259,7 @@ public class DevServicesOpenFGAProcessor {
 
                     Map<String, String> devServicesConfigProperties = new HashMap<>();
 
-                    withAPI(containerAddress.getHost(), containerAddress.getPort(), (instanceURL, api) -> {
+                    withAPI(containerAddress.getHost(), containerAddress.getPort(), tlsEnabled, (instanceURL, api) -> {
 
                         devServicesConfigProperties.put(URL_CONFIG_KEY, instanceURL.toExternalForm());
 
@@ -272,8 +276,9 @@ public class DevServicesOpenFGAProcessor {
                             devServicesConfigProperties.put(STORE_ID_CONFIG_KEY, storeId);
 
                         } catch (Throwable x) {
-                            throw new ConfigurationException(format("Could not find store '%s' in shared DevServices instance",
-                                    devServicesConfig.storeName()));
+                            throw new ConfigurationException(
+                                    format("Could not find store '%s' in shared DevServices instance",
+                                            devServicesConfig.storeName()));
                         }
 
                         loadAuthorizationModelDefinition(api, devServicesConfig)
@@ -312,7 +317,7 @@ public class DevServicesOpenFGAProcessor {
                     return devServicesConfig.authorizationModelLocation()
                             .map(location -> {
                                 try {
-                                    var authModelPath = resolveModelPath(location);
+                                    var authModelPath = resolvePath(location);
                                     return Files.readString(authModelPath);
                                 } catch (Throwable x) {
                                     throw new RuntimeException(
@@ -336,7 +341,7 @@ public class DevServicesOpenFGAProcessor {
                     return devServicesConfig.authorizationTuplesLocation()
                             .map(location -> {
                                 try {
-                                    var authModelPath = resolveModelPath(location);
+                                    var authModelPath = resolvePath(location);
                                     return Files.readString(authModelPath);
                                 } catch (Throwable x) {
                                     throw new RuntimeException(
@@ -353,7 +358,7 @@ public class DevServicesOpenFGAProcessor {
                 });
     }
 
-    private static Path resolveModelPath(String location) throws IOException {
+    private static Path resolvePath(String location) throws IOException {
         if (location.startsWith("filesystem:")) {
             return Path.of(location.substring("filesystem:".length()));
         }
@@ -380,10 +385,10 @@ public class DevServicesOpenFGAProcessor {
         }
     }
 
-    private static void withAPI(String host, Integer port, BiFunction<URL, API, Void> apiConsumer) {
+    private static void withAPI(String host, Integer port, boolean tlsEnabled, BiFunction<URL, API, Void> apiConsumer) {
         URL instanceURL;
         try {
-            instanceURL = new URL("http", host, port, "");
+            instanceURL = new URL(tlsEnabled ? "https" : "http", host, port, "");
         } catch (MalformedURLException e) {
             // Should not happen
             throw new RuntimeException(e);
@@ -403,9 +408,11 @@ public class DevServicesOpenFGAProcessor {
         OptionalInt fixedExposedHttpPort;
         OptionalInt fixedExposedGrpcPort;
         OptionalInt fixedExposedPlaygroundPort;
+        boolean tlsEnabled;
 
         public QuarkusOpenFGAContainer(DockerImageName dockerImageName, OptionalInt fixedExposedHttpPort,
-                OptionalInt fixedExposedGrpcPort, OptionalInt fixedExposedPlaygroundPort, String serviceName) {
+                OptionalInt fixedExposedGrpcPort, OptionalInt fixedExposedPlaygroundPort,
+                String serviceName, DevServicesOpenFGAConfig.Tls tls) {
             super(dockerImageName);
             this.fixedExposedHttpPort = fixedExposedHttpPort;
             this.fixedExposedGrpcPort = fixedExposedGrpcPort;
@@ -413,6 +420,26 @@ public class DevServicesOpenFGAProcessor {
             withNetwork(Network.SHARED);
             if (serviceName != null) { // Only adds the label in dev mode.
                 withLabel(DEV_SERVICE_LABEL, serviceName);
+            }
+            if (tls.pemKeyPath().isPresent() && tls.pemCertificatePath().isPresent()) {
+                try {
+                    var certPath = tls.pemCertificatePath()
+                            .orElseThrow(() -> new IllegalStateException("Missing TLS certificate path"));
+                    var keyPath = tls.pemKeyPath()
+                            .orElseThrow(() -> new IllegalStateException("Missing TLS key path"));
+                    withCommand("run", "--http-tls-enabled=true",
+                            "--http-tls-cert=/tls/cert.pem", "--http-tls-key=/tls/key.pem");
+                    withFileSystemBind(resolvePath(certPath).toAbsolutePath().toString(),
+                            "/tls/cert.pem", BindMode.READ_ONLY);
+                    withFileSystemBind(resolvePath(keyPath).toAbsolutePath().toString(),
+                            "/tls/key.pem", BindMode.READ_ONLY);
+                    waitingFor(Wait.forHttps("/healthz").forPort(8080).forResponsePredicate((response) -> {
+                        return response.contains("SERVING");
+                    }).usingTls().allowInsecure());
+                } catch (IOException e) {
+                    throw new RuntimeException("Failed to bind TLS certificate and key", e);
+                }
+                tlsEnabled = true;
             }
         }
 
@@ -444,6 +471,11 @@ public class DevServicesOpenFGAProcessor {
                 return fixedExposedHttpPort.getAsInt();
             }
             return super.getMappedPort(OPEN_FGA_EXPOSED_HTTP_PORT);
+        }
+
+        @Override
+        public String getHttpEndpoint() {
+            return (tlsEnabled ? "https" : "http") + "://" + this.getHost() + ":" + this.getMappedPort(8080);
         }
     }
 }

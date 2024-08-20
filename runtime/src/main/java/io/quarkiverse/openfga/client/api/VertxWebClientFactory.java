@@ -7,6 +7,8 @@ import java.net.URL;
 import org.jboss.logging.Logger;
 
 import io.quarkiverse.openfga.runtime.config.OpenFGAConfig;
+import io.quarkus.tls.TlsConfiguration;
+import io.quarkus.tls.TlsConfigurationRegistry;
 import io.vertx.core.net.PemTrustOptions;
 import io.vertx.core.tracing.TracingPolicy;
 import io.vertx.ext.web.client.WebClientOptions;
@@ -17,7 +19,8 @@ public class VertxWebClientFactory {
 
     private static final Logger log = Logger.getLogger(VertxWebClientFactory.class.getName());
 
-    public static WebClient create(OpenFGAConfig config, boolean globalTrustAll, boolean tracingEnabled, Vertx vertx) {
+    public static WebClient create(OpenFGAConfig config, boolean tracingEnabled, Vertx vertx,
+            TlsConfigurationRegistry tlsRegistry) {
 
         var url = config.url();
 
@@ -31,13 +34,33 @@ public class VertxWebClientFactory {
 
         config.nonProxyHosts().ifPresent(options::setNonProxyHosts);
 
-        var tls = config.tls();
-        boolean trustAll = tls.skipVerify().orElseGet(() -> globalTrustAll);
-        if (trustAll) {
-            skipVerify(options);
-        } else {
-            tls.caCert().ifPresent(caCert -> cacert(options, caCert));
-        }
+        TlsConfiguration.from(tlsRegistry, config.tlsConfigurationName())
+                .or(tlsRegistry::getDefault)
+                .ifPresent(tlsConfig -> {
+
+                    options.setTrustOptions(tlsConfig.getTrustStoreOptions());
+                    options.setTrustAll(tlsConfig.isTrustAll());
+                    tlsConfig.getHostnameVerificationAlgorithm().ifPresent(algo -> {
+                        options.setVerifyHost(algo.equals("NONE"));
+                    });
+
+                    // mutual TLS
+                    options.setKeyCertOptions(tlsConfig.getKeyStoreOptions());
+
+                    var sslOptions = tlsConfig.getSSLOptions();
+                    if (sslOptions != null) {
+                        options.setSslHandshakeTimeout(sslOptions.getSslHandshakeTimeout());
+                        options.setSslHandshakeTimeoutUnit(sslOptions.getSslHandshakeTimeoutUnit());
+                        for (var suite : sslOptions.getEnabledCipherSuites()) {
+                            options.addEnabledCipherSuite(suite);
+                        }
+                        for (var buffer : sslOptions.getCrlValues()) {
+                            options.addCrlValue(buffer);
+                        }
+                        options.setEnabledSecureTransportProtocols(sslOptions.getEnabledSecureTransportProtocols());
+                        options.setUseAlpn(sslOptions.isUseAlpn());
+                    }
+                });
 
         return WebClient.create(vertx, options);
     }
@@ -50,7 +73,8 @@ public class VertxWebClientFactory {
                 .setDefaultPort(url.getPort() != -1 ? url.getPort() : url.getDefaultPort())
                 .setConnectTimeout((int) SECONDS.toMillis(2))
                 .setIdleTimeout(2)
-                .setIdleTimeoutUnit(SECONDS);
+                .setIdleTimeoutUnit(SECONDS)
+                .setTrustAll(true);
 
         return WebClient.create(vertx, options);
     }

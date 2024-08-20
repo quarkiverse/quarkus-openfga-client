@@ -110,4 +110,25 @@ public interface DevServicesOpenFGAConfig {
      *           {@link #authorizationModel} or {@link #authorizationModelLocation}.
      */
     Optional<String> authorizationTuplesLocation();
+
+    /**
+     * TLS configuration to use for the DevServices OpenFGA instance.
+     */
+    interface Tls {
+
+        /**
+         * Path to file containing a PEM encoded certificate to use for the DevServices OpenFGA instance.
+         */
+        Optional<String> pemCertificatePath();
+
+        /**
+         * Path to file containing a PEM encoded private key to use for the DevServices OpenFGA instance.
+         */
+        Optional<String> pemKeyPath();
+    }
+
+    /**
+     * TLS configuration to use for the DevServices OpenFGA instance.
+     */
+    Tls tls();
 }

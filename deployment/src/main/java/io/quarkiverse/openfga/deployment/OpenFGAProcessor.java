@@ -3,6 +3,8 @@ package io.quarkiverse.openfga.deployment;
 import static io.quarkus.deployment.Capability.SMALLRYE_HEALTH;
 import static io.quarkus.deployment.annotations.ExecutionTime.RUNTIME_INIT;
 
+import java.util.Optional;
+
 import jakarta.enterprise.context.ApplicationScoped;
 
 import io.quarkiverse.openfga.client.AuthorizationModelClient;
@@ -20,8 +22,8 @@ import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.*;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
-import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.smallrye.health.deployment.spi.HealthBuildItem;
+import io.quarkus.tls.TlsRegistryBuildItem;
 import io.quarkus.vertx.deployment.VertxBuildItem;
 
 class OpenFGAProcessor {
@@ -51,16 +53,21 @@ class OpenFGAProcessor {
     ServiceStartBuildItem registerSyntheticBeans(
             OpenFGABuildTimeConfig buildTimeConfig,
             OpenFGAConfig runtimeConfig,
-            VertxBuildItem vertx,
+            VertxBuildItem vertxBuildItem,
+            Optional<TlsRegistryBuildItem> tlsRegistryBuildItem,
             ShutdownContextBuildItem shutdownContextBuildItem,
             OpenFGARecorder recorder,
             Capabilities capabilities,
             BuildProducer<SyntheticBeanBuildItem> syntheticBeans,
             BuildProducer<ExtensionSslNativeSupportBuildItem> sslNativeSupport) {
 
-        RuntimeValue<API> apiValue = recorder.createAPI(
+        var tlsRegistrySupplier = tlsRegistryBuildItem.map(TlsRegistryBuildItem::registry)
+                .orElse(() -> null);
+
+        var apiValue = recorder.createAPI(
                 runtimeConfig, buildTimeConfig.tracing().enabled(),
-                vertx.getVertx(), shutdownContextBuildItem);
+                vertxBuildItem.getVertx(), tlsRegistrySupplier,
+                shutdownContextBuildItem);
 
         sslNativeSupport.produce(new ExtensionSslNativeSupportBuildItem(FEATURE));
 

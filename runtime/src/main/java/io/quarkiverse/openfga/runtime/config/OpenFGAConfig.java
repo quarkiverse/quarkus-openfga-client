@@ -7,7 +7,6 @@ import java.util.Optional;
 
 import io.quarkiverse.openfga.client.AuthorizationModelClient;
 import io.quarkiverse.openfga.client.StoreClient;
-import io.quarkus.runtime.annotations.ConfigDocSection;
 import io.quarkus.runtime.annotations.ConfigPhase;
 import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
@@ -70,10 +69,13 @@ public interface OpenFGAConfig {
     Optional<String> authorizationModelId();
 
     /**
-     * TLS configuration.
+     * The name of the TLS configuration to use.
+     * <p>
+     * If not set and the default TLS configuration is configured ({@code quarkus.tls.*}) then that will be used.
+     * If a name is configured, it uses the configuration from {@code quarkus.tls.<name>.*}
+     * If a name is configured, but no TLS configuration is found with that name then an error will be thrown.
      */
-    @ConfigDocSection
-    OpenFGATLSConfig tls();
+    Optional<String> tlsConfigurationName();
 
     /**
      * Timeout to establish a connection with OpenFGA.
