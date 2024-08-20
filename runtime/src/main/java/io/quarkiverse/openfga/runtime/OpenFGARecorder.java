@@ -2,7 +2,7 @@ package io.quarkiverse.openfga.runtime;
 
 import static io.quarkiverse.openfga.client.OpenFGAClient.storeIdResolver;
 
-import org.eclipse.microprofile.config.ConfigProvider;
+import java.util.function.Supplier;
 
 import io.quarkiverse.openfga.client.AuthorizationModelClient;
 import io.quarkiverse.openfga.client.ClientConfig;
@@ -13,16 +13,16 @@ import io.quarkiverse.openfga.runtime.config.OpenFGAConfig;
 import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.ShutdownContext;
 import io.quarkus.runtime.annotations.Recorder;
+import io.quarkus.tls.TlsConfigurationRegistry;
 import io.vertx.mutiny.core.Vertx;
 
 @Recorder
 public class OpenFGARecorder {
 
     public RuntimeValue<API> createAPI(OpenFGAConfig config, boolean tracingEnabled,
-            RuntimeValue<io.vertx.core.Vertx> vertx, ShutdownContext shutdownContext) {
-        var globalTrustAll = ConfigProvider.getConfig().getOptionalValue("quarkus.tls.trust-all", Boolean.class)
-                .orElse(false);
-        var api = new API(config, globalTrustAll, tracingEnabled, Vertx.newInstance(vertx.getValue()));
+            RuntimeValue<io.vertx.core.Vertx> vertx, Supplier<TlsConfigurationRegistry> tlsRegistry,
+            ShutdownContext shutdownContext) {
+        var api = new API(config, tracingEnabled, Vertx.newInstance(vertx.getValue()), tlsRegistry.get());
         shutdownContext.addShutdownTask(api::close);
         return new RuntimeValue<>(api);
     }

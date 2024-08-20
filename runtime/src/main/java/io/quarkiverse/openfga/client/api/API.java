@@ -26,6 +26,7 @@ import io.quarkiverse.openfga.client.model.AuthorizationModelSchema;
 import io.quarkiverse.openfga.client.model.ConditionalTupleKey;
 import io.quarkiverse.openfga.client.model.dto.*;
 import io.quarkiverse.openfga.runtime.config.OpenFGAConfig;
+import io.quarkus.tls.TlsConfigurationRegistry;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
@@ -48,8 +49,8 @@ public class API implements Closeable {
     private final Optional<Credentials> credentials;
     private final ObjectMapper objectMapper;
 
-    public API(OpenFGAConfig config, boolean globalTrustAll, boolean tracingEnabled, Vertx vertx) {
-        this(VertxWebClientFactory.create(config, globalTrustAll, tracingEnabled, vertx),
+    public API(OpenFGAConfig config, boolean tracingEnabled, Vertx vertx, TlsConfigurationRegistry tlsRegistry) {
+        this(VertxWebClientFactory.create(config, tracingEnabled, vertx, tlsRegistry),
                 config.sharedKey().map(TokenCredentials::new));
     }
 
