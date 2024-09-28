@@ -4,7 +4,7 @@
   <parent>
     <groupId>io.quarkiverse.openfga</groupId>
     <artifactId>quarkus-openfga-client-parent</artifactId>
-    <version>2.1.0</version>
+    <version>999-SNAPSHOT</version>
   </parent>
   <artifactId>quarkus-openfga-client-deployment</artifactId>
   <name>Quarkus OpenFGA Client - Deployment</name>
