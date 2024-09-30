@@ -26,10 +26,7 @@ import io.quarkiverse.openfga.client.AuthorizationModelsClient;
 import io.quarkiverse.openfga.client.OpenFGAClient;
 import io.quarkiverse.openfga.client.api.API;
 import io.quarkiverse.openfga.client.api.VertxWebClientFactory;
-import io.quarkiverse.openfga.client.model.AuthorizationModel;
-import io.quarkiverse.openfga.client.model.AuthorizationModelSchema;
-import io.quarkiverse.openfga.client.model.ConditionalTupleKey;
-import io.quarkiverse.openfga.client.model.Store;
+import io.quarkiverse.openfga.client.model.*;
 import io.quarkiverse.openfga.client.model.dto.CreateStoreRequest;
 import io.quarkiverse.openfga.client.model.dto.WriteAuthorizationModelRequest;
 import io.quarkiverse.openfga.client.model.dto.WriteRequest;
@@ -188,70 +185,70 @@ public class DevServicesOpenFGAProcessor {
             var devServicesConfigProperties = new HashMap<String, String>();
 
             withAPI(container.getHost(), container.getHttpPort(), tlsEnabled, devServicesConfig.startupTimeout(),
-                (instanceURL, api) -> {
+                    (instanceURL, api) -> {
 
-                devServicesConfigProperties.put(URL_CONFIG_KEY, instanceURL.toExternalForm());
+                        devServicesConfigProperties.put(URL_CONFIG_KEY, instanceURL.toExternalForm());
 
-                String storeId;
-                try {
+                        String storeId;
+                        try {
 
-                    log.info("Initializing authorization store...");
+                            log.info("Initializing authorization store...");
 
-                    storeId = api.createStore(CreateStoreRequest.of(devServicesConfig.storeName()))
-                            .await().atMost(devServicesConfig.startupTimeout())
-                            .getId();
+                            storeId = api.createStore(CreateStoreRequest.of(devServicesConfig.storeName()))
+                                    .await().atMost(devServicesConfig.startupTimeout())
+                                    .getId();
 
-                    devServicesConfigProperties.put(STORE_ID_CONFIG_KEY, storeId);
+                            devServicesConfigProperties.put(STORE_ID_CONFIG_KEY, storeId);
 
-                } catch (Throwable e) {
-                    throw new RuntimeException("Store initialization failed", e);
-                }
+                        } catch (Throwable e) {
+                            throw new RuntimeException("Store initialization failed", e);
+                        }
 
-                loadAuthorizationModelDefinition(api, devServicesConfig)
-                        .ifPresentOrElse(schema -> {
+                        loadAuthorizationModelDefinition(api, devServicesConfig)
+                                .ifPresentOrElse(schema -> {
 
-                            String authModelId;
-                            try {
-                                log.info("Initializing authorization model...");
+                                    String authModelId;
+                                    try {
+                                        log.info("Initializing authorization model...");
 
-                                var request = WriteAuthorizationModelRequest.of(schema);
-                                authModelId = api.writeAuthorizationModel(storeId, request)
-                                        .await()
-                                        .atMost(devServicesConfig.startupTimeout())
-                                        .getAuthorizationModelId();
+                                        var request = WriteAuthorizationModelRequest.of(schema);
+                                        authModelId = api.writeAuthorizationModel(storeId, request)
+                                                .await()
+                                                .atMost(devServicesConfig.startupTimeout())
+                                                .getAuthorizationModelId();
 
-                                devServicesConfigProperties.put(AUTHORIZATION_MODEL_ID_CONFIG_KEY, authModelId);
+                                        devServicesConfigProperties.put(AUTHORIZATION_MODEL_ID_CONFIG_KEY, authModelId);
 
-                            } catch (Exception e) {
-                                throw new RuntimeException("Model initialization failed", e);
-                            }
+                                    } catch (Exception e) {
+                                        throw new RuntimeException("Model initialization failed", e);
+                                    }
 
-                            loadAuthorizationTuples(api, devServicesConfig)
-                                    .ifPresent(authTuples -> {
-                                        try {
-                                            log.info("Initializing authorization tuples...");
+                                    loadAuthorizationTuples(api, devServicesConfig)
+                                            .ifPresent(authTuples -> {
+                                                try {
+                                                    log.info("Initializing authorization tuples...");
 
-                                            var writeRequest = WriteRequest.builder()
-                                                    .authorizationModelId(authModelId)
-                                                    .addWrites(authTuples)
-                                                    .build();
-                                            api.write(storeId, writeRequest)
-                                                    .await()
-                                                    .atMost(devServicesConfig.startupTimeout());
+                                                    var writeRequest = WriteRequest.builder()
+                                                            .authorizationModelId(authModelId)
+                                                            .addWrites(authTuples)
+                                                            .build();
+                                                    api.write(storeId, writeRequest)
+                                                            .await()
+                                                            .atMost(devServicesConfig.startupTimeout());
 
-                                        } catch (Exception e) {
-                                            throw new RuntimeException("Tuples initialization failed", e);
-                                        }
-                                    });
-                        }, () -> {
-                            if (devServicesConfig.authorizationTuples().isPresent()
-                                    || devServicesConfig.authorizationTuplesLocation().isPresent()) {
-                                log.warn("No authorization model configured, no tuples will not be initialized");
-                            }
-                        });
+                                                } catch (Exception e) {
+                                                    throw new RuntimeException("Tuples initialization failed", e);
+                                                }
+                                            });
+                                }, () -> {
+                                    if (devServicesConfig.authorizationTuples().isPresent()
+                                            || devServicesConfig.authorizationTuplesLocation().isPresent()) {
+                                        log.warn("No authorization model configured, no tuples will not be initialized");
+                                    }
+                                });
 
-                return null;
-            });
+                        return null;
+                    });
 
             return new RunningDevService(FEATURE, container.getContainerId(), container::close, devServicesConfigProperties);
         };
@@ -262,54 +259,54 @@ public class DevServicesOpenFGAProcessor {
 
                     Map<String, String> devServicesConfigProperties = new HashMap<>();
 
-                    withAPI(containerAddress.getHost(), containerAddress.getPort(), tlsEnabled, devServicesConfig.startupTimeout(),
-                        (instanceURL, api) -> {
+                    withAPI(containerAddress.getHost(), containerAddress.getPort(), tlsEnabled,
+                            devServicesConfig.startupTimeout(), (instanceURL, api) -> {
 
-                        devServicesConfigProperties.put(URL_CONFIG_KEY, instanceURL.toExternalForm());
+                                devServicesConfigProperties.put(URL_CONFIG_KEY, instanceURL.toExternalForm());
 
-                        String storeId;
-                        try {
-                            var client = new OpenFGAClient(api);
+                                String storeId;
+                                try {
+                                    var client = new OpenFGAClient(api);
 
-                            storeId = client.listAllStores().await()
-                                    .atMost(devServicesConfig.startupTimeout())
-                                    .stream().filter(store -> store.getName().equals(devServicesConfig.storeName()))
-                                    .map(Store::getId)
-                                    .findFirst()
-                                    .orElseThrow();
+                                    storeId = client.listAllStores().await()
+                                            .atMost(devServicesConfig.startupTimeout())
+                                            .stream().filter(store -> store.getName().equals(devServicesConfig.storeName()))
+                                            .map(Store::getId)
+                                            .findFirst()
+                                            .orElseThrow();
 
-                            devServicesConfigProperties.put(STORE_ID_CONFIG_KEY, storeId);
+                                    devServicesConfigProperties.put(STORE_ID_CONFIG_KEY, storeId);
 
-                        } catch (Throwable x) {
-                            throw new ConfigurationException(
-                                    format("Could not find store '%s' in shared DevServices instance",
-                                            devServicesConfig.storeName()));
-                        }
+                                } catch (Throwable x) {
+                                    throw new ConfigurationException(
+                                            format("Could not find store '%s' in shared DevServices instance",
+                                                    devServicesConfig.storeName()));
+                                }
 
-                        loadAuthorizationModelDefinition(api, devServicesConfig)
-                                .ifPresent(authModelDef -> {
-                                    try {
-                                        var client = new AuthorizationModelsClient(api, Uni.createFrom().item(storeId));
+                                loadAuthorizationModelDefinition(api, devServicesConfig)
+                                        .ifPresent(authModelDef -> {
+                                            try {
+                                                var client = new AuthorizationModelsClient(api, Uni.createFrom().item(storeId));
 
-                                        var authModelId = client.listAll().await()
-                                                .atMost(devServicesConfig.startupTimeout())
-                                                .stream()
-                                                .filter(item -> item.getTypeDefinitions()
-                                                        .equals(authModelDef.getTypeDefinitions()))
-                                                .map(AuthorizationModel::getId)
-                                                .findFirst()
-                                                .orElseThrow();
+                                                var authModelId = client.listAll().await()
+                                                        .atMost(devServicesConfig.startupTimeout())
+                                                        .stream()
+                                                        .filter(item -> item.getTypeDefinitions()
+                                                                .equals(authModelDef.getTypeDefinitions()))
+                                                        .map(AuthorizationModel::getId)
+                                                        .findFirst()
+                                                        .orElseThrow();
 
-                                        devServicesConfigProperties.put(AUTHORIZATION_MODEL_ID_CONFIG_KEY, authModelId);
+                                                devServicesConfigProperties.put(AUTHORIZATION_MODEL_ID_CONFIG_KEY, authModelId);
 
-                                    } catch (Throwable x) {
-                                        throw new ConfigurationException(
-                                                "Could not find authorization model in shared DevServices instance");
-                                    }
-                                });
+                                            } catch (Throwable x) {
+                                                throw new ConfigurationException(
+                                                        "Could not find authorization model in shared DevServices instance");
+                                            }
+                                        });
 
-                        return null;
-                    });
+                                return null;
+                            });
 
                     return new RunningDevService(FEATURE, containerAddress.getId(), null, devServicesConfigProperties);
                 })
