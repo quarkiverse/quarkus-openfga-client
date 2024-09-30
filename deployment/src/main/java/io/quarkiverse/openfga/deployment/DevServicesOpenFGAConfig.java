@@ -1,5 +1,6 @@
 package io.quarkiverse.openfga.deployment;
 
+import java.time.Duration;
 import java.util.Optional;
 import java.util.OptionalInt;
 
@@ -131,4 +132,10 @@ public interface DevServicesOpenFGAConfig {
      * TLS configuration to use for the DevServices OpenFGA instance.
      */
     Tls tls();
+
+    /**
+     * Timeout while creating the store/authorizationModel
+     */
+    @WithDefault("5s")
+    Duration startupTimeout();
 }

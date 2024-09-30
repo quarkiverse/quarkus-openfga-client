@@ -26,7 +26,10 @@ import io.quarkiverse.openfga.client.AuthorizationModelsClient;
 import io.quarkiverse.openfga.client.OpenFGAClient;
 import io.quarkiverse.openfga.client.api.API;
 import io.quarkiverse.openfga.client.api.VertxWebClientFactory;
-import io.quarkiverse.openfga.client.model.*;
+import io.quarkiverse.openfga.client.model.AuthorizationModel;
+import io.quarkiverse.openfga.client.model.AuthorizationModelSchema;
+import io.quarkiverse.openfga.client.model.ConditionalTupleKey;
+import io.quarkiverse.openfga.client.model.Store;
 import io.quarkiverse.openfga.client.model.dto.CreateStoreRequest;
 import io.quarkiverse.openfga.client.model.dto.WriteAuthorizationModelRequest;
 import io.quarkiverse.openfga.client.model.dto.WriteRequest;
@@ -64,7 +67,6 @@ public class DevServicesOpenFGAProcessor {
     static final String STORE_ID_CONFIG_KEY = CONFIG_PREFIX + "store";
     static final String AUTHORIZATION_MODEL_ID_CONFIG_KEY = CONFIG_PREFIX + "authorization-model-id";
     static final ContainerLocator openFGAContainerLocator = new ContainerLocator(DEV_SERVICE_LABEL, OPEN_FGA_EXPOSED_HTTP_PORT);
-    static final Duration INIT_OP_MAX_WAIT = Duration.ofSeconds(5);
 
     private static volatile RunningDevService devService;
     private static volatile DevServicesOpenFGAConfig capturedDevServicesConfiguration;
@@ -185,7 +187,8 @@ public class DevServicesOpenFGAProcessor {
 
             var devServicesConfigProperties = new HashMap<String, String>();
 
-            withAPI(container.getHost(), container.getHttpPort(), tlsEnabled, (instanceURL, api) -> {
+            withAPI(container.getHost(), container.getHttpPort(), tlsEnabled, devServicesConfig.startupTimeout(),
+                (instanceURL, api) -> {
 
                 devServicesConfigProperties.put(URL_CONFIG_KEY, instanceURL.toExternalForm());
 
@@ -195,7 +198,7 @@ public class DevServicesOpenFGAProcessor {
                     log.info("Initializing authorization store...");
 
                     storeId = api.createStore(CreateStoreRequest.of(devServicesConfig.storeName()))
-                            .await().atMost(INIT_OP_MAX_WAIT)
+                            .await().atMost(devServicesConfig.startupTimeout())
                             .getId();
 
                     devServicesConfigProperties.put(STORE_ID_CONFIG_KEY, storeId);
@@ -214,7 +217,7 @@ public class DevServicesOpenFGAProcessor {
                                 var request = WriteAuthorizationModelRequest.of(schema);
                                 authModelId = api.writeAuthorizationModel(storeId, request)
                                         .await()
-                                        .atMost(INIT_OP_MAX_WAIT)
+                                        .atMost(devServicesConfig.startupTimeout())
                                         .getAuthorizationModelId();
 
                                 devServicesConfigProperties.put(AUTHORIZATION_MODEL_ID_CONFIG_KEY, authModelId);
@@ -234,7 +237,7 @@ public class DevServicesOpenFGAProcessor {
                                                     .build();
                                             api.write(storeId, writeRequest)
                                                     .await()
-                                                    .atMost(INIT_OP_MAX_WAIT);
+                                                    .atMost(devServicesConfig.startupTimeout());
 
                                         } catch (Exception e) {
                                             throw new RuntimeException("Tuples initialization failed", e);
@@ -259,7 +262,8 @@ public class DevServicesOpenFGAProcessor {
 
                     Map<String, String> devServicesConfigProperties = new HashMap<>();
 
-                    withAPI(containerAddress.getHost(), containerAddress.getPort(), tlsEnabled, (instanceURL, api) -> {
+                    withAPI(containerAddress.getHost(), containerAddress.getPort(), tlsEnabled, devServicesConfig.startupTimeout(),
+                        (instanceURL, api) -> {
 
                         devServicesConfigProperties.put(URL_CONFIG_KEY, instanceURL.toExternalForm());
 
@@ -267,7 +271,8 @@ public class DevServicesOpenFGAProcessor {
                         try {
                             var client = new OpenFGAClient(api);
 
-                            storeId = client.listAllStores().await().atMost(INIT_OP_MAX_WAIT)
+                            storeId = client.listAllStores().await()
+                                    .atMost(devServicesConfig.startupTimeout())
                                     .stream().filter(store -> store.getName().equals(devServicesConfig.storeName()))
                                     .map(Store::getId)
                                     .findFirst()
@@ -286,7 +291,8 @@ public class DevServicesOpenFGAProcessor {
                                     try {
                                         var client = new AuthorizationModelsClient(api, Uni.createFrom().item(storeId));
 
-                                        var authModelId = client.listAll().await().atMost(INIT_OP_MAX_WAIT)
+                                        var authModelId = client.listAll().await()
+                                                .atMost(devServicesConfig.startupTimeout())
                                                 .stream()
                                                 .filter(item -> item.getTypeDefinitions()
                                                         .equals(authModelDef.getTypeDefinitions()))
@@ -385,7 +391,8 @@ public class DevServicesOpenFGAProcessor {
         }
     }
 
-    private static void withAPI(String host, Integer port, boolean tlsEnabled, BiFunction<URL, API, Void> apiConsumer) {
+    private static void withAPI(String host, Integer port, boolean tlsEnabled, Duration startupTimout,
+            BiFunction<URL, API, Void> apiConsumer) {
         URL instanceURL;
         try {
             instanceURL = new URL(tlsEnabled ? "https" : "http", host, port, "");
@@ -400,7 +407,7 @@ public class DevServicesOpenFGAProcessor {
             apiConsumer.apply(instanceURL, api);
 
         } finally {
-            vertx.close().await().atMost(INIT_OP_MAX_WAIT);
+            vertx.close().await().atMost(startupTimout);
         }
     }
 
