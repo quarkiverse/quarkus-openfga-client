@@ -36,11 +36,13 @@ public final class Condition {
     private final String name;
     private final String expression;
     private final Map<String, Parameter> parameters;
+    private final Map<String, String> metadata;
 
-    public Condition(String name, String expression, Map<String, Parameter> parameters) {
+    public Condition(String name, String expression, Map<String, Parameter> parameters, Map<String, String> metadata) {
         this.name = name;
         this.expression = expression;
         this.parameters = parameters;
+        this.metadata = metadata;
     }
 
     public String getName() {
@@ -53,6 +55,10 @@ public final class Condition {
 
     public Map<String, Parameter> getParameters() {
         return parameters;
+    }
+
+    public Map<String, String> getMetadata() {
+        return metadata;
     }
 
     @Override
