@@ -53,7 +53,7 @@ public class DevServicesOpenFGAProcessor {
 
     private static final Logger log = Logger.getLogger(DevServicesOpenFGAProcessor.class);
 
-    static final String OPEN_FGA_VERSION = "v1.5.9";
+    static final String OPEN_FGA_VERSION = "v1.8.4";
     static final String OPEN_FGA_IMAGE = "openfga/openfga:" + OPEN_FGA_VERSION;
     static final int OPEN_FGA_EXPOSED_HTTP_PORT = 8080;
     static final int OPEN_FGA_EXPOSED_GRPC_PORT = 8081;
