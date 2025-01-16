@@ -11,6 +11,35 @@ import io.quarkus.test.junit.QuarkusTest;
 public class OpenFGAResourceTest {
 
     @Test
+    public void testListStores() {
+
+        given()
+                .when().get("/openfga/stores")
+                .then()
+                .log().ifValidationFails()
+                .statusCode(200)
+                .contentType("application/json")
+                .body("$", hasSize(1));
+    }
+
+    @Test
+    public void testListChanges() {
+
+        given()
+                .when().get("/openfga/changes")
+                .then()
+                .log().ifValidationFails()
+                .statusCode(200)
+                .contentType("application/json")
+                .body("$", hasSize(3),
+                        "tuple_key.object", containsInAnyOrder("thing:1", "thing:2", "thing:2"),
+                        "tuple_key.relation", containsInAnyOrder("owner", "owner", "reader"),
+                        "tuple_key.user", containsInAnyOrder("user:me", "user:you", "user:me"),
+                        "operation",
+                        containsInAnyOrder("TUPLE_OPERATION_WRITE", "TUPLE_OPERATION_WRITE", "TUPLE_OPERATION_WRITE"));
+    }
+
+    @Test
     public void testListModels() {
 
         given()
@@ -35,5 +64,32 @@ public class OpenFGAResourceTest {
                         "key.object", containsInAnyOrder("thing:1", "thing:2", "thing:2"),
                         "key.relation", containsInAnyOrder("owner", "owner", "reader"),
                         "key.user", containsInAnyOrder("user:me", "user:you", "user:me"));
+    }
+
+    @Test
+    public void testListObjects() {
+
+        given()
+                .when().get("/openfga/objects")
+                .then()
+                .log().ifValidationFails()
+                .statusCode(200)
+                .contentType("application/json")
+                .body("$", hasSize(3),
+                        "key.object", containsInAnyOrder("thing:1", "thing:2", "thing:2"),
+                        "key.relation", containsInAnyOrder("owner", "owner", "reader"),
+                        "key.user", containsInAnyOrder("user:me", "user:you", "user:me"));
+    }
+
+    @Test
+    public void testListAssertions() {
+
+        given()
+                .when().get("/openfga/assertions")
+                .then()
+                .log().ifValidationFails()
+                .statusCode(200)
+                .contentType("application/json")
+                .body("$", hasSize(0));
     }
 }
