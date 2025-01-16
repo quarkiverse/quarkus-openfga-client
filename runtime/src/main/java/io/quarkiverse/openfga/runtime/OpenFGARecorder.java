@@ -4,10 +4,7 @@ import static io.quarkiverse.openfga.client.OpenFGAClient.storeIdResolver;
 
 import java.util.function.Supplier;
 
-import io.quarkiverse.openfga.client.AuthorizationModelClient;
-import io.quarkiverse.openfga.client.ClientConfig;
-import io.quarkiverse.openfga.client.OpenFGAClient;
-import io.quarkiverse.openfga.client.StoreClient;
+import io.quarkiverse.openfga.client.*;
 import io.quarkiverse.openfga.client.api.API;
 import io.quarkiverse.openfga.runtime.config.OpenFGAConfig;
 import io.quarkus.runtime.RuntimeValue;
@@ -44,5 +41,19 @@ public class OpenFGARecorder {
                         .map(modelId -> new ClientConfig(storeId, modelId)));
         var authModelClient = new AuthorizationModelClient(api.getValue(), configResolver);
         return new RuntimeValue<>(authModelClient);
+    }
+
+    public RuntimeValue<AuthorizationModelsClient> createAuthModelsClient(RuntimeValue<API> api, OpenFGAConfig config) {
+        var storeIdResolver = storeIdResolver(api.getValue(), config.store(), config.alwaysResolveStoreId());
+        var authModelsClient = new AuthorizationModelsClient(api.getValue(), storeIdResolver);
+        return new RuntimeValue<>(authModelsClient);
+    }
+
+    public RuntimeValue<AssertionsClient> createAssertionsClient(RuntimeValue<API> api, OpenFGAConfig config) {
+        var configResolver = storeIdResolver(api.getValue(), config.store(), config.alwaysResolveStoreId())
+                .flatMap(storeId -> OpenFGAClient.authorizationModelIdResolver(api.getValue(), storeId)
+                        .map(modelId -> new ClientConfig(storeId, modelId)));
+        var assertionsClient = new AssertionsClient(api.getValue(), configResolver);
+        return new RuntimeValue<>(assertionsClient);
     }
 }

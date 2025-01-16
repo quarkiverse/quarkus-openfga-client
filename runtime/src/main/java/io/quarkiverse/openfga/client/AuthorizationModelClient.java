@@ -205,4 +205,8 @@ public class AuthorizationModelClient {
                 .map(WriteResponse::getValues);
     }
 
+    public AssertionsClient assertions() {
+        return new AssertionsClient(api, config);
+    }
+
 }

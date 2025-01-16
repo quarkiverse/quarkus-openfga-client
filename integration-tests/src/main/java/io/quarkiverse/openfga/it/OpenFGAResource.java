@@ -26,10 +26,8 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 
-import io.quarkiverse.openfga.client.AuthorizationModelClient;
-import io.quarkiverse.openfga.client.StoreClient;
-import io.quarkiverse.openfga.client.model.AuthorizationModel;
-import io.quarkiverse.openfga.client.model.Tuple;
+import io.quarkiverse.openfga.client.*;
+import io.quarkiverse.openfga.client.model.*;
 import io.smallrye.mutiny.Uni;
 
 @Path("/openfga")
@@ -37,16 +35,39 @@ import io.smallrye.mutiny.Uni;
 public class OpenFGAResource {
 
     @Inject
+    OpenFGAClient client;
+
+    @Inject
     StoreClient storeClient;
 
     @Inject
+    AuthorizationModelsClient authorizationModelsClient;
+
+    @Inject
     AuthorizationModelClient authorizationModelClient;
+
+    @Inject
+    AssertionsClient assertionsClient;
+
+    @GET
+    @Path("stores")
+    @Produces(APPLICATION_JSON)
+    public Uni<List<Store>> listStores() {
+        return client.listAllStores();
+    }
+
+    @GET
+    @Path("changes")
+    @Produces(APPLICATION_JSON)
+    public Uni<List<TupleChange>> listChanges() {
+        return storeClient.listChanges(null, null, null);
+    }
 
     @GET
     @Path("authorization-models")
     @Produces(APPLICATION_JSON)
     public Uni<List<AuthorizationModel>> listModels() {
-        return storeClient.authorizationModels().listAll();
+        return authorizationModelsClient.listAll();
     }
 
     @GET
@@ -54,5 +75,19 @@ public class OpenFGAResource {
     @Produces(APPLICATION_JSON)
     public Uni<List<Tuple>> listTuples() {
         return authorizationModelClient.readAllTuples();
+    }
+
+    @GET
+    @Path("objects")
+    @Produces(APPLICATION_JSON)
+    public Uni<List<Tuple>> listObjects() {
+        return authorizationModelClient.readAllTuples();
+    }
+
+    @GET
+    @Path("assertions")
+    @Produces(APPLICATION_JSON)
+    public Uni<List<Assertion>> listAssertions() {
+        return assertionsClient.list();
     }
 }

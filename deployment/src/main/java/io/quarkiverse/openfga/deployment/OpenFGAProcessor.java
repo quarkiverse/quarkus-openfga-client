@@ -7,9 +7,7 @@ import java.util.Optional;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
-import io.quarkiverse.openfga.client.AuthorizationModelClient;
-import io.quarkiverse.openfga.client.OpenFGAClient;
-import io.quarkiverse.openfga.client.StoreClient;
+import io.quarkiverse.openfga.client.*;
 import io.quarkiverse.openfga.client.api.API;
 import io.quarkiverse.openfga.client.model.Store;
 import io.quarkiverse.openfga.runtime.OpenFGARecorder;
@@ -97,6 +95,20 @@ class OpenFGAProcessor {
                         .scope(ApplicationScoped.class)
                         .setRuntimeInit()
                         .runtimeValue(recorder.createAuthModelClient(apiValue, runtimeConfig))
+                        .done());
+
+        syntheticBeans.produce(
+                SyntheticBeanBuildItem.configure(AuthorizationModelsClient.class)
+                        .scope(ApplicationScoped.class)
+                        .setRuntimeInit()
+                        .runtimeValue(recorder.createAuthModelsClient(apiValue, runtimeConfig))
+                        .done());
+
+        syntheticBeans.produce(
+                SyntheticBeanBuildItem.configure(AssertionsClient.class)
+                        .scope(ApplicationScoped.class)
+                        .setRuntimeInit()
+                        .runtimeValue(recorder.createAssertionsClient(apiValue, runtimeConfig))
                         .done());
 
         return new ServiceStartBuildItem("openfga-client");
