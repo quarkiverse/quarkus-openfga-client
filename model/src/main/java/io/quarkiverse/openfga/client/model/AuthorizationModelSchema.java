@@ -1,5 +1,6 @@
 package io.quarkiverse.openfga.client.model;
 
+import java.io.*;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -9,6 +10,7 @@ import javax.annotation.Nullable;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import io.quarkiverse.openfga.client.model.utils.ModelMapper;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class AuthorizationModelSchema {
@@ -39,6 +41,22 @@ public final class AuthorizationModelSchema {
     public static AuthorizationModelSchema of(@JsonProperty("type_definitions") List<TypeDefinition> typeDefinitions,
             @Nullable Map<String, Condition> conditions) {
         return of(Defaults.SCHEMA_VERSION, typeDefinitions, conditions);
+    }
+
+    public static AuthorizationModelSchema parse(InputStream stream) throws IOException {
+        return ModelMapper.mapper.readValue(stream, AuthorizationModelSchema.class);
+    }
+
+    public static AuthorizationModelSchema parse(Reader reader) throws IOException {
+        return ModelMapper.mapper.readValue(reader, AuthorizationModelSchema.class);
+    }
+
+    public static AuthorizationModelSchema parse(byte[] bytes) throws IOException {
+        return ModelMapper.mapper.readValue(bytes, AuthorizationModelSchema.class);
+    }
+
+    public static AuthorizationModelSchema parse(String json) throws IOException {
+        return ModelMapper.mapper.readValue(json, AuthorizationModelSchema.class);
     }
 
     @JsonProperty("schema_version")

@@ -8,23 +8,13 @@ import static io.vertx.mutiny.core.http.HttpHeaders.CONTENT_TYPE;
 import static java.lang.String.format;
 
 import java.io.Closeable;
-import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import javax.annotation.Nullable;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
-
-import io.quarkiverse.openfga.client.model.AuthorizationModelSchema;
-import io.quarkiverse.openfga.client.model.ConditionalTupleKey;
 import io.quarkiverse.openfga.client.model.dto.*;
+import io.quarkiverse.openfga.client.model.utils.ModelMapper;
 import io.quarkiverse.openfga.runtime.config.OpenFGAConfig;
 import io.quarkus.tls.TlsConfigurationRegistry;
 import io.smallrye.mutiny.Uni;
@@ -47,7 +37,6 @@ public class API implements Closeable {
 
     private final WebClient webClient;
     private final Optional<Credentials> credentials;
-    private final ObjectMapper objectMapper;
 
     public API(OpenFGAConfig config, boolean tracingEnabled, Vertx vertx, TlsConfigurationRegistry tlsRegistry) {
         this(VertxWebClientFactory.create(config, tracingEnabled, vertx, tlsRegistry),
@@ -57,21 +46,10 @@ public class API implements Closeable {
     public API(WebClient webClient, Optional<Credentials> credentials) {
         this.webClient = webClient;
         this.credentials = credentials;
-        this.objectMapper = createObjectMapper();
     }
 
     public void close() {
         webClient.close();
-    }
-
-    public AuthorizationModelSchema parseModelSchema(String modelJSON) throws IOException {
-        return objectMapper.readValue(modelJSON, new TypeReference<>() {
-        });
-    }
-
-    public List<ConditionalTupleKey> parseTuples(String modelJSON) throws IOException {
-        return objectMapper.readValue(modelJSON, new TypeReference<>() {
-        });
     }
 
     public Uni<ListStoresResponse> listStores(ListStoresRequest request) {
@@ -80,7 +58,8 @@ public class API implements Closeable {
                         GET,
                         STORES_URI,
                         vars(),
-                        query(PAGE_SIZE_PARAM, request.getPageSize(), CONT_TOKEN_PARAM, request.getContinuationToken())),
+                        query(PAGE_SIZE_PARAM, request.getPageSize(), CONT_TOKEN_PARAM, request.getContinuationToken(),
+                                NAME_PARAM, request.getName())),
                 ExpectedStatus.OK,
                 ListStoresResponse.class);
     }
@@ -149,16 +128,21 @@ public class API implements Closeable {
                 ReadAuthorizationModelResponse.class);
     }
 
-    public Uni<ListChangesResponse> listChanges(String storeId, ListChangesRequest request) {
+    @Deprecated(since = "2.4.0", forRemoval = true)
+    public Uni<ReadChangesResponse> listChanges(String storeId, ReadChangesRequest request) {
+        return readChanges(storeId, request);
+    }
+
+    public Uni<ReadChangesResponse> readChanges(String storeId, ReadChangesRequest request) {
         return execute(
                 request("Read Changes",
                         GET,
                         CHANGES_URI,
                         vars(STORE_ID_PARAM, storeId),
-                        query(TYPE_PARAM, request.getType(), PAGE_SIZE_PARAM, request.getPageSize(), CONT_TOKEN_PARAM,
-                                request.getContinuationToken())),
+                        query(TYPE_PARAM, request.getType(), START_TIME_PARAM, request.getStartTime(),
+                                PAGE_SIZE_PARAM, request.getPageSize(), CONT_TOKEN_PARAM, request.getContinuationToken())),
                 ExpectedStatus.OK,
-                ListChangesResponse.class);
+                ReadChangesResponse.class);
     }
 
     public Uni<ReadResponse> read(String storeId, ReadRequest request) {
@@ -265,7 +249,7 @@ public class API implements Closeable {
                         return prepare(request)
                                 .putHeader(ACCEPT.toString(), APPLICATION_JSON)
                                 .putHeader(CONTENT_TYPE.toString(), APPLICATION_JSON)
-                                .sendBuffer(Buffer.buffer(objectMapper.writeValueAsString(body)));
+                                .sendBuffer(Buffer.buffer(ModelMapper.mapper.writeValueAsString(body)));
                     } catch (Throwable t) {
                         return Uni.createFrom().failure(t);
                     }
@@ -273,7 +257,7 @@ public class API implements Closeable {
                 .onItem().transformToUni(response -> {
                     try {
                         checkJSONResponse(response, expectedStatus);
-                        return Uni.createFrom().item(objectMapper.readValue(response.bodyAsString(), responseType));
+                        return Uni.createFrom().item(ModelMapper.mapper.readValue(response.bodyAsString(), responseType));
                     } catch (Throwable e) {
                         return Uni.createFrom().failure(e);
                     }
@@ -286,7 +270,7 @@ public class API implements Closeable {
                     try {
                         return prepare(request)
                                 .putHeader(CONTENT_TYPE.toString(), APPLICATION_JSON)
-                                .sendBuffer(Buffer.buffer(objectMapper.writeValueAsString(body)));
+                                .sendBuffer(Buffer.buffer(ModelMapper.mapper.writeValueAsString(body)));
                     } catch (Throwable t) {
                         return Uni.createFrom().failure(t);
                     }
@@ -309,7 +293,7 @@ public class API implements Closeable {
                 .onItem().transformToUni(response -> {
                     try {
                         checkJSONResponse(response, expectedStatus);
-                        return Uni.createFrom().item(objectMapper.readValue(response.bodyAsString(), responseType));
+                        return Uni.createFrom().item(ModelMapper.mapper.readValue(response.bodyAsString(), responseType));
                     } catch (Throwable e) {
                         return Uni.createFrom().failure(e);
                     }
@@ -339,7 +323,9 @@ public class API implements Closeable {
 
     private HttpRequest<Buffer> request(String operationName, HttpMethod method, UriTemplate uriTemplate, Variables variables,
             Map<String, String> query) {
-        variables.set(FULL_QUERY_PARAM, query);
+        for (Map.Entry<String, String> entry : query.entrySet()) {
+            variables.set(entry.getKey(), entry.getValue());
+        }
         return request(operationName, method, uriTemplate, variables);
     }
 
@@ -375,29 +361,26 @@ public class API implements Closeable {
         throw new NoStackTraceThrowable(message);
     }
 
-    public static ObjectMapper createObjectMapper() {
-        return new ObjectMapper()
-                .registerModule(new JavaTimeModule())
-                .registerModule(new Jdk8Module())
-                .registerModule(new ParameterNamesModule())
-                .setSerializationInclusion(JsonInclude.Include.NON_NULL);
-    }
-
     private static final String APPLICATION_JSON = "application/json";
     private static final String PAGE_SIZE_PARAM = "page_size";
     private static final String CONT_TOKEN_PARAM = "continuation_token";
     private static final String STORE_ID_PARAM = "store_id";
     private static final String AUTH_MODEL_ID_PARAM = "authorization_model_id";
     private static final String TYPE_PARAM = "type";
+    private static final String NAME_PARAM = "name";
+    private static final String START_TIME_PARAM = "start_time";
     private static final String ID_PARAM = "id";
-    private static final String FULL_QUERY_PARAM = "query";
 
-    private static final UriTemplate STORES_URI = UriTemplate.of("/stores{?query*}");
+    private static final UriTemplate STORES_URI = UriTemplate
+            .of(format("/stores{?%s,%s,%s}", PAGE_SIZE_PARAM, CONT_TOKEN_PARAM, NAME_PARAM));
     private static final UriTemplate STORE_URI = UriTemplate.of("/stores/{store_id}");
     private static final UriTemplate ASSERTIONS_URI = UriTemplate.of("/stores/{store_id}/assertions/{authorization_model_id}");
-    private static final UriTemplate AUTH_MODELS_URI = UriTemplate.of("/stores/{store_id}/authorization-models{?query*}");
+    private static final UriTemplate AUTH_MODELS_URI = UriTemplate
+            .of(format("/stores/{store_id}/authorization-models{?%s,%s}", PAGE_SIZE_PARAM, CONT_TOKEN_PARAM));
     private static final UriTemplate AUTH_MODEL_URI = UriTemplate.of("/stores/{store_id}/authorization-models/{id}");
-    private static final UriTemplate CHANGES_URI = UriTemplate.of("/stores/{store_id}/changes");
+    private static final UriTemplate CHANGES_URI = UriTemplate
+            .of(format("/stores/{store_id}/changes{?%s,%s,%s,%s}", TYPE_PARAM, START_TIME_PARAM, PAGE_SIZE_PARAM,
+                    CONT_TOKEN_PARAM));
     private static final UriTemplate CHECK_URI = UriTemplate.of("/stores/{store_id}/check");
     private static final UriTemplate EXPAND_URI = UriTemplate.of("/stores/{store_id}/expand");
     private static final UriTemplate LIST_OBJECTS_URI = UriTemplate.of("/stores/{store_id}/list-objects");

@@ -258,7 +258,7 @@ public class DefaultAuthorizationModelClientTest {
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem();
 
-        var tuples = authorizationModelClient.listObjects("document", "writer", "user:me", null)
+        var tuples = authorizationModelClient.listObjects("document", "writer", "user:me")
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();

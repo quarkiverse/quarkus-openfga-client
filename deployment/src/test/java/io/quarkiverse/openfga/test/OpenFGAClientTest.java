@@ -13,14 +13,17 @@ import org.assertj.core.api.InstanceOfAssertFactories;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.quarkiverse.openfga.client.OpenFGAClient;
+import io.quarkiverse.openfga.client.OpenFGAClient.ListStoresFilter;
 import io.quarkiverse.openfga.client.api.API;
 import io.quarkiverse.openfga.client.model.Store;
 import io.quarkiverse.openfga.client.utils.PaginatedList;
+import io.quarkiverse.openfga.client.utils.Pagination;
 import io.quarkus.test.QuarkusUnitTest;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
@@ -66,8 +69,8 @@ public class OpenFGAClientTest {
     }
 
     @Test
-    @DisplayName("Can List Stores Without Pagination")
-    public void canListStoresWithoutPagination() {
+    @DisplayName("Can List Stores")
+    public void canListStores() {
 
         var createdStores = Multi.createFrom().items("testing1", "testing2")
                 .onItem().transformToUniAndConcatenate(name -> client.createStore(name))
@@ -81,7 +84,35 @@ public class OpenFGAClientTest {
                 .map(Store::getName)
                 .containsExactlyInAnyOrder("testing1", "testing2");
 
-        var list = client.listStores(2, null)
+        var list = client.listStores()
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+
+        assertThat(list)
+                .isNotNull()
+                .extracting(PaginatedList::getItems, as(InstanceOfAssertFactories.collection(Store.class)))
+                .containsExactlyInAnyOrderElementsOf(createdStores);
+    }
+
+    @Test
+    @DisplayName("Can List Stores With Name")
+    @Disabled("Using the name filter causes a server error")
+    public void canListStoresWithName() {
+
+        var createdStores = Multi.createFrom().items("testing")
+                .onItem().transformToUniAndConcatenate(name -> client.createStore(name))
+                .collect().asList()
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+
+        assertThat(createdStores)
+                .isNotNull()
+                .map(Store::getName)
+                .containsExactlyInAnyOrder("testing");
+
+        var list = client.listStores(ListStoresFilter.named("testing"), Pagination.limitedTo(1))
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
@@ -96,6 +127,59 @@ public class OpenFGAClientTest {
     @DisplayName("Can List Stores With Pagination")
     public void canListStoresWithPagination() {
 
+        var createdStores = Multi.createFrom().items("testing1", "testing2", "testing3", "testing4", "testing5")
+                .onItem().transformToUniAndConcatenate(name -> client.createStore(name))
+                .collect().asList()
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+
+        assertThat(createdStores)
+                .isNotNull()
+                .map(Store::getName)
+                .containsExactlyInAnyOrder("testing1", "testing2", "testing3", "testing4", "testing5");
+
+        var page1 = client.listStores(Pagination.limitedTo(2))
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+
+        assertThat(page1)
+                .isNotNull()
+                .extracting(PaginatedList::getItems, as(InstanceOfAssertFactories.collection(Store.class)))
+                .hasSize(2)
+                .extracting("name")
+                .containsExactlyInAnyOrder("testing1", "testing2");
+
+        var page2 = client.listStores(Pagination.limitedTo(2).andContinuingFrom(page1.getToken()))
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+
+        assertThat(page2)
+                .isNotNull()
+                .extracting(PaginatedList::getItems, as(InstanceOfAssertFactories.collection(Store.class)))
+                .hasSize(2)
+                .extracting("name")
+                .containsExactlyInAnyOrder("testing3", "testing4");
+
+        var page3 = client.listStores(Pagination.limitedTo(2).andContinuingFrom(page2.getToken()))
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+
+        assertThat(page3)
+                .isNotNull()
+                .extracting(PaginatedList::getItems, as(InstanceOfAssertFactories.collection(Store.class)))
+                .hasSize(1)
+                .extracting("name")
+                .containsExactlyInAnyOrder("testing5");
+    }
+
+    @Test
+    @DisplayName("Can List All Stores (Auto-Pagination)")
+    public void canListAllStores() {
+
         var createdStores = Multi.createFrom().items("testing1", "testing2", "testing3")
                 .onItem().transformToUniAndConcatenate(name -> client.createStore(name))
                 .collect().asList()
@@ -108,7 +192,7 @@ public class OpenFGAClientTest {
                 .map(Store::getName)
                 .containsExactlyInAnyOrder("testing1", "testing2", "testing3");
 
-        var list = client.listAllStores(1)
+        var list = client.listAllStores()
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();

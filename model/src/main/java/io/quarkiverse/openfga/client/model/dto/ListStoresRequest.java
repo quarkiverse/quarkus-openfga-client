@@ -17,20 +17,27 @@ public final class ListStoresRequest {
     @Nullable
     private final String continuationToken;
 
+    @JsonProperty("name")
+    @Nullable
+    private final String name;
+
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     ListStoresRequest(@JsonProperty("page_size") @Nullable Integer pageSize,
-            @JsonProperty("continuation_token") @Nullable String continuationToken) {
+            @JsonProperty("continuation_token") @Nullable String continuationToken,
+            @JsonProperty("name") @Nullable String name) {
         this.pageSize = pageSize;
         this.continuationToken = continuationToken;
+        this.name = name;
     }
 
-    public static ListStoresRequest of(@Nullable Integer pageSize, @Nullable String continuationToken) {
-        return new ListStoresRequest(pageSize, continuationToken);
+    public static ListStoresRequest of(@Nullable Integer pageSize, @Nullable String continuationToken, @Nullable String name) {
+        return new ListStoresRequest(pageSize, continuationToken, name);
     }
 
     public static final class Builder {
         private Integer pageSize;
         private String continuationToken;
+        private String name;
 
         Builder() {
         }
@@ -45,8 +52,13 @@ public final class ListStoresRequest {
             return this;
         }
 
+        public Builder name(@Nullable String name) {
+            this.name = name;
+            return this;
+        }
+
         public ListStoresRequest build() {
-            return new ListStoresRequest(pageSize, continuationToken);
+            return new ListStoresRequest(pageSize, continuationToken, name);
         }
     }
 
@@ -66,6 +78,12 @@ public final class ListStoresRequest {
         return continuationToken;
     }
 
+    @JsonProperty("name")
+    @Nullable
+    public String getName() {
+        return name;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (obj == this)
@@ -74,19 +92,21 @@ public final class ListStoresRequest {
             return false;
         var that = (ListStoresRequest) obj;
         return Objects.equals(this.pageSize, that.pageSize) &&
-                Objects.equals(this.continuationToken, that.continuationToken);
+                Objects.equals(this.continuationToken, that.continuationToken) &&
+                Objects.equals(this.name, that.name);
     }
 
     @Override
     public int hashCode() {
-        return java.util.Objects.hash(pageSize, continuationToken);
+        return java.util.Objects.hash(pageSize, continuationToken, name);
     }
 
     @Override
     public String toString() {
         return "ListStoresRequest[" +
                 "pageSize=" + pageSize + ", " +
-                "continuationToken=" + continuationToken + ']';
+                "continuationToken=" + continuationToken + ", "
+                + "name=" + name + ']';
     }
 
 }

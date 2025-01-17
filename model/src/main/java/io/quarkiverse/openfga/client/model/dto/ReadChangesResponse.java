@@ -13,7 +13,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.quarkiverse.openfga.client.model.TupleChange;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
-public final class ListChangesResponse {
+public final class ReadChangesResponse {
 
     private final List<TupleChange> changes;
 
@@ -22,7 +22,7 @@ public final class ListChangesResponse {
     private final String continuationToken;
 
     @JsonCreator(mode = PROPERTIES)
-    public ListChangesResponse(List<TupleChange> changes,
+    public ReadChangesResponse(List<TupleChange> changes,
             @JsonProperty("continuation_token") @Nullable String continuationToken) {
         this.changes = Preconditions.parameterNonNull(changes, "changes");
         this.continuationToken = continuationToken;
@@ -44,7 +44,7 @@ public final class ListChangesResponse {
             return true;
         if (obj == null || obj.getClass() != this.getClass())
             return false;
-        var that = (ListChangesResponse) obj;
+        var that = (ReadChangesResponse) obj;
         return Objects.equals(this.changes, that.changes) &&
                 Objects.equals(this.continuationToken, that.continuationToken);
     }

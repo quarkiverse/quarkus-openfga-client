@@ -2,6 +2,7 @@ package io.quarkiverse.openfga.client.model.dto;
 
 import static com.fasterxml.jackson.annotation.JsonCreator.Mode.PROPERTIES;
 
+import java.time.OffsetDateTime;
 import java.util.Objects;
 
 import javax.annotation.Nullable;
@@ -9,7 +10,7 @@ import javax.annotation.Nullable;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public final class ListChangesRequest {
+public final class ReadChangesRequest {
 
     @Nullable
     private final String type;
@@ -22,22 +23,30 @@ public final class ListChangesRequest {
     @Nullable
     private final String continuationToken;
 
+    @JsonProperty("start_time")
+    @Nullable
+    private final OffsetDateTime startTime;
+
     @JsonCreator(mode = PROPERTIES)
-    ListChangesRequest(@Nullable String type, @JsonProperty("page_size") @Nullable Integer pageSize,
-            @JsonProperty("continuation_token") @Nullable String continuationToken) {
+    ReadChangesRequest(@Nullable String type, @JsonProperty("page_size") @Nullable Integer pageSize,
+            @JsonProperty("continuation_token") @Nullable String continuationToken,
+            @JsonProperty("start_time") @Nullable OffsetDateTime startTime) {
         this.type = type;
         this.pageSize = pageSize;
         this.continuationToken = continuationToken;
+        this.startTime = startTime;
     }
 
-    public static ListChangesRequest of(@Nullable String type, @Nullable Integer pageSize, @Nullable String continuationToken) {
-        return new ListChangesRequest(type, pageSize, continuationToken);
+    public static ReadChangesRequest of(@Nullable String type, @Nullable Integer pageSize, @Nullable String continuationToken,
+            @Nullable OffsetDateTime startTime) {
+        return new ReadChangesRequest(type, pageSize, continuationToken, startTime);
     }
 
     public static final class Builder {
         private String type;
         private Integer pageSize;
         private String continuationToken;
+        private OffsetDateTime startTime;
 
         public Builder() {
         }
@@ -57,8 +66,13 @@ public final class ListChangesRequest {
             return this;
         }
 
-        public ListChangesRequest build() {
-            return new ListChangesRequest(type, pageSize, continuationToken);
+        public Builder startTime(@Nullable OffsetDateTime startTime) {
+            this.startTime = startTime;
+            return this;
+        }
+
+        public ReadChangesRequest build() {
+            return new ReadChangesRequest(type, pageSize, continuationToken, startTime);
         }
     }
 
@@ -83,29 +97,37 @@ public final class ListChangesRequest {
         return continuationToken;
     }
 
+    @JsonProperty("start_time")
+    @Nullable
+    public OffsetDateTime getStartTime() {
+        return startTime;
+    }
+
     @Override
     public boolean equals(@Nullable Object obj) {
         if (obj == this)
             return true;
         if (obj == null || obj.getClass() != this.getClass())
             return false;
-        var that = (ListChangesRequest) obj;
+        var that = (ReadChangesRequest) obj;
         return Objects.equals(this.type, that.type) &&
                 Objects.equals(this.pageSize, that.pageSize) &&
-                Objects.equals(this.continuationToken, that.continuationToken);
+                Objects.equals(this.continuationToken, that.continuationToken) &&
+                Objects.equals(this.startTime, that.startTime);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(type, pageSize, continuationToken);
+        return Objects.hash(type, pageSize, continuationToken, startTime);
     }
 
     @Override
     public String toString() {
-        return "ExpandRequest[" +
+        return "ReadChangesRequest[" +
                 "type=" + type + ", " +
                 "pageSize=" + pageSize + ", " +
-                "continuationToken=" + continuationToken + ']';
+                "continuationToken=" + continuationToken + ", " +
+                "startTime=" + startTime + ']';
     }
 
 }

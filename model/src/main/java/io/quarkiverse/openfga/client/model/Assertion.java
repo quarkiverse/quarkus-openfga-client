@@ -27,7 +27,7 @@ public final class Assertion {
         this.contextualTuples = contextualTuples;
     }
 
-    public Assertion of(TupleKey tupleKey, boolean expectation, @Nullable List<TupleKey> contextualTuples) {
+    public static Assertion of(TupleKey tupleKey, boolean expectation, @Nullable List<TupleKey> contextualTuples) {
         return new Assertion(tupleKey, expectation, contextualTuples);
     }
 
