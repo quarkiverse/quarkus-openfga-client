@@ -3,7 +3,7 @@ package io.quarkiverse.openfga.client.utils;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import javax.annotation.Nullable;
 
@@ -12,6 +12,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 
 public final class PaginatedList<T> {
+
     private final List<T> items;
     @Nullable
     private final String token;
@@ -26,12 +27,12 @@ public final class PaginatedList<T> {
     }
 
     public static <T> Uni<List<T>> collectAllPages(@Nullable Integer pageSize,
-            BiFunction<Integer, String, Uni<PaginatedList<T>>> listGenerator) {
+            Function<Pagination, Uni<PaginatedList<T>>> listGenerator) {
         return Multi.createBy()
-                .repeating().uni(AtomicReference<String>::new, lastToken -> {
-                    return listGenerator.apply(pageSize, lastToken.get())
-                            .onItem().invoke(list -> lastToken.set(list.getToken()));
-                })
+                .repeating()
+                .uni(AtomicReference<String>::new,
+                        lastToken -> listGenerator.apply(new Pagination(pageSize, lastToken.get()))
+                                .onItem().invoke(list -> lastToken.set(list.getToken())))
                 .whilst(PaginatedList::isNotLastPage)
                 .onItem().transformToIterable(PaginatedList::getItems)
                 .collect().asList();
@@ -52,7 +53,7 @@ public final class PaginatedList<T> {
             return true;
         if (obj == null || obj.getClass() != this.getClass())
             return false;
-        var that = (PaginatedList) obj;
+        var that = (PaginatedList<?>) obj;
         return Objects.equals(this.items, that.items) &&
                 Objects.equals(this.token, that.token);
     }

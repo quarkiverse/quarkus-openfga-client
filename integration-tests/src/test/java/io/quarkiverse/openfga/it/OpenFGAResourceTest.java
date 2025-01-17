@@ -23,7 +23,7 @@ public class OpenFGAResourceTest {
     }
 
     @Test
-    public void testListChanges() {
+    public void testReadChanges() {
 
         given()
                 .when().get("/openfga/changes")

@@ -11,6 +11,7 @@ import io.quarkiverse.openfga.client.api.API;
 import io.quarkiverse.openfga.client.model.*;
 import io.quarkiverse.openfga.client.model.dto.*;
 import io.quarkiverse.openfga.client.utils.PaginatedList;
+import io.quarkiverse.openfga.client.utils.Pagination;
 import io.smallrye.mutiny.Uni;
 
 public class AuthorizationModelClient {
@@ -73,85 +74,90 @@ public class AuthorizationModelClient {
                 .map(ExpandResponse::getTree);
     }
 
-    public static final class Options {
-        private List<ConditionalTupleKey> contextualTuples;
-        private Object context;
-        private ConsistencyPreference consistency;
+    public record ListOptions(@Nullable List<ConditionalTupleKey> contextualTuples, @Nullable Object context,
+            @Nullable ConsistencyPreference consistency) {
 
-        public Options() {
-            this.contextualTuples = null;
-            this.context = null;
-            this.consistency = null;
+        public static final ListOptions NONE = new ListOptions(null, null, null);
+
+        public static ListOptions of(List<ConditionalTupleKey> contextualTuples, Object context,
+                ConsistencyPreference consistency) {
+            return new ListOptions(contextualTuples, context, consistency);
         }
 
-        public Options contextualTuples(List<ConditionalTupleKey> contextualTuples) {
-            this.contextualTuples = contextualTuples;
-            return this;
+        public ListOptions() {
+            this(null, null, null);
         }
 
-        public Options context(Object context) {
-            this.context = context;
-            return this;
+        public ListOptions contextualTuples(List<ConditionalTupleKey> contextualTuples) {
+            return new ListOptions(contextualTuples, context, consistency);
         }
 
-        public Options consistency(ConsistencyPreference consistency) {
-            this.consistency = consistency;
-            return this;
+        public ListOptions context(Object context) {
+            return new ListOptions(contextualTuples, context, consistency);
+        }
+
+        public ListOptions consistency(ConsistencyPreference consistency) {
+            return new ListOptions(contextualTuples, context, consistency);
         }
     }
 
     public Uni<List<String>> listObjects(String type, String relation, String user) {
-        return listObjects(type, relation, user, null);
+        return listObjects(type, relation, user, ListOptions.NONE);
     }
 
-    public Uni<List<String>> listObjects(String type, String relation, String user, @Nullable Options options) {
+    public Uni<List<String>> listObjects(String type, String relation, String user, ListOptions options) {
         return config.flatMap(config -> {
-            var opts = options == null ? new Options() : options;
             var request = ListObjectsRequest.builder()
                     .authorizationModelId(config.getAuthorizationModelId())
                     .type(type)
                     .relation(relation)
                     .user(user)
-                    .contextualTuples(ContextualTupleKeys.of(opts.contextualTuples))
-                    .context(opts.context)
-                    .consistency(opts.consistency)
+                    .contextualTuples(ContextualTupleKeys.of(options.contextualTuples))
+                    .context(options.context)
+                    .consistency(options.consistency)
                     .build();
             return api.listObjects(config.getStoreId(), request);
-        })
-                .map(ListObjectsResponse::getObjects);
+        }).map(ListObjectsResponse::getObjects);
     }
 
     public Uni<List<User>> listUsers(AnyObject object, String relation, List<UserTypeFilter> userFilters) {
-        return listUsers(object, relation, userFilters, null);
+        return listUsers(object, relation, userFilters, ListOptions.NONE);
     }
 
     public Uni<List<User>> listUsers(AnyObject object, String relation, List<UserTypeFilter> userFilters,
-            @Nullable Options options) {
+            ListOptions options) {
         return config.flatMap(config -> {
-            var opts = options == null ? new Options() : options;
             var request = ListUsersRequest.builder()
                     .authorizationModelId(config.getAuthorizationModelId())
                     .object(object)
                     .relation(relation)
                     .userFilters(userFilters)
-                    .contextualTuples(ContextualTupleKeys.of(opts.contextualTuples))
-                    .context(opts.context)
-                    .consistency(opts.consistency)
+                    .contextualTuples(ContextualTupleKeys.of(options.contextualTuples))
+                    .context(options.context)
+                    .consistency(options.consistency)
                     .build();
             return api.listUsers(config.getStoreId(), request);
-        })
-                .map(ListUsersResponse::getUsers);
+        }).map(ListUsersResponse::getUsers);
     }
 
+    @Deprecated(since = "2.4.0", forRemoval = true)
     public Uni<PaginatedList<Tuple>> queryTuples(PartialTupleKey tupleKey, @Nullable Integer pageSize,
             @Nullable String continuationToken) {
+        return queryTuples(tupleKey, Pagination.limitedTo(pageSize).andContinuingFrom(continuationToken));
+    }
+
+    public Uni<PaginatedList<Tuple>> queryTuples(PartialTupleKey tupleKey) {
+        return queryTuples(tupleKey, Pagination.DEFAULT);
+    }
+
+    public Uni<PaginatedList<Tuple>> queryTuples(PartialTupleKey tupleKey, Pagination options) {
         return config
                 .flatMap(config -> {
                     var request = ReadRequest.builder()
                             .tupleKey(tupleKey)
                             .authorizationModelId(config.getAuthorizationModelId())
-                            .pageSize(pageSize)
-                            .continuationToken(continuationToken)
+                            .pageSize(options.pageSize())
+                            .continuationToken(options.continuationToken())
                             .build();
                     return api.read(config.getStoreId(), request);
                 })
@@ -163,21 +169,27 @@ public class AuthorizationModelClient {
     }
 
     public Uni<List<Tuple>> queryAllTuples(PartialTupleKey tupleKey, @Nullable Integer pageSize) {
-        return collectAllPages(pageSize, (currentPageSize, currentToken) -> {
-            return queryTuples(tupleKey, currentPageSize, currentToken);
-        });
+        return collectAllPages(pageSize, (paginationOptions) -> queryTuples(tupleKey, paginationOptions));
     }
 
+    @Deprecated(since = "2.4.0", forRemoval = true)
     public Uni<PaginatedList<Tuple>> readTuples(@Nullable Integer pageSize, @Nullable String continuationToken) {
+        return readTuples(Pagination.limitedTo(pageSize).andContinuingFrom(continuationToken));
+    }
+
+    public Uni<PaginatedList<Tuple>> readTuples() {
+        return readTuples(Pagination.DEFAULT);
+    }
+
+    public Uni<PaginatedList<Tuple>> readTuples(Pagination options) {
         return config.flatMap(config -> {
             var request = ReadRequest.builder()
                     .authorizationModelId(config.getAuthorizationModelId())
-                    .pageSize(pageSize)
-                    .continuationToken(continuationToken)
+                    .pageSize(options.pageSize())
+                    .continuationToken(options.continuationToken())
                     .build();
             return api.read(config.getStoreId(), request);
-        })
-                .map(res -> new PaginatedList<>(res.getTuples(), res.getContinuationToken()));
+        }).map(res -> new PaginatedList<>(res.getTuples(), res.getContinuationToken()));
     }
 
     public Uni<List<Tuple>> readAllTuples() {

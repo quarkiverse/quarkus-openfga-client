@@ -28,6 +28,7 @@ import jakarta.ws.rs.Produces;
 
 import io.quarkiverse.openfga.client.*;
 import io.quarkiverse.openfga.client.model.*;
+import io.quarkiverse.openfga.client.utils.PaginatedList;
 import io.smallrye.mutiny.Uni;
 
 @Path("/openfga")
@@ -59,8 +60,8 @@ public class OpenFGAResource {
     @GET
     @Path("changes")
     @Produces(APPLICATION_JSON)
-    public Uni<List<TupleChange>> listChanges() {
-        return storeClient.listChanges(null, null, null);
+    public Uni<List<TupleChange>> readChanges() {
+        return storeClient.readChanges().map(PaginatedList::getItems);
     }
 
     @GET

@@ -270,7 +270,7 @@ public class AuthorizationModelClientTest {
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem();
 
-        var objects = authorizationModelClient.listObjects("document", "writer", "user:me", null)
+        var objects = authorizationModelClient.listObjects("document", "writer", "user:me")
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();

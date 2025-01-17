@@ -1,5 +1,8 @@
 package io.quarkiverse.openfga.client.model;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
 import java.util.List;
 import java.util.Objects;
 
@@ -7,7 +10,9 @@ import javax.annotation.Nullable;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.type.TypeReference;
 
+import io.quarkiverse.openfga.client.model.utils.ModelMapper;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class ContextualTupleKeys {
@@ -27,6 +32,46 @@ public final class ContextualTupleKeys {
         if (tupleKeys == null) {
             return null;
         }
+        return new ContextualTupleKeys(tupleKeys);
+    }
+
+    public static ContextualTupleKeys parse(InputStream stream) throws IOException {
+        return ModelMapper.mapper.readValue(stream, ContextualTupleKeys.class);
+    }
+
+    public static ContextualTupleKeys parse(Reader reader) throws IOException {
+        return ModelMapper.mapper.readValue(reader, ContextualTupleKeys.class);
+    }
+
+    public static ContextualTupleKeys parse(String json) throws IOException {
+        return ModelMapper.mapper.readValue(json, ContextualTupleKeys.class);
+    }
+
+    public static ContextualTupleKeys parse(byte[] bytes) throws IOException {
+        return ModelMapper.mapper.readValue(bytes, ContextualTupleKeys.class);
+    }
+
+    public static ContextualTupleKeys parseList(InputStream stream) throws IOException {
+        List<ConditionalTupleKey> tupleKeys = ModelMapper.mapper.readValue(stream, new TypeReference<>() {
+        });
+        return new ContextualTupleKeys(tupleKeys);
+    }
+
+    public static ContextualTupleKeys parseList(Reader reader) throws IOException {
+        List<ConditionalTupleKey> tupleKeys = ModelMapper.mapper.readValue(reader, new TypeReference<>() {
+        });
+        return new ContextualTupleKeys(tupleKeys);
+    }
+
+    public static ContextualTupleKeys parseList(String json) throws IOException {
+        List<ConditionalTupleKey> tupleKeys = ModelMapper.mapper.readValue(json, new TypeReference<>() {
+        });
+        return new ContextualTupleKeys(tupleKeys);
+    }
+
+    public static ContextualTupleKeys parseList(byte[] bytes) throws IOException {
+        List<ConditionalTupleKey> tupleKeys = ModelMapper.mapper.readValue(bytes, new TypeReference<>() {
+        });
         return new ContextualTupleKeys(tupleKeys);
     }
 

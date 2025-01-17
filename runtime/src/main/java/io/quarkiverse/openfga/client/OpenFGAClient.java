@@ -15,6 +15,7 @@ import io.quarkiverse.openfga.client.model.FGAValidationException;
 import io.quarkiverse.openfga.client.model.Store;
 import io.quarkiverse.openfga.client.model.dto.*;
 import io.quarkiverse.openfga.client.utils.PaginatedList;
+import io.quarkiverse.openfga.client.utils.Pagination;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 
@@ -26,10 +27,37 @@ public class OpenFGAClient {
         this.api = api;
     }
 
+    public record ListStoresFilter(@Nullable String name) {
+
+        public static final ListStoresFilter ALL = new ListStoresFilter(null);
+
+        public static ListStoresFilter named(String name) {
+            return new ListStoresFilter(name);
+        }
+    }
+
+    @Deprecated(since = "2.4.0", forRemoval = true)
     public Uni<PaginatedList<Store>> listStores(@Nullable Integer pageSize, @Nullable String continuationToken) {
+        return listStores(Pagination.limitedTo(pageSize).andContinuingFrom(continuationToken));
+    }
+
+    public Uni<PaginatedList<Store>> listStores() {
+        return listStores(ListStoresFilter.ALL, Pagination.DEFAULT);
+    }
+
+    public Uni<PaginatedList<Store>> listStores(ListStoresFilter filter) {
+        return listStores(filter, Pagination.DEFAULT);
+    }
+
+    public Uni<PaginatedList<Store>> listStores(Pagination pagination) {
+        return listStores(ListStoresFilter.ALL, pagination);
+    }
+
+    public Uni<PaginatedList<Store>> listStores(ListStoresFilter filter, Pagination pagination) {
         var request = ListStoresRequest.builder()
-                .pageSize(pageSize)
-                .continuationToken(continuationToken)
+                .name(filter.name())
+                .pageSize(pagination.pageSize())
+                .continuationToken(pagination.continuationToken())
                 .build();
         return api.listStores(request)
                 .map(res -> new PaginatedList<>(res.getStores(), res.getContinuationToken()));

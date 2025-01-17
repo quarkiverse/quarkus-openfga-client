@@ -82,7 +82,7 @@ public class DevServicesOpenFGAProcessor {
         DevServicesOpenFGAConfig currentDevServicesConfiguration = config.devservices();
 
         // figure out if we need to shut down and restart any existing OpenFGA container
-        // if not and the OpenFGA container have already started we just return
+        // if not, and the OpenFGA container has already started we just return
         if (devService != null) {
             boolean restartRequired = !currentDevServicesConfiguration.equals(capturedDevServicesConfiguration);
             if (!restartRequired) {
@@ -204,7 +204,7 @@ public class DevServicesOpenFGAProcessor {
                             throw new RuntimeException("Store initialization failed", e);
                         }
 
-                        loadAuthorizationModelDefinition(api, devServicesConfig)
+                        loadAuthorizationModelDefinition(devServicesConfig)
                                 .ifPresentOrElse(schema -> {
 
                                     String authModelId;
@@ -223,7 +223,7 @@ public class DevServicesOpenFGAProcessor {
                                         throw new RuntimeException("Model initialization failed", e);
                                     }
 
-                                    loadAuthorizationTuples(api, devServicesConfig)
+                                    loadAuthorizationTuples(devServicesConfig)
                                             .ifPresent(authTuples -> {
                                                 try {
                                                     log.info("Initializing authorization tuples...");
@@ -283,7 +283,7 @@ public class DevServicesOpenFGAProcessor {
                                                     devServicesConfig.storeName()));
                                 }
 
-                                loadAuthorizationModelDefinition(api, devServicesConfig)
+                                loadAuthorizationModelDefinition(devServicesConfig)
                                         .ifPresent(authModelDef -> {
                                             try {
                                                 var client = new AuthorizationModelsClient(api, Uni.createFrom().item(storeId));
@@ -313,48 +313,43 @@ public class DevServicesOpenFGAProcessor {
                 .orElseGet(defaultOpenFGAInstanceSupplier);
     }
 
-    private static Optional<AuthorizationModelSchema> loadAuthorizationModelDefinition(API api,
+    private static Optional<AuthorizationModelSchema> loadAuthorizationModelDefinition(
             DevServicesOpenFGAConfig devServicesConfig) {
         return devServicesConfig.authorizationModel()
-                .or(() -> {
-                    return devServicesConfig.authorizationModelLocation()
-                            .map(location -> {
-                                try {
-                                    var authModelPath = resolvePath(location);
-                                    return Files.readString(authModelPath);
-                                } catch (Throwable x) {
-                                    throw new RuntimeException(
-                                            format("Unable to load authorization model from '%s'", location));
-                                }
-                            });
-                })
+                .or(() -> devServicesConfig.authorizationModelLocation()
+                        .map(location -> {
+                            try {
+                                var authModelPath = resolvePath(location);
+                                return Files.readString(authModelPath);
+                            } catch (Throwable x) {
+                                throw new RuntimeException(
+                                        format("Unable to load authorization model from '%s'", location));
+                            }
+                        }))
                 .map(authModelJSON -> {
                     try {
-                        return api.parseModelSchema(authModelJSON);
+                        return AuthorizationModelSchema.parse(authModelJSON);
                     } catch (Throwable t) {
                         throw new RuntimeException("Unable to parse authorization model", t);
                     }
                 });
     }
 
-    private static Optional<List<ConditionalTupleKey>> loadAuthorizationTuples(API api,
-            DevServicesOpenFGAConfig devServicesConfig) {
+    private static Optional<List<ConditionalTupleKey>> loadAuthorizationTuples(DevServicesOpenFGAConfig devServicesConfig) {
         return devServicesConfig.authorizationTuples()
-                .or(() -> {
-                    return devServicesConfig.authorizationTuplesLocation()
-                            .map(location -> {
-                                try {
-                                    var authModelPath = resolvePath(location);
-                                    return Files.readString(authModelPath);
-                                } catch (Throwable x) {
-                                    throw new RuntimeException(
-                                            format("Unable to load authorization tuples from '%s'", location));
-                                }
-                            });
-                })
+                .or(() -> devServicesConfig.authorizationTuplesLocation()
+                        .map(location -> {
+                            try {
+                                var authModelPath = resolvePath(location);
+                                return Files.readString(authModelPath);
+                            } catch (Throwable x) {
+                                throw new RuntimeException(
+                                        format("Unable to load authorization tuples from '%s'", location));
+                            }
+                        }))
                 .map(authTuplesJSON -> {
                     try {
-                        return api.parseTuples(authTuplesJSON);
+                        return ContextualTupleKeys.parseList(authTuplesJSON).getTupleKeys();
                     } catch (Throwable t) {
                         throw new RuntimeException("Unable to parse authorization tuples", t);
                     }
@@ -437,9 +432,8 @@ public class DevServicesOpenFGAProcessor {
                             "/tls/cert.pem", BindMode.READ_ONLY);
                     withFileSystemBind(resolvePath(keyPath).toAbsolutePath().toString(),
                             "/tls/key.pem", BindMode.READ_ONLY);
-                    waitingFor(Wait.forHttps("/healthz").forPort(8080).forResponsePredicate((response) -> {
-                        return response.contains("SERVING");
-                    }).usingTls().allowInsecure());
+                    waitingFor(Wait.forHttps("/healthz").forPort(8080)
+                            .forResponsePredicate((response) -> response.contains("SERVING")).usingTls().allowInsecure());
                 } catch (IOException e) {
                     throw new RuntimeException("Failed to bind TLS certificate and key", e);
                 }

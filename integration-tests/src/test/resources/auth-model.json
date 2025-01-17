@@ -5,6 +5,9 @@
       "type": "user"
     },
     {
+      "type": "group"
+    },
+    {
       "type": "thing",
       "relations": {
         "reader": {
@@ -23,6 +26,9 @@
             "directly_related_user_types": [
               {
                 "type": "user"
+              },
+              {
+                "type": "group"
               }
             ]
           },
@@ -30,6 +36,9 @@
             "directly_related_user_types": [
               {
                 "type": "user"
+              },
+              {
+                "type": "group"
               }
             ]
           },
@@ -37,6 +46,57 @@
             "directly_related_user_types": [
               {
                 "type": "user"
+              },
+              {
+                "type": "group"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "other-thing",
+      "relations": {
+        "reader": {
+          "this": {}
+        },
+        "writer": {
+          "this": {}
+        },
+        "owner": {
+          "this": {}
+        }
+      },
+      "metadata": {
+        "relations": {
+          "reader": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              },
+              {
+                "type": "group"
+              }
+            ]
+          },
+          "writer": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              },
+              {
+                "type": "group"
+              }
+            ]
+          },
+          "owner": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              },
+              {
+                "type": "group"
               }
             ]
           }
