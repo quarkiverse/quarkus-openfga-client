@@ -25,7 +25,7 @@ public final class ListObjectsRequest {
         @Nullable
         private RelUser user;
         @Nullable
-        private Collection<RelTupleKeyed> contextualTuples;
+        private Collection<? extends RelTupleKeyed> contextualTuples;
         @Nullable
         private Map<String, Object> context;
         @Nullable
@@ -54,7 +54,7 @@ public final class ListObjectsRequest {
             return this;
         }
 
-        public Builder contextualTuples(@Nullable Collection<RelTupleKeyed> contextualTuples) {
+        public Builder contextualTuples(@Nullable Collection<? extends RelTupleKeyed> contextualTuples) {
             this.contextualTuples = contextualTuples;
             return this;
         }

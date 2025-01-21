@@ -34,7 +34,7 @@ public class AuthorizationModelClient {
                 .map(ReadAuthorizationModelResponse::authorizationModel);
     }
 
-    public record CheckOptions(Optional<Collection<RelTupleKeyed>> contextualTuples,
+    public record CheckOptions(Optional<Collection<? extends RelTupleKeyed>> contextualTuples,
             Optional<Map<String, Object>> context, Optional<ConsistencyPreference> consistency) {
 
         public static final CheckOptions DEFAULT = new CheckOptions();
@@ -43,7 +43,7 @@ public class AuthorizationModelClient {
             this(Optional.empty(), Optional.empty(), Optional.empty());
         }
 
-        public static CheckOptions withContextualTuples(@Nullable Collection<RelTupleKeyed> contextualTuples) {
+        public static CheckOptions withContextualTuples(@Nullable Collection<? extends RelTupleKeyed> contextualTuples) {
             return new CheckOptions(Optional.ofNullable(contextualTuples), Optional.empty(), Optional.empty());
         }
 
@@ -59,7 +59,7 @@ public class AuthorizationModelClient {
             return new CheckOptions(Optional.empty(), Optional.empty(), Optional.ofNullable(consistency));
         }
 
-        public CheckOptions contextualTuples(@Nullable Collection<RelTupleKeyed> contextualTuples) {
+        public CheckOptions contextualTuples(@Nullable Collection<? extends RelTupleKeyed> contextualTuples) {
             return new CheckOptions(Optional.ofNullable(contextualTuples), context, consistency);
         }
 
@@ -127,7 +127,7 @@ public class AuthorizationModelClient {
         }).map(BatchCheckResponse::result);
     }
 
-    public record ExpandOptions(Optional<Collection<RelTupleKeyed>> contextualTuples,
+    public record ExpandOptions(Optional<Collection<? extends RelTupleKeyed>> contextualTuples,
             Optional<Map<String, Object>> context, Optional<ConsistencyPreference> consistency) {
 
         public static final ExpandOptions DEFAULT = new ExpandOptions();
@@ -136,7 +136,7 @@ public class AuthorizationModelClient {
             this(Optional.empty(), Optional.empty(), Optional.empty());
         }
 
-        public static ExpandOptions withContextualTuples(@Nullable Collection<RelTupleKeyed> contextualTuples) {
+        public static ExpandOptions withContextualTuples(@Nullable Collection<? extends RelTupleKeyed> contextualTuples) {
             return new ExpandOptions(Optional.ofNullable(contextualTuples), Optional.empty(), Optional.empty());
         }
 
@@ -152,7 +152,7 @@ public class AuthorizationModelClient {
             return new ExpandOptions(Optional.empty(), Optional.empty(), Optional.ofNullable(consistency));
         }
 
-        public ExpandOptions contextualTuples(@Nullable Collection<RelTupleKeyed> contextualTuples) {
+        public ExpandOptions contextualTuples(@Nullable Collection<? extends RelTupleKeyed> contextualTuples) {
             return new ExpandOptions(Optional.ofNullable(contextualTuples), context, consistency);
         }
 
@@ -187,12 +187,12 @@ public class AuthorizationModelClient {
                 .map(ExpandResponse::tree);
     }
 
-    public record ListOptions(Optional<Collection<RelTupleKeyed>> contextualTuples,
+    public record ListOptions(Optional<Collection<? extends RelTupleKeyed>> contextualTuples,
             Optional<Map<String, Object>> context, Optional<ConsistencyPreference> consistency) {
 
         public static final ListOptions DEFAULT = new ListOptions();
 
-        public static ListOptions of(@Nullable Collection<RelTupleKeyed> contextualTuples,
+        public static ListOptions of(@Nullable Collection<? extends RelTupleKeyed> contextualTuples,
                 @Nullable Map<String, Object> context, @Nullable ConsistencyPreference consistency) {
             return new ListOptions(Optional.ofNullable(contextualTuples), Optional.ofNullable(context),
                     Optional.ofNullable(consistency));
@@ -202,7 +202,7 @@ public class AuthorizationModelClient {
             this(Optional.empty(), Optional.empty(), Optional.empty());
         }
 
-        public static ListOptions withContextualTuples(@Nullable Collection<RelTupleKeyed> contextualTuples) {
+        public static ListOptions withContextualTuples(@Nullable Collection<? extends RelTupleKeyed> contextualTuples) {
             return new ListOptions(Optional.ofNullable(contextualTuples), Optional.empty(), Optional.empty());
         }
 
@@ -218,7 +218,7 @@ public class AuthorizationModelClient {
             return new ListOptions(Optional.empty(), Optional.empty(), Optional.ofNullable(consistency));
         }
 
-        public ListOptions contextualTuples(@Nullable Collection<RelTupleKeyed> contextualTuples) {
+        public ListOptions contextualTuples(@Nullable Collection<? extends RelTupleKeyed> contextualTuples) {
             return new ListOptions(Optional.ofNullable(contextualTuples), context, consistency);
         }
 
