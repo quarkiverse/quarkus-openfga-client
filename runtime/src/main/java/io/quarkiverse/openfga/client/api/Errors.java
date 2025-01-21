@@ -1,9 +1,9 @@
 package io.quarkiverse.openfga.client.api;
 
+import io.quarkiverse.openfga.client.model.FGAInputValidationException;
 import io.quarkiverse.openfga.client.model.FGAInternalException;
 import io.quarkiverse.openfga.client.model.FGANotFoundException;
 import io.quarkiverse.openfga.client.model.FGAUnknownException;
-import io.quarkiverse.openfga.client.model.FGAValidationException;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
 
 class Errors {
@@ -17,8 +17,8 @@ class Errors {
         };
     }
 
-    private static FGAValidationException convertToValidationException(HttpResponse<?> response) {
-        return response.bodyAsJson(FGAValidationException.class);
+    private static FGAInputValidationException convertToValidationException(HttpResponse<?> response) {
+        return response.bodyAsJson(FGAInputValidationException.class);
     }
 
     private static FGANotFoundException convertToNotFoundException(HttpResponse<?> response) {

@@ -18,6 +18,7 @@ package io.quarkiverse.openfga.it;
 
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
+import java.util.Collection;
 import java.util.List;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -60,7 +61,7 @@ public class OpenFGAResource {
     @GET
     @Path("changes")
     @Produces(APPLICATION_JSON)
-    public Uni<List<TupleChange>> readChanges() {
+    public Uni<Collection<RelTupleChange>> readChanges() {
         return storeClient.readChanges().map(PaginatedList::getItems);
     }
 
@@ -74,15 +75,15 @@ public class OpenFGAResource {
     @GET
     @Path("authorization-tuples")
     @Produces(APPLICATION_JSON)
-    public Uni<List<Tuple>> listTuples() {
-        return authorizationModelClient.readAllTuples();
+    public Uni<List<RelTuple>> listTuples() {
+        return authorizationModelClient.readAll();
     }
 
     @GET
     @Path("objects")
     @Produces(APPLICATION_JSON)
-    public Uni<List<Tuple>> listObjects() {
-        return authorizationModelClient.readAllTuples();
+    public Uni<List<RelTuple>> listObjects() {
+        return authorizationModelClient.readAll();
     }
 
     @GET

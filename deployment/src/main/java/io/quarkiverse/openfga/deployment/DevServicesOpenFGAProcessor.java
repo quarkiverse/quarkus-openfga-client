@@ -194,9 +194,9 @@ public class DevServicesOpenFGAProcessor {
 
                             log.info("Initializing authorization store...");
 
-                            storeId = api.createStore(CreateStoreRequest.of(devServicesConfig.storeName()))
+                            storeId = api.createStore(CreateStoreRequest.builder().name(devServicesConfig.storeName()).build())
                                     .await().atMost(devServicesConfig.startupTimeout())
-                                    .getId();
+                                    .id();
 
                             devServicesConfigProperties.put(STORE_ID_CONFIG_KEY, storeId);
 
@@ -211,11 +211,15 @@ public class DevServicesOpenFGAProcessor {
                                     try {
                                         log.info("Initializing authorization model...");
 
-                                        var request = WriteAuthorizationModelRequest.of(schema);
+                                        var request = WriteAuthorizationModelRequest.builder()
+                                                .schemaVersion(schema.getSchemaVersion())
+                                                .typeDefinitions(schema.getTypeDefinitions())
+                                                .conditions(schema.getConditions())
+                                                .build();
                                         authModelId = api.writeAuthorizationModel(storeId, request)
                                                 .await()
                                                 .atMost(devServicesConfig.startupTimeout())
-                                                .getAuthorizationModelId();
+                                                .authorizationModelId();
 
                                         devServicesConfigProperties.put(AUTHORIZATION_MODEL_ID_CONFIG_KEY, authModelId);
 
@@ -230,7 +234,7 @@ public class DevServicesOpenFGAProcessor {
 
                                                     var writeRequest = WriteRequest.builder()
                                                             .authorizationModelId(authModelId)
-                                                            .addWrites(authTuples)
+                                                            .writes(WriteRequest.Writes.of(authTuples))
                                                             .build();
                                                     api.write(storeId, writeRequest)
                                                             .await()
@@ -335,7 +339,7 @@ public class DevServicesOpenFGAProcessor {
                 });
     }
 
-    private static Optional<List<ConditionalTupleKey>> loadAuthorizationTuples(DevServicesOpenFGAConfig devServicesConfig) {
+    private static Optional<Collection<RelTupleKeyed>> loadAuthorizationTuples(DevServicesOpenFGAConfig devServicesConfig) {
         return devServicesConfig.authorizationTuples()
                 .or(() -> devServicesConfig.authorizationTuplesLocation()
                         .map(location -> {
@@ -349,7 +353,7 @@ public class DevServicesOpenFGAProcessor {
                         }))
                 .map(authTuplesJSON -> {
                     try {
-                        return ContextualTupleKeys.parseList(authTuplesJSON).getTupleKeys();
+                        return RelTupleKeys.parseList(authTuplesJSON).getTupleKeys();
                     } catch (Throwable t) {
                         throw new RuntimeException("Unable to parse authorization tuples", t);
                     }
@@ -394,7 +398,7 @@ public class DevServicesOpenFGAProcessor {
         }
 
         Vertx vertx = Vertx.vertx();
-        try (var api = new API(VertxWebClientFactory.create(instanceURL, vertx), Optional.empty())) {
+        try (var api = new API(VertxWebClientFactory.create(instanceURL, vertx), null)) {
 
             apiConsumer.apply(instanceURL, api);
 

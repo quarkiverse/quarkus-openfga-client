@@ -1,7 +1,5 @@
 package io.quarkiverse.openfga.client.model.dto;
 
-import static com.fasterxml.jackson.annotation.JsonCreator.Mode.PROPERTIES;
-
 import java.util.Objects;
 
 import javax.annotation.Nullable;
@@ -12,21 +10,12 @@ import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class CreateStoreRequest {
 
-    private final String name;
-
-    @JsonCreator(mode = PROPERTIES)
-    CreateStoreRequest(String name) {
-        this.name = Preconditions.parameterNonNull(name, "name");
-    }
-
-    public static CreateStoreRequest of(String name) {
-        return new CreateStoreRequest(name);
-    }
-
     public static final class Builder {
+
+        @Nullable
         private String name;
 
-        Builder() {
+        private Builder() {
         }
 
         public Builder name(String name) {
@@ -35,12 +24,20 @@ public final class CreateStoreRequest {
         }
 
         public CreateStoreRequest build() {
-            return new CreateStoreRequest(name);
+            return new CreateStoreRequest(
+                    Preconditions.parameterNonBlank(name, "name"));
         }
     }
 
     public static Builder builder() {
         return new Builder();
+    }
+
+    private final String name;
+
+    @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+    CreateStoreRequest(String name) {
+        this.name = name;
     }
 
     public String getName() {
@@ -49,11 +46,8 @@ public final class CreateStoreRequest {
 
     @Override
     public boolean equals(@Nullable Object obj) {
-        if (obj == this)
-            return true;
-        if (obj == null || obj.getClass() != this.getClass())
+        if (!(obj instanceof CreateStoreRequest that))
             return false;
-        var that = (CreateStoreRequest) obj;
         return Objects.equals(this.name, that.name);
     }
 

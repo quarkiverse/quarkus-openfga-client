@@ -1,18 +1,18 @@
 package io.quarkiverse.openfga.test;
 
+import static io.quarkiverse.openfga.test.SchemaFixtures.*;
 import static java.time.Duration.ofSeconds;
-import static java.time.OffsetDateTime.now;
-import static java.time.temporal.ChronoUnit.SECONDS;
 import static java.util.Collections.emptyList;
-import static org.assertj.core.api.Assertions.within;
+import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
+import static org.assertj.core.api.InstanceOfAssertFactories.*;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import jakarta.inject.Inject;
 
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.AfterEach;
@@ -22,9 +22,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.quarkiverse.openfga.client.AuthorizationModelClient;
+import io.quarkiverse.openfga.client.AuthorizationModelClient.*;
 import io.quarkiverse.openfga.client.OpenFGAClient;
 import io.quarkiverse.openfga.client.StoreClient;
 import io.quarkiverse.openfga.client.model.*;
+import io.quarkiverse.openfga.client.model.CheckResult;
+import io.quarkiverse.openfga.client.model.schema.*;
+import io.quarkiverse.openfga.client.utils.PaginatedList;
+import io.quarkiverse.openfga.client.utils.Pagination;
 import io.quarkus.test.QuarkusUnitTest;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 
@@ -33,7 +38,8 @@ public class AuthorizationModelClientTest {
     // Start unit test with extension loaded
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
-            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class));
+            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
+                    .addClasses(SchemaFixtures.class, Unchecked.class));
 
     @Inject
     OpenFGAClient openFGAClient;
@@ -41,32 +47,23 @@ public class AuthorizationModelClientTest {
     Store store;
 
     StoreClient storeClient;
-
     AuthorizationModelClient authorizationModelClient;
 
-    @BeforeEach
-    public void createTestStoreAndModel() {
-        store = openFGAClient.createStore("test").await().atMost(ofSeconds(10));
-        storeClient = openFGAClient.store(store.getId());
-
-        // ensure it has an auth model
-        var useTypeDef = TypeDefinition.of("user", Map.of());
-
-        var documentTypeDef = TypeDefinition.of("document", Map.of(
-                "reader", Userset.direct("a", 1),
-                "writer", Userset.direct("b", 2)),
-                Metadata.of(
-                        Map.of("reader", RelationMetadata.of(List.of(RelationReference.of("user"))),
-                                "writer", RelationMetadata.of(List.of(RelationReference.of("user"))))));
-
-        var schema = AuthorizationModelSchema.of(List.of(useTypeDef, documentTypeDef), null);
+    private AuthorizationModelClient createAuthorizationModelClient(AuthorizationModelSchema schema) {
 
         var authModelId = storeClient.authorizationModels().create(schema)
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
 
-        authorizationModelClient = storeClient.authorizationModels().model(authModelId);
+        return storeClient.authorizationModels().model(authModelId);
+    }
+
+    @BeforeEach
+    public void createTestStoreAndModel() {
+        store = openFGAClient.createStore("test").await().atMost(ofSeconds(10));
+        storeClient = openFGAClient.store(store.getId());
+        authorizationModelClient = createAuthorizationModelClient(SchemaFixtures.schema);
     }
 
     @AfterEach
@@ -77,225 +74,651 @@ public class AuthorizationModelClientTest {
     }
 
     @Test
-    @DisplayName("Can Read & Write Tuples")
-    public void canReadWriteTuples() {
+    @DisplayName("Read & Write Tuples")
+    public void readWriteTuples() {
 
-        var tuples = List.of(
-                ConditionalTupleKey.of("document:123", "reader", "user:me"));
-        var writes = authorizationModelClient.write(tuples, emptyList())
+        var tupleDef = document123.define(RelationshipNames.READER, userMe);
+
+        var writes = authorizationModelClient.write(tupleDef)
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
         assertThat(writes.entrySet())
                 .isEmpty();
 
-        var foundTuples = storeClient.readAllTuples()
+        var list = storeClient.readTuples()
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
-                .getItem()
-                .stream().map(Tuple::getKey).collect(Collectors.toList());
+                .getItem();
 
-        assertThat(foundTuples)
-                .isEqualTo(tuples);
+        assertThat(list)
+                .extracting(PaginatedList::getItems, as(iterable(RelTuple.class)))
+                .hasSize(1)
+                .extracting(RelTuple::getKey)
+                .containsExactly(tupleDef.conditional());
+        assertThat(list)
+                .extracting(PaginatedList::getToken, as(STRING))
+                .isEmpty();
     }
 
     @Test
-    @DisplayName("Throws Validation Exception When Write User Not Object")
+    @DisplayName("Throws Validation Exception When Write User Invalid")
     public void throwsValidationExceptionWhenUserNotObject() {
 
-        var tuples = List.of(
-                ConditionalTupleKey.of("document:123", "reader", "user"));
-        authorizationModelClient.write(tuples, emptyList())
+        var tupleDef = document123.define(RelationshipNames.READER, Unchecked.user("user", ""));
+
+        authorizationModelClient.write(tupleDef)
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitFailure()
-                .assertFailedWith(FGAValidationException.class,
-                        "Invalid tuple 'document:123#reader@user'. Reason: the 'user' field must be an object (e.g. document:1) or an 'object#relation' or a typed wildcard (e.g. group:*)");
+                .assertFailedWith(FGAInputValidationException.class,
+                        "Invalid tuple 'document:123#reader@user:'. " +
+                                "Reason: the 'user' field is malformed (validation_error)");
     }
 
     @Test
-    @DisplayName("Can Execute Checks")
-    public void canExecuteChecks() {
+    @DisplayName("Check Successful")
+    public void checkSuccessful() {
 
-        var tuple = ConditionalTupleKey.of("document:123", "reader", "user:me");
+        var tupleDef = document123.define(RelationshipNames.READER, userMe);
 
-        var writes = authorizationModelClient.write(List.of(tuple), emptyList())
+        var writes = authorizationModelClient.write(tupleDef)
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
         assertThat(writes.entrySet())
                 .isEmpty();
 
-        var allowed = authorizationModelClient.check(tuple.withoutCondition(), null)
+        var allowed = authorizationModelClient.check(tupleDef)
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
+
         assertThat(allowed)
                 .isTrue();
     }
 
     @Test
-    @DisplayName("Can Read All Relationships for an Object")
-    public void canReadAllRelationshipsForObject() {
+    @DisplayName("Check Failing")
+    public void checkFailing() {
 
-        var readerTuple = ConditionalTupleKey.of("document:123", "reader", "user:me");
-        var writerTuple = ConditionalTupleKey.of("document:123", "writer", "user:me");
+        var tupleDef = document123.define(RelationshipNames.READER, userMe);
 
-        authorizationModelClient.write(List.of(readerTuple), emptyList())
-                .subscribe().withSubscriber(UniAssertSubscriber.create())
-                .awaitItem();
-        authorizationModelClient.write(List.of(writerTuple), emptyList())
-                .subscribe().withSubscriber(UniAssertSubscriber.create())
-                .awaitItem();
+        var disallowedTupleDef = document123.define(RelationshipNames.READER, userYou);
 
-        var objects = authorizationModelClient.queryAllTuples(PartialTupleKey.of("document:123", null, null))
+        var writes = authorizationModelClient.write(tupleDef)
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
-        assertThat(objects)
-                .hasSize(2)
-                .anySatisfy(t -> {
-                    assertThat(t.getKey()).isEqualTo(readerTuple);
-                    assertThat(t.getTimestamp()).isCloseTo(now(), within(5, SECONDS));
+        assertThat(writes.entrySet())
+                .isEmpty();
+
+        var allowed = authorizationModelClient.check(disallowedTupleDef)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+
+        assertThat(allowed)
+                .isFalse();
+    }
+
+    @Test
+    @DisplayName("Check With Contextual Tuples")
+    public void checkWithContextualTuples() {
+
+        var tupleDef = document123.define(RelationshipNames.READER, userMe);
+        var ctxTupleDef = document123.define(RelationshipNames.OWNER, userYou);
+
+        var writes = authorizationModelClient.write(tupleDef)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+        assertThat(writes.entrySet())
+                .isEmpty();
+
+        var allowed = authorizationModelClient.check(ctxTupleDef, CheckOptions.withContextualTuples(ctxTupleDef))
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+
+        assertThat(allowed)
+                .isTrue();
+    }
+
+    @Test
+    @DisplayName("Check With Conditions")
+    public void checkWithConditions() {
+
+        var authorizationModelClient = createAuthorizationModelClient(SchemaFixtures.schemaWithCondition);
+
+        var condTupleDef = document123.define(RelationshipNames.GRANTEE, userMe)
+                .withCondition(RelCondition.of(ConditionNames.NON_EXPIRED_GRANT, Map.of(
+                        ParameterNames.GRANT_TIME, "2021-01-01T00:00:00Z",
+                        ParameterNames.GRANT_DURATION, "1h")));
+
+        var writes = authorizationModelClient.write(condTupleDef)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+        assertThat(writes.entrySet())
+                .isEmpty();
+
+        var allowed = authorizationModelClient.check(condTupleDef, CheckOptions.withContext(Map.of(
+                ParameterNames.CURRENT_TIME, "2021-01-01T00:20:00Z")))
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+
+        assertThat(allowed)
+                .isTrue();
+    }
+
+    @Test
+    @DisplayName("Batch Check")
+    public void batchCheck() {
+
+        var tupleDef1 = document123.define(RelationshipNames.READER, userMe);
+        var tupleDef2 = document123.define(RelationshipNames.WRITER, userYou);
+        var invTupleDef = document456.define(RelationshipNames.WRITER, Unchecked.user("user", ""));
+
+        var writes = authorizationModelClient.write(tupleDef1)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+        assertThat(writes.entrySet())
+                .isEmpty();
+
+        var results = authorizationModelClient.batchCheck(List.of(
+                Check.builder()
+                        .correlationId("1")
+                        .tupleKey(tupleDef1)
+                        .build(),
+                Check.builder()
+                        .correlationId("2")
+                        .tupleKey(tupleDef2)
+                        .build(),
+                Check.builder()
+                        .correlationId("3")
+                        .tupleKey(invTupleDef)
+                        .build()))
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+
+        assertThat(results)
+                .hasEntrySatisfying("1", r -> {
+                    assertThat(r).extracting(CheckResult::allowed, as(BOOLEAN)).isTrue();
+                    assertThat(r).extracting(CheckResult::error).isNull();
                 })
-                .anySatisfy(t -> {
-                    assertThat(t.getKey()).isEqualTo(writerTuple);
-                    assertThat(t.getTimestamp()).isCloseTo(now(), within(5, SECONDS));
+                .hasEntrySatisfying("2", r -> {
+                    assertThat(r).extracting(CheckResult::allowed, as(BOOLEAN)).isFalse();
+                    assertThat(r).extracting(CheckResult::error).isNull();
+                })
+                .hasEntrySatisfying("3", r -> {
+                    assertThat(r).extracting(CheckResult::allowed, as(BOOLEAN)).isFalse();
+                    assertThat(r)
+                            .extracting(CheckResult::error)
+                            .isNotNull()
+                            .satisfies(e -> {
+                                assertThat(e)
+                                        .extracting(CheckError::inputError)
+                                        .isEqualTo(InputErrorCode.VALIDATION_ERROR);
+                                assertThat(e)
+                                        .extracting(CheckError::message)
+                                        .isEqualTo("the 'user' field is malformed");
+                            });
                 });
     }
 
     @Test
-    @DisplayName("Can Read All Relationships for an Object, and Relation")
-    public void canReadAllRelationshipsForObjectAndRelation() {
+    @DisplayName("Expand")
+    public void expand() {
 
-        var meTuple = ConditionalTupleKey.of("document:123", "reader", "user:me");
-        var youTuple = ConditionalTupleKey.of("document:123", "reader", "user:you");
+        var tupleDef = document123.define(RelationshipNames.READER, userMe);
 
-        authorizationModelClient.write(List.of(meTuple), emptyList())
-                .subscribe().withSubscriber(UniAssertSubscriber.create())
-                .awaitItem();
-        authorizationModelClient.write(List.of(youTuple), emptyList())
-                .subscribe().withSubscriber(UniAssertSubscriber.create())
-                .awaitItem();
-
-        var objects = authorizationModelClient.queryAllTuples(PartialTupleKey.of("document:123", "reader", null))
+        var writes = authorizationModelClient.write(tupleDef)
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
-        assertThat(objects)
-                .hasSize(2)
-                .anySatisfy(t -> {
-                    assertThat(t.getKey()).isEqualTo(meTuple);
-                    assertThat(t.getTimestamp()).isCloseTo(now(), within(5, SECONDS));
-                })
-                .anySatisfy(t -> {
-                    assertThat(t.getKey()).isEqualTo(youTuple);
-                    assertThat(t.getTimestamp()).isCloseTo(now(), within(5, SECONDS));
+        assertThat(writes.entrySet())
+                .isEmpty();
+
+        var expanded = authorizationModelClient.expand(tupleDef)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+
+        assertThat(expanded)
+                .isNotNull()
+                .satisfies(t -> {
+                    assertThat(t)
+                            .extracting(UsersetTree::getRoot, as(type(Node.class)))
+                            .satisfies(u -> {
+                                assertThat(u)
+                                        .extracting(Node::name)
+                                        .isEqualTo("document:123#reader");
+                                assertThat(u)
+                                        .extracting(Node::leaf, as(type(Leaf.class)))
+                                        .isNotNull()
+                                        .extracting(Leaf::users, as(type(Users.class)))
+                                        .isNotNull()
+                                        .extracting(Users::users, as(iterable(String.class)))
+                                        .isNotNull()
+                                        .containsExactlyInAnyOrder(userMe.toString());
+                                assertThat(u)
+                                        .extracting(Node::computed)
+                                        .isNull();
+                                assertThat(u)
+                                        .extracting(Node::tupleToUserset)
+                                        .isNull();
+                                assertThat(u)
+                                        .extracting(Node::difference)
+                                        .isNull();
+                                assertThat(u)
+                                        .extracting(Node::union)
+                                        .isNull();
+                                assertThat(u)
+                                        .extracting(Node::intersection)
+                                        .isNull();
+                            });
                 });
     }
 
     @Test
-    @DisplayName("Can Read All Relationships for an Object, and User")
-    public void canReadAllRelationshipsForObjectAndUser() {
+    @DisplayName("Expand With Contextual Tuples")
+    public void expandWithContextualTuples() {
 
-        var readerTuple = ConditionalTupleKey.of("document:123", "reader", "user:me");
-        var writerTuple = ConditionalTupleKey.of("document:123", "writer", "user:me");
+        var tupleDef = document123.define(RelationshipNames.READER, userMe);
+        var ctxTupleDef = document123.define(RelationshipNames.READER, userYou);
 
-        authorizationModelClient.write(List.of(readerTuple), emptyList())
-                .subscribe().withSubscriber(UniAssertSubscriber.create())
-                .awaitItem();
-        authorizationModelClient.write(List.of(writerTuple), emptyList())
-                .subscribe().withSubscriber(UniAssertSubscriber.create())
-                .awaitItem();
-
-        var objects = authorizationModelClient.queryAllTuples(PartialTupleKey.of("document:123", null, "user:me"))
+        var writes = authorizationModelClient.write(tupleDef)
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
-        assertThat(objects)
-                .hasSize(2)
-                .anySatisfy(t -> {
-                    assertThat(t.getKey()).isEqualTo(readerTuple);
-                    assertThat(t.getTimestamp()).isCloseTo(now(), within(5, SECONDS));
-                })
-                .anySatisfy(t -> {
-                    assertThat(t.getKey()).isEqualTo(writerTuple);
-                    assertThat(t.getTimestamp()).isCloseTo(now(), within(5, SECONDS));
+        assertThat(writes.entrySet())
+                .isEmpty();
+
+        var expanded = authorizationModelClient.expand(tupleDef, ExpandOptions.withContextualTuples(ctxTupleDef))
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+
+        assertThat(expanded)
+                .isNotNull()
+                .satisfies(t -> {
+                    assertThat(t)
+                            .extracting(UsersetTree::getRoot, as(type(Node.class)))
+                            .satisfies(u -> {
+                                assertThat(u)
+                                        .extracting(Node::name)
+                                        .isEqualTo("document:123#reader");
+                                assertThat(u)
+                                        .extracting(Node::leaf, as(type(Leaf.class)))
+                                        .isNotNull()
+                                        .extracting(Leaf::users, as(type(Users.class)))
+                                        .isNotNull()
+                                        .extracting(Users::users, as(iterable(String.class)))
+                                        .isNotNull()
+                                        .containsExactlyInAnyOrder(userMe.toString(), userYou.toString());
+                                assertThat(u)
+                                        .extracting(Node::computed)
+                                        .isNull();
+                                assertThat(u)
+                                        .extracting(Node::tupleToUserset)
+                                        .isNull();
+                                assertThat(u)
+                                        .extracting(Node::difference)
+                                        .isNull();
+                                assertThat(u)
+                                        .extracting(Node::union)
+                                        .isNull();
+                                assertThat(u)
+                                        .extracting(Node::intersection)
+                                        .isNull();
+                            });
                 });
     }
 
     @Test
-    @DisplayName("Can Read All Relationships for an Object Type, and User")
-    public void canReadAllRelationshipsForObjectTypeAndUser() {
+    @DisplayName("Expand With Conditions")
+    public void expandWithConditions() {
 
-        var readerTuple = ConditionalTupleKey.of("document:123", "reader", "user:me");
-        var writerTuple = ConditionalTupleKey.of("document:123", "writer", "user:me");
+        var authorizationModelClient = createAuthorizationModelClient(SchemaFixtures.schemaWithCondition);
 
-        authorizationModelClient.write(List.of(readerTuple), emptyList())
-                .subscribe().withSubscriber(UniAssertSubscriber.create())
-                .awaitItem();
-        authorizationModelClient.write(List.of(writerTuple), emptyList())
-                .subscribe().withSubscriber(UniAssertSubscriber.create())
-                .awaitItem();
-        authorizationModelClient.write(List.of(ConditionalTupleKey.of("document:123", "writer", "user:you")), emptyList())
-                .subscribe().withSubscriber(UniAssertSubscriber.create())
-                .awaitItem();
+        var tupleDef = document123.define(RelationshipNames.GRANTEE, userMe)
+                .withCondition(RelCondition.of(ConditionNames.NON_EXPIRED_GRANT, Map.of(
+                        ParameterNames.GRANT_TIME, "2021-01-01T00:00:00Z",
+                        ParameterNames.GRANT_DURATION, "1h")));
 
-        var objects = authorizationModelClient.queryAllTuples(PartialTupleKey.of("document:", null, "user:me"))
+        var writes = authorizationModelClient.write(tupleDef)
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
-        assertThat(objects)
-                .hasSize(2)
-                .anySatisfy(t -> {
-                    assertThat(t.getKey()).isEqualTo(readerTuple);
-                    assertThat(t.getTimestamp()).isCloseTo(now(), within(5, SECONDS));
-                })
-                .anySatisfy(t -> {
-                    assertThat(t.getKey()).isEqualTo(writerTuple);
-                    assertThat(t.getTimestamp()).isCloseTo(now(), within(5, SECONDS));
+        assertThat(writes.entrySet())
+                .isEmpty();
+
+        var expanded = authorizationModelClient.expand(tupleDef, ExpandOptions.withContext(Map.of(
+                ParameterNames.CURRENT_TIME, "2021-01-01T00:20:00Z")))
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+
+        assertThat(expanded)
+                .isNotNull()
+                .satisfies(t -> {
+                    assertThat(t)
+                            .extracting(UsersetTree::getRoot, as(type(Node.class)))
+                            .satisfies(u -> {
+                                assertThat(u)
+                                        .extracting(Node::name)
+                                        .isEqualTo("document:123#grantee");
+                                assertThat(u)
+                                        .extracting(Node::leaf, as(type(Leaf.class)))
+                                        .isNotNull()
+                                        .extracting(Leaf::users, as(type(Users.class)))
+                                        .isNotNull()
+                                        .extracting(Users::users, as(iterable(String.class)))
+                                        .isNotNull()
+                                        .containsExactlyInAnyOrder(userMe.toString());
+                                assertThat(u)
+                                        .extracting(Node::computed)
+                                        .isNull();
+                                assertThat(u)
+                                        .extracting(Node::tupleToUserset)
+                                        .isNull();
+                                assertThat(u)
+                                        .extracting(Node::difference)
+                                        .isNull();
+                                assertThat(u)
+                                        .extracting(Node::union)
+                                        .isNull();
+                                assertThat(u)
+                                        .extracting(Node::intersection)
+                                        .isNull();
+                            });
                 });
     }
 
     @Test
-    @DisplayName("Can List All Objects for an Object Type, Relation, and User")
-    public void canListAllRelationshipsForObjectTypeRelationAndUser() {
+    @DisplayName("Read Tuples")
+    public void readTuples() {
 
-        var aTuple = ConditionalTupleKey.of("document:123", "writer", "user:me");
-        var bTuple = ConditionalTupleKey.of("document:456", "writer", "user:me");
+        var readerTupleDef = document123.define(RelationshipNames.READER, userMe);
+        var writerTupleDef = document123.define(RelationshipNames.WRITER, userMe);
+        var otherTupleDef = document456.define(RelationshipNames.WRITER, userMe);
 
-        authorizationModelClient.write(List.of(aTuple), emptyList())
+        authorizationModelClient.write(readerTupleDef, writerTupleDef, otherTupleDef)
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem();
-        authorizationModelClient.write(List.of(bTuple), emptyList())
-                .subscribe().withSubscriber(UniAssertSubscriber.create())
-                .awaitItem();
 
-        var objects = authorizationModelClient.listObjects("document", "writer", "user:me")
+        var list = authorizationModelClient.read()
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
-        assertThat(objects)
-                .containsOnly("document:123", "document:456");
+
+        assertThat(list)
+                .extracting(PaginatedList::getItems, as(iterable(RelTuple.class)))
+                .hasSize(3)
+                .extracting(RelTuple::getKey)
+                .containsExactlyInAnyOrder(readerTupleDef.conditional(), writerTupleDef.conditional(),
+                        otherTupleDef.conditional());
+        assertThat(list)
+                .extracting(PaginatedList::getToken, as(STRING))
+                .isEmpty();
     }
 
     @Test
-    @DisplayName("Can List All Users for an Object Type, Relation, and User Type")
-    public void canListAllUsersForObjectAndRelationship() {
+    @DisplayName("Read Tuples Matching Object")
+    public void readTuplesMatchingObject() {
 
-        var aTuple = ConditionalTupleKey.of("document:123", "writer", "user:them");
-        var bTuple = ConditionalTupleKey.of("document:456", "writer", "user:me");
-        var cTuple = ConditionalTupleKey.of("document:456", "writer", "user:you");
+        var readerTupleDef = document123.define(RelationshipNames.READER, userMe);
+        var writerTupleDef = document123.define(RelationshipNames.WRITER, userMe);
+        var otherTupleDef = document456.define(RelationshipNames.WRITER, userMe);
 
-        authorizationModelClient.write(List.of(aTuple, bTuple, cTuple), emptyList())
+        authorizationModelClient.write(readerTupleDef, writerTupleDef, otherTupleDef)
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem();
 
-        var objects = authorizationModelClient
-                .listUsers(AnyObject.of("document", "456"), "writer", List.of(UserTypeFilter.of("user")))
+        var list = authorizationModelClient.read(ReadFilter.byObject(document123))
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+
+        assertThat(list)
+                .extracting(PaginatedList::getItems, as(iterable(RelTuple.class)))
+                .hasSize(2)
+                .extracting(RelTuple::getKey)
+                .containsExactlyInAnyOrder(readerTupleDef.conditional(), writerTupleDef.conditional());
+        assertThat(list)
+                .extracting(PaginatedList::getToken, as(STRING))
+                .isEmpty();
+    }
+
+    @Test
+    @DisplayName("Read Tuples Matching Object and Relation")
+    public void readTuplesMatchingObjectAndRelation() {
+
+        var meTupleDef = document123.define(RelationshipNames.READER, userMe);
+        var youTupleDef = document123.define(RelationshipNames.READER, userYou);
+        var otherTupleDef = document456.define(RelationshipNames.WRITER, userMe);
+
+        authorizationModelClient.write(meTupleDef, youTupleDef, otherTupleDef)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem();
+
+        var list = authorizationModelClient.read(ReadFilter.byObject(document123).relation(RelationshipNames.READER))
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+
+        assertThat(list)
+                .extracting(PaginatedList::getItems, as(iterable(RelTuple.class)))
+                .hasSize(2)
+                .extracting(RelTuple::getKey)
+                .containsExactlyInAnyOrder(meTupleDef.conditional(), youTupleDef.conditional());
+        assertThat(list)
+                .extracting(PaginatedList::getToken, as(STRING))
+                .isEmpty();
+    }
+
+    @Test
+    @DisplayName("Read Tuples Matching Object and User")
+    public void readTuplesMatchingObjectUser() {
+
+        var readerTupleDef = document123.define(RelationshipNames.READER, userMe);
+        var writerTupleDef = document123.define(RelationshipNames.WRITER, userMe);
+        var otherTupleDef = document123.define(RelationshipNames.WRITER, userYou);
+
+        authorizationModelClient.write(readerTupleDef, writerTupleDef, otherTupleDef)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem();
+
+        var list = authorizationModelClient.read(ReadFilter.byObject(document123).user(userMe))
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+
+        assertThat(list)
+                .extracting(PaginatedList::getItems, as(InstanceOfAssertFactories.collection(RelTuple.class)))
+                .hasSize(2)
+                .extracting(RelTuple::getKey)
+                .containsExactlyInAnyOrder(readerTupleDef.conditional(), writerTupleDef.conditional());
+        assertThat(list)
+                .extracting(PaginatedList::getToken, as(STRING))
+                .isEmpty();
+    }
+
+    @Test
+    @DisplayName("Read Tuples Matching Object Type and User")
+    public void readTuplesMatchingForObjectTypeAndUser() {
+
+        var readerTupleDef = document123.define("reader", userMe);
+        var writerTupleDef = document123.define("writer", userMe);
+        var otherTupleDef = document123.define("writer", userYou);
+
+        authorizationModelClient.write(List.of(readerTupleDef, writerTupleDef, otherTupleDef), emptyList())
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem();
+
+        var list = authorizationModelClient.read(ReadFilter.byObjectType(documentType).user(userMe))
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+
+        assertThat(list)
+                .extracting(PaginatedList::getItems, as(iterable(RelTuple.class)))
+                .hasSize(2)
+                .extracting(RelTuple::getKey)
+                .containsExactlyInAnyOrder(readerTupleDef.conditional(), writerTupleDef.conditional());
+        assertThat(list)
+                .extracting(PaginatedList::getToken, as(STRING))
+                .isEmpty();
+    }
+
+    @Test
+    @DisplayName("Read Tuples With Pagination")
+    public void readTuplesWithPagination() {
+
+        var readerTupleDef = document123.define("reader", userMe);
+        var writerTupleDef = document123.define("writer", userMe);
+        var otherTupleDef = document123.define("owner", userMe);
+
+        authorizationModelClient.write(List.of(readerTupleDef, writerTupleDef, otherTupleDef), emptyList())
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem();
+
+        var page1 = authorizationModelClient.read(ReadFilter.byObjectType(documentType).user(userMe),
+                Pagination.limitedTo(2))
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+
+        assertThat(page1)
+                .extracting(PaginatedList::getItems, as(iterable(RelTuple.class)))
+                .hasSize(2)
+                .extracting(RelTuple::getKey)
+                .containsExactlyInAnyOrder(readerTupleDef.conditional(), writerTupleDef.conditional());
+        assertThat(page1)
+                .extracting(PaginatedList::getToken, as(STRING))
+                .isNotBlank();
+
+        var page2 = authorizationModelClient.read(ReadFilter.byObjectType(documentType).user(userMe),
+                Pagination.limitedTo(2).andContinuingFrom(page1.getToken()))
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+
+        assertThat(page2)
+                .extracting(PaginatedList::getItems, as(iterable(RelTuple.class)))
+                .hasSize(1)
+                .extracting(RelTuple::getKey)
+                .containsExactlyInAnyOrder(otherTupleDef.conditional());
+        assertThat(page2)
+                .extracting(PaginatedList::getToken, as(STRING))
+                .isBlank();
+    }
+
+    @Test
+    @DisplayName("Read All Tuples")
+    public void readAllTuples() {
+
+        var readerTupleDef = document123.define("reader", userMe);
+        var writerTupleDef = document123.define("writer", userMe);
+        var otherTupleDef = document123.define("owner", userMe);
+
+        authorizationModelClient.write(List.of(readerTupleDef, writerTupleDef, otherTupleDef), emptyList())
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem();
+
+        var list = authorizationModelClient.readAll(ReadFilter.ALL, 1)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+
+        assertThat(list)
+                .hasSize(3)
+                .extracting(RelTuple::getKey)
+                .containsExactlyInAnyOrder(readerTupleDef.conditional(), writerTupleDef.conditional(),
+                        otherTupleDef.conditional());
+
+        var list2 = authorizationModelClient.readAll()
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+        assertThat(list2)
+                .hasSize(3);
+
+        var list3 = authorizationModelClient.readAll(ReadFilter.ALL)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+        assertThat(list3)
+                .hasSize(3);
+    }
+
+    @Test
+    @DisplayName("List Objects Matching Object Type, Relation, and User")
+    public void listObjectsMatchingObjectTypeRelationAndUser() {
+
+        var aTupleDef = document123.define(RelationshipNames.WRITER, userMe);
+        var bTupleDef = document456.define(RelationshipNames.WRITER, userMe);
+        var cTupleDef = document456.define(RelationshipNames.WRITER, userYou);
+
+        authorizationModelClient.write(aTupleDef, bTupleDef, cTupleDef)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem();
+
+        var objects = authorizationModelClient.listObjects(ListObjectsFilter.byObjectType(documentType)
+                .relation(RelationshipNames.WRITER)
+                .user(userMe))
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
         assertThat(objects)
+                .containsOnly(document123, document456);
+    }
+
+    @Test
+    @DisplayName("List Objects With Contextual Tuples")
+    public void listObjectsWithContextualTuples() {
+
+        var aTupleDef = document123.define(RelationshipNames.WRITER, userMe);
+        var bTupleDef = document123.define(RelationshipNames.WRITER, userYou);
+        var cTupleDef = document456.define(RelationshipNames.WRITER, userMe);
+
+        authorizationModelClient.write(aTupleDef, bTupleDef)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem();
+
+        var objects = authorizationModelClient.listObjects(ListObjectsFilter.byObjectType(documentType)
+                .relation(RelationshipNames.WRITER)
+                .user(userMe),
+                ListOptions.withContextualTuples(cTupleDef))
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+        assertThat(objects)
+                .containsOnly(document123, document456);
+    }
+
+    @Test
+    @DisplayName("List All Users for an Object, Relation, and User Type")
+    public void listAllUsersForObjectRelationUserType() {
+
+        var aTupleDef = document123.define("writer", userMe);
+        var bTupleDef = document456.define("writer", userMe);
+        var cTupleDef = document456.define("writer", userYou);
+
+        authorizationModelClient.write(aTupleDef, bTupleDef, cTupleDef)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem();
+
+        var list = authorizationModelClient
+                .listUsers(ListUsersFilter.byObject(document456).relation("writer").userType(userType))
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+
+        assertThat(list)
                 .containsOnly(User.object("user", "me"), User.object("user", "you"));
     }
 }

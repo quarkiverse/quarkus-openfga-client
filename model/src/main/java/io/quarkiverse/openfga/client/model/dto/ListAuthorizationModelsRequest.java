@@ -11,30 +11,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public final class ListAuthorizationModelsRequest {
 
-    @JsonProperty("page_size")
-    @Nullable
-    private final Integer pageSize;
-
-    @JsonProperty("continuation_token")
-    @Nullable
-    private final String continuationToken;
-
-    @JsonCreator(mode = PROPERTIES)
-    ListAuthorizationModelsRequest(@JsonProperty("page_size") @Nullable Integer pageSize,
-            @JsonProperty("continuation_token") @Nullable String continuationToken) {
-        this.pageSize = pageSize;
-        this.continuationToken = continuationToken;
-    }
-
-    public static ListAuthorizationModelsRequest of(@Nullable Integer pageSize, @Nullable String continuationToken) {
-        return new ListAuthorizationModelsRequest(pageSize, continuationToken);
-    }
-
     public static final class Builder {
+
+        @Nullable
         private Integer pageSize;
+        @Nullable
         private String continuationToken;
 
-        Builder() {
+        private Builder() {
         }
 
         public Builder pageSize(@Nullable Integer pageSize) {
@@ -56,6 +40,18 @@ public final class ListAuthorizationModelsRequest {
         return new Builder();
     }
 
+    @Nullable
+    private final Integer pageSize;
+    @Nullable
+    private final String continuationToken;
+
+    @JsonCreator(mode = PROPERTIES)
+    ListAuthorizationModelsRequest(@JsonProperty("page_size") @Nullable Integer pageSize,
+            @JsonProperty("continuation_token") @Nullable String continuationToken) {
+        this.pageSize = pageSize;
+        this.continuationToken = continuationToken;
+    }
+
     @JsonProperty("page_size")
     @Nullable
     public Integer getPageSize() {
@@ -70,11 +66,8 @@ public final class ListAuthorizationModelsRequest {
 
     @Override
     public boolean equals(@Nullable Object obj) {
-        if (obj == this)
-            return true;
-        if (obj == null || obj.getClass() != this.getClass())
+        if (!(obj instanceof ListAuthorizationModelsRequest that))
             return false;
-        var that = (ListAuthorizationModelsRequest) obj;
         return Objects.equals(this.pageSize, that.pageSize) &&
                 Objects.equals(this.continuationToken, that.continuationToken);
     }

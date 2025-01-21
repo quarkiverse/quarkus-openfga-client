@@ -1,7 +1,7 @@
 package io.quarkiverse.openfga.client.model.dto;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
+import java.util.Map;
 import java.util.Objects;
 
 import javax.annotation.Nullable;
@@ -9,62 +9,29 @@ import javax.annotation.Nullable;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import io.quarkiverse.openfga.client.model.ConditionalTupleKey;
-import io.quarkiverse.openfga.client.model.ConsistencyPreference;
-import io.quarkiverse.openfga.client.model.ContextualTupleKeys;
+import io.quarkiverse.openfga.client.model.*;
+import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class ListObjectsRequest {
 
-    @JsonProperty("authorization_model_id")
-    @Nullable
-    private final String authorizationModelId;
-
-    private final String type;
-
-    private final String relation;
-
-    private final String user;
-
-    @JsonProperty("contextual_tuples")
-    @Nullable
-    private final ContextualTupleKeys contextualTuples;
-
-    @Nullable
-    private final Object context;
-
-    @Nullable
-    private final ConsistencyPreference consistency;
-
-    @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-    ListObjectsRequest(@JsonProperty("authorization_model_id") @Nullable String authorizationModelId,
-            String type, String relation, String user,
-            @Nullable @JsonProperty("contextual_tuples") ContextualTupleKeys contextualTuples,
-            @Nullable Object context, @Nullable ConsistencyPreference consistency) {
-        this.authorizationModelId = authorizationModelId;
-        this.type = type;
-        this.relation = relation;
-        this.user = user;
-        this.contextualTuples = contextualTuples;
-        this.context = context;
-        this.consistency = consistency;
-    }
-
-    public static ListObjectsRequest of(@Nullable String authorizationModelId, String type, String relation, String user,
-            @Nullable ContextualTupleKeys contextualTuples, @Nullable Object context,
-            @Nullable ConsistencyPreference consistency) {
-        return new ListObjectsRequest(authorizationModelId, type, relation, user, contextualTuples, context, consistency);
-    }
-
     public static final class Builder {
+
+        @Nullable
         private String authorizationModelId;
+        @Nullable
         private String type;
+        @Nullable
         private String relation;
-        private String user;
-        private ContextualTupleKeys contextualTuples;
-        private Object context;
+        @Nullable
+        private RelUser user;
+        @Nullable
+        private Collection<RelTupleKeyed> contextualTuples;
+        @Nullable
+        private Map<String, Object> context;
+        @Nullable
         private ConsistencyPreference consistency;
 
-        public Builder() {
+        private Builder() {
         }
 
         public Builder authorizationModelId(@Nullable String authorizationModelId) {
@@ -82,33 +49,17 @@ public final class ListObjectsRequest {
             return this;
         }
 
-        public Builder user(String user) {
+        public Builder user(RelUser user) {
             this.user = user;
             return this;
         }
 
-        public Builder contextualTuples(@Nullable ContextualTupleKeys contextualTuples) {
+        public Builder contextualTuples(@Nullable Collection<RelTupleKeyed> contextualTuples) {
             this.contextualTuples = contextualTuples;
             return this;
         }
 
-        public Builder addContextualTuples(List<ConditionalTupleKey> contextualTuples) {
-            if (this.contextualTuples == null) {
-                this.contextualTuples = ContextualTupleKeys.of(new ArrayList<>());
-            }
-            this.contextualTuples.getTupleKeys().addAll(contextualTuples);
-            return this;
-        }
-
-        public Builder addContextualTuple(ConditionalTupleKey contextualTuple) {
-            if (contextualTuples == null) {
-                contextualTuples = ContextualTupleKeys.of(new ArrayList<>());
-            }
-            contextualTuples.getTupleKeys().add(contextualTuple);
-            return this;
-        }
-
-        public Builder context(@Nullable Object context) {
+        public Builder context(@Nullable Map<String, Object> context) {
             this.context = context;
             return this;
         }
@@ -119,12 +70,42 @@ public final class ListObjectsRequest {
         }
 
         public ListObjectsRequest build() {
-            return new ListObjectsRequest(authorizationModelId, type, relation, user, contextualTuples, context, consistency);
+            var type = Preconditions.parameterNonBlank(this.type, "type");
+            var relation = Preconditions.parameterNonBlank(this.relation, "relation");
+            var user = Preconditions.parameterNonNull(this.user, "user");
+            return new ListObjectsRequest(authorizationModelId, type, relation, user,
+                    RelTupleKeys.of(contextualTuples), context, consistency);
         }
     }
 
     public static Builder builder() {
         return new Builder();
+    }
+
+    @Nullable
+    private final String authorizationModelId;
+    private final String type;
+    private final String relation;
+    private final RelUser user;
+    @Nullable
+    private final RelTupleKeys contextualTuples;
+    @Nullable
+    private final Map<String, Object> context;
+    @Nullable
+    private final ConsistencyPreference consistency;
+
+    @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+    ListObjectsRequest(@JsonProperty("authorization_model_id") @Nullable String authorizationModelId,
+            String type, String relation, RelUser user,
+            @JsonProperty("contextual_tuples") @Nullable RelTupleKeys contextualTuples,
+            @Nullable Map<String, Object> context, @Nullable ConsistencyPreference consistency) {
+        this.authorizationModelId = authorizationModelId;
+        this.type = type;
+        this.relation = relation;
+        this.user = user;
+        this.contextualTuples = contextualTuples;
+        this.context = context;
+        this.consistency = consistency;
     }
 
     @JsonProperty("authorization_model_id")
@@ -141,18 +122,17 @@ public final class ListObjectsRequest {
         return relation;
     }
 
-    public String getUser() {
+    public RelUser getUser() {
         return user;
     }
 
-    @JsonProperty("contextual_tuples")
     @Nullable
-    public ContextualTupleKeys getContextualTuples() {
+    public RelTupleKeys getContextualTuples() {
         return contextualTuples;
     }
 
     @Nullable
-    public Object getContext() {
+    public Map<String, Object> getContext() {
         return context;
     }
 
@@ -163,22 +143,20 @@ public final class ListObjectsRequest {
 
     @Override
     public boolean equals(@Nullable Object obj) {
-        if (obj == this)
-            return true;
-        if (obj == null || obj.getClass() != this.getClass())
+        if (!(obj instanceof ListObjectsRequest that))
             return false;
-        var that = (ListObjectsRequest) obj;
         return Objects.equals(this.authorizationModelId, that.authorizationModelId) &&
                 Objects.equals(this.type, that.type) &&
                 Objects.equals(this.relation, that.relation) &&
                 Objects.equals(this.user, that.user) &&
                 Objects.equals(this.contextualTuples, that.contextualTuples) &&
-                Objects.equals(this.context, that.context);
+                Objects.equals(this.context, that.context) &&
+                Objects.equals(this.consistency, that.consistency);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(authorizationModelId, type, relation, user, contextualTuples, context);
+        return Objects.hash(authorizationModelId, type, relation, user, contextualTuples, context, consistency);
     }
 
     @Override
@@ -189,7 +167,8 @@ public final class ListObjectsRequest {
                 "relation=" + relation + ", " +
                 "user=" + user + ", " +
                 "contextualTupleKeys=" + contextualTuples + ", " +
-                "context=" + context + ']';
+                "context=" + context + ", " +
+                "consistency=" + consistency + ']';
     }
 
 }

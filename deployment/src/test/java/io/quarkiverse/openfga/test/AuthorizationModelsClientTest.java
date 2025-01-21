@@ -1,10 +1,13 @@
 package io.quarkiverse.openfga.test;
 
+import static io.quarkiverse.openfga.client.model.AuthorizationModelSchema.DEFAULT_SCHEMA_VERSION;
 import static java.time.Duration.ofSeconds;
+import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
+import static org.assertj.core.api.InstanceOfAssertFactories.*;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import jakarta.inject.Inject;
 
@@ -20,6 +23,9 @@ import io.quarkiverse.openfga.client.AuthorizationModelsClient;
 import io.quarkiverse.openfga.client.OpenFGAClient;
 import io.quarkiverse.openfga.client.StoreClient;
 import io.quarkiverse.openfga.client.model.*;
+import io.quarkiverse.openfga.client.model.schema.Condition;
+import io.quarkiverse.openfga.client.utils.PaginatedList;
+import io.quarkiverse.openfga.client.utils.Pagination;
 import io.quarkus.test.QuarkusUnitTest;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 
@@ -28,7 +34,8 @@ public class AuthorizationModelsClientTest {
     // Start unit test with extension loaded
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
-            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class));
+            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
+                    .addClass(SchemaFixtures.class));
 
     @Inject
     OpenFGAClient openFGAClient;
@@ -36,7 +43,6 @@ public class AuthorizationModelsClientTest {
     Store store;
 
     StoreClient storeClient;
-
     AuthorizationModelsClient authorizationModelsClient;
 
     @BeforeEach
@@ -53,30 +59,247 @@ public class AuthorizationModelsClientTest {
         }
     }
 
+    private List<String> createTestModels(int count) {
+
+        var ids = new ArrayList<String>();
+        for (int c = 0; c < count; c++) {
+            var modelId = authorizationModelsClient.create(SchemaFixtures.schema)
+                    .subscribe().withSubscriber(UniAssertSubscriber.create())
+                    .awaitItem()
+                    .getItem();
+            ids.add(modelId);
+        }
+
+        return ids;
+    }
+
     @Test
     @DisplayName("Can List Models")
     public void canList() {
 
-        var userTypeDef = TypeDefinition.of("user");
-        var documentTypeDef = TypeDefinition.of("document", Map.of(
-                "reader", Userset.direct("a", 1)),
-                Metadata.of(
-                        Map.of("reader", RelationMetadata.of(List.of(RelationReference.of("user"))))));
+        var modelIds = createTestModels(4);
 
-        var schema = AuthorizationModelSchema.of(List.of(userTypeDef, documentTypeDef), null);
+        var list = authorizationModelsClient.list()
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
 
-        for (int c = 0; c < 4; c++) {
-            authorizationModelsClient.create(schema)
-                    .subscribe().withSubscriber(UniAssertSubscriber.create())
-                    .awaitItem();
-        }
+        assertThat(list)
+                .extracting(PaginatedList::getItems, as(iterable(AuthorizationModel.class)))
+                .hasSize(4)
+                .allSatisfy(model -> {
+                    assertThat(model)
+                            .extracting(AuthorizationModel::getId, as(STRING))
+                            .isIn(modelIds);
+                    assertThat(model)
+                            .extracting(AuthorizationModel::getSchemaVersion, as(STRING))
+                            .isEqualTo(DEFAULT_SCHEMA_VERSION);
+                    assertThat(model)
+                            .extracting(AuthorizationModel::getTypeDefinitions, as(iterable(TypeDefinition.class)))
+                            .containsExactlyInAnyOrderElementsOf(SchemaFixtures.schema.getTypeDefinitions());
+                    assertThat(model)
+                            .extracting(AuthorizationModel::getConditions, as(map(String.class, Condition.class)))
+                            .isEmpty();
+                });
+    }
 
-        var models = authorizationModelsClient.listAll(1)
+    @Test
+    @DisplayName("Can List Models With Pagination")
+    public void canListWithPagination() {
+
+        var modelIds = createTestModels(5);
+
+        var page1 = authorizationModelsClient.list(Pagination.limitedTo(2))
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+
+        assertThat(page1)
+                .extracting(PaginatedList::getItems, as(iterable(AuthorizationModel.class)))
+                .hasSize(2)
+                .allSatisfy(model -> {
+                    assertThat(model)
+                            .extracting(AuthorizationModel::getId, as(STRING))
+                            .isIn(modelIds);
+                    assertThat(model)
+                            .extracting(AuthorizationModel::getSchemaVersion)
+                            .isEqualTo(DEFAULT_SCHEMA_VERSION);
+                    assertThat(model)
+                            .extracting(AuthorizationModel::getTypeDefinitions, as(iterable(TypeDefinition.class)))
+                            .containsExactlyInAnyOrderElementsOf(SchemaFixtures.schema.getTypeDefinitions());
+                    assertThat(model)
+                            .extracting(AuthorizationModel::getConditions, as(map(String.class, Condition.class)))
+                            .isEmpty();
+                });
+        assertThat(page1)
+                .extracting(PaginatedList::getToken, as(STRING))
+                .isNotBlank();
+
+        var page2 = authorizationModelsClient.list(Pagination.limitedTo(2).andContinuingFrom(page1.getToken()))
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+
+        assertThat(page2)
+                .extracting(PaginatedList::getItems, as(iterable(AuthorizationModel.class)))
+                .hasSize(2)
+                .allSatisfy(model -> {
+                    assertThat(model)
+                            .extracting(AuthorizationModel::getId, as(STRING))
+                            .isIn(modelIds);
+                    assertThat(model)
+                            .extracting(AuthorizationModel::getSchemaVersion)
+                            .isEqualTo(DEFAULT_SCHEMA_VERSION);
+                    assertThat(model)
+                            .extracting(AuthorizationModel::getTypeDefinitions, as(iterable(TypeDefinition.class)))
+                            .containsExactlyInAnyOrderElementsOf(SchemaFixtures.schema.getTypeDefinitions());
+                    assertThat(model)
+                            .extracting(AuthorizationModel::getConditions, as(map(String.class, Condition.class)))
+                            .isEmpty();
+                });
+        assertThat(page2)
+                .extracting(PaginatedList::getToken, as(STRING))
+                .isNotBlank();
+
+        var page3 = authorizationModelsClient.list(Pagination.limitedTo(2).andContinuingFrom(page2.getToken()))
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+
+        assertThat(page3)
+                .extracting(PaginatedList::getItems, as(iterable(AuthorizationModel.class)))
+                .hasSize(1)
+                .allSatisfy(model -> {
+                    assertThat(model)
+                            .extracting(AuthorizationModel::getId, as(STRING))
+                            .isIn(modelIds);
+                    assertThat(model)
+                            .extracting(AuthorizationModel::getSchemaVersion)
+                            .isEqualTo(DEFAULT_SCHEMA_VERSION);
+                    assertThat(model)
+                            .extracting(AuthorizationModel::getTypeDefinitions, as(iterable(TypeDefinition.class)))
+                            .containsExactlyInAnyOrderElementsOf(SchemaFixtures.schema.getTypeDefinitions());
+                    assertThat(model)
+                            .extracting(AuthorizationModel::getConditions, as(map(String.class, Condition.class)))
+                            .isEmpty();
+                });
+        assertThat(page3)
+                .extracting(PaginatedList::getToken, as(STRING))
+                .isEmpty();
+    }
+
+    @Test
+    @DisplayName("Can List All Models")
+    public void canListAll() {
+
+        var modelIds = createTestModels(5);
+
+        var list = authorizationModelsClient.listAll(1)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+
+        assertThat(list)
+                .hasSize(5)
+                .extracting(AuthorizationModel::getId)
+                .containsExactlyInAnyOrderElementsOf(modelIds);
+    }
+
+    @Test
+    @DisplayName("Can Create Model With Schema")
+    public void canCreateModelWithSchema() {
+
+        var modelId = authorizationModelsClient.create(SchemaFixtures.schema)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+
+        var models = authorizationModelsClient.listAll()
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
 
         assertThat(models)
-                .hasSize(4);
+                .hasSize(1)
+                .allSatisfy(model -> {
+                    assertThat(model)
+                            .extracting(AuthorizationModel::getId, as(STRING))
+                            .isEqualTo(modelId);
+                    assertThat(model)
+                            .extracting(AuthorizationModel::getSchemaVersion)
+                            .isEqualTo(DEFAULT_SCHEMA_VERSION);
+                    assertThat(model)
+                            .extracting(AuthorizationModel::getTypeDefinitions, as(iterable(TypeDefinition.class)))
+                            .containsExactlyInAnyOrderElementsOf(SchemaFixtures.schema.getTypeDefinitions());
+                    assertThat(model)
+                            .extracting(AuthorizationModel::getConditions, as(map(String.class, Condition.class)))
+                            .isEmpty();
+                });
+    }
+
+    @Test
+    @DisplayName("Can Create Model With Properties")
+    public void canCreateModelWithProperties() {
+
+        var modelId = authorizationModelsClient
+                .create(DEFAULT_SCHEMA_VERSION, SchemaFixtures.schema.getTypeDefinitions(), null)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+
+        var models = authorizationModelsClient.listAll()
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+
+        assertThat(models)
+                .hasSize(1)
+                .allSatisfy(model -> {
+                    assertThat(model)
+                            .extracting(AuthorizationModel::getId, as(STRING))
+                            .isEqualTo(modelId);
+                    assertThat(model)
+                            .extracting(AuthorizationModel::getSchemaVersion)
+                            .isEqualTo(DEFAULT_SCHEMA_VERSION);
+                    assertThat(model)
+                            .extracting(AuthorizationModel::getTypeDefinitions, as(iterable(TypeDefinition.class)))
+                            .containsExactlyInAnyOrderElementsOf(SchemaFixtures.schema.getTypeDefinitions());
+                    assertThat(model)
+                            .extracting(AuthorizationModel::getConditions, as(map(String.class, Condition.class)))
+                            .isEmpty();
+                });
+    }
+
+    @Test
+    @DisplayName("Can Create Model With Conditions")
+    public void canCreateModelWithConditions() {
+
+        var modelId = authorizationModelsClient.create(SchemaFixtures.schemaWithCondition)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+
+        var models = authorizationModelsClient.listAll()
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+
+        assertThat(models)
+                .hasSize(1)
+                .allSatisfy(model -> {
+                    assertThat(model)
+                            .extracting(AuthorizationModel::getId, as(STRING))
+                            .isEqualTo(modelId);
+                    assertThat(model)
+                            .extracting(AuthorizationModel::getSchemaVersion)
+                            .isEqualTo(DEFAULT_SCHEMA_VERSION);
+                    assertThat(model)
+                            .extracting(AuthorizationModel::getTypeDefinitions, as(iterable(TypeDefinition.class)))
+                            .containsExactlyInAnyOrderElementsOf(SchemaFixtures.schemaWithCondition.getTypeDefinitions());
+                    assertThat(model)
+                            .extracting(AuthorizationModel::getConditions, as(map(String.class, Condition.class)))
+                            .usingRecursiveComparison()
+                            .isEqualTo(SchemaFixtures.schemaWithCondition.getConditions());
+                });
     }
 }

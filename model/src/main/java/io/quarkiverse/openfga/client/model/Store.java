@@ -12,17 +12,19 @@ import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class Store {
 
+    public static Store of(String id, String name, OffsetDateTime createdAt, OffsetDateTime updatedAt,
+            @Nullable OffsetDateTime deletedAt) {
+        return new Store(id, name, createdAt, updatedAt, deletedAt);
+    }
+
+    public static Store of(String id, String name, OffsetDateTime createdAt, OffsetDateTime updatedAt) {
+        return of(id, name, createdAt, updatedAt, null);
+    }
+
     private final String id;
-
     private final String name;
-
-    @JsonProperty("created_at")
     private final OffsetDateTime createdAt;
-
-    @JsonProperty("updated_at")
     private final OffsetDateTime updatedAt;
-
-    @JsonProperty("deleted_at")
     @Nullable
     private final OffsetDateTime deletedAt;
 
@@ -35,15 +37,6 @@ public final class Store {
         this.createdAt = Preconditions.parameterNonNull(createdAt, "createdAt");
         this.updatedAt = Preconditions.parameterNonNull(updatedAt, "updatedAt");
         this.deletedAt = deletedAt;
-    }
-
-    public static Store of(String id, String name, OffsetDateTime createdAt, OffsetDateTime updatedAt,
-            @Nullable OffsetDateTime deletedAt) {
-        return new Store(id, name, createdAt, updatedAt, deletedAt);
-    }
-
-    public static Store of(String id, String name, OffsetDateTime createdAt, OffsetDateTime updatedAt) {
-        return of(id, name, createdAt, updatedAt, null);
     }
 
     public String getId() {
@@ -72,11 +65,8 @@ public final class Store {
 
     @Override
     public boolean equals(@Nullable Object obj) {
-        if (obj == this)
-            return true;
-        if (obj == null || obj.getClass() != this.getClass())
+        if (!(obj instanceof Store that))
             return false;
-        var that = (Store) obj;
         return Objects.equals(this.id, that.id) &&
                 Objects.equals(this.name, that.name) &&
                 Objects.equals(this.createdAt, that.createdAt) &&

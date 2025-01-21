@@ -1,72 +1,112 @@
 package io.quarkiverse.openfga.client.model.dto;
 
-import static com.fasterxml.jackson.annotation.JsonCreator.Mode.PROPERTIES;
-
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
+import java.util.Map;
 import java.util.Objects;
 
 import javax.annotation.Nullable;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.quarkiverse.openfga.client.model.*;
+import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class ListUsersRequest {
 
-    @JsonProperty("authorization_model_id")
-    @Nullable
-    private final String authorizationModelId;
+    public static final class UserTypeFilter {
 
-    private final AnyObject object;
+        public static final class Builder {
 
-    private final String relation;
+            @Nullable
+            private String type;
+            @Nullable
+            private String relation;
 
-    @JsonProperty("user_filters")
-    private final List<UserTypeFilter> userFilters;
+            private Builder() {
+            }
 
-    @JsonProperty("contextual_tuples")
-    @Nullable
-    private final ContextualTupleKeys contextualTuples;
+            public Builder type(String type) {
+                this.type = type;
+                return this;
+            }
 
-    @Nullable
-    private final Object context;
+            public Builder relation(@Nullable String relation) {
+                this.relation = relation;
+                return this;
+            }
 
-    @Nullable
-    private final ConsistencyPreference consistency;
+            public UserTypeFilter build() {
+                return new UserTypeFilter(
+                        Preconditions.parameterNonBlank(type, "type"),
+                        relation);
+            }
+        }
 
-    @JsonCreator(mode = PROPERTIES)
-    ListUsersRequest(@JsonProperty("authorization_model_id") @Nullable String authorizationModelId,
-            AnyObject object, String relation, List<UserTypeFilter> userFilters,
-            @Nullable @JsonProperty("contextual_tuples") ContextualTupleKeys contextualTuples,
-            @Nullable Object context, @Nullable ConsistencyPreference consistency) {
-        this.authorizationModelId = authorizationModelId;
-        this.object = object;
-        this.relation = relation;
-        this.userFilters = userFilters;
-        this.contextualTuples = contextualTuples;
-        this.context = context;
-        this.consistency = consistency;
-    }
+        public static Builder builder() {
+            return new Builder();
+        }
 
-    public static ListUsersRequest of(@Nullable String authorizationModelId, AnyObject object, String relation,
-            List<UserTypeFilter> userFilters, @Nullable ContextualTupleKeys contextualTuples,
-            @Nullable Object context, @Nullable ConsistencyPreference consistency) {
-        return new ListUsersRequest(authorizationModelId, object, relation, userFilters, contextualTuples, context,
-                consistency);
+        private final String type;
+        @Nullable
+        private final String relation;
+
+        @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+        UserTypeFilter(String type, @Nullable String relation) {
+            this.type = type;
+            this.relation = relation;
+        }
+
+        public String getType() {
+            return type;
+        }
+
+        @Nullable
+        public String getRelation() {
+            return relation;
+        }
+
+        @Override
+        public boolean equals(@Nullable Object obj) {
+            if (!(obj instanceof UserTypeFilter that))
+                return false;
+            return type.equals(that.type) &&
+                    Objects.equals(relation, that.relation);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(type, relation);
+        }
+
+        @Override
+        public String toString() {
+            return "UserTypeFilter[" +
+                    "type='" + type + "', " +
+                    "relation='" + relation + ']';
+        }
+
     }
 
     public static final class Builder {
+
+        @Nullable
         private String authorizationModelId;
-        private AnyObject object;
+        @Nullable
+        private RelObject object;
+        @Nullable
         private String relation;
-        private List<UserTypeFilter> userFilters;
-        private ContextualTupleKeys contextualTuples;
-        private Object context;
+        @Nullable
+        private Collection<UserTypeFilter> userFilters;
+        @Nullable
+        private Collection<RelTupleKeyed> contextualTuples;
+        @Nullable
+        private Map<String, Object> context;
+        @Nullable
         private ConsistencyPreference consistency;
 
-        public Builder() {
+        private Builder() {
         }
 
         public Builder authorizationModelId(@Nullable String authorizationModelId) {
@@ -74,7 +114,7 @@ public final class ListUsersRequest {
             return this;
         }
 
-        public Builder object(AnyObject object) {
+        public Builder object(RelObject object) {
             this.object = object;
             return this;
         }
@@ -84,49 +124,17 @@ public final class ListUsersRequest {
             return this;
         }
 
-        public Builder userFilters(List<UserTypeFilter> userFilters) {
+        public Builder userFilters(Collection<UserTypeFilter> userFilters) {
             this.userFilters = userFilters;
             return this;
         }
 
-        public Builder addUserFilters(List<UserTypeFilter> userFilters) {
-            if (this.userFilters == null) {
-                this.userFilters = new ArrayList<>();
-            }
-            this.userFilters.addAll(userFilters);
-            return this;
-        }
-
-        public Builder addUserFilter(UserTypeFilter userFilter) {
-            if (this.userFilters == null) {
-                this.userFilters = new ArrayList<>();
-            }
-            this.userFilters.add(userFilter);
-            return this;
-        }
-
-        public Builder contextualTuples(@Nullable ContextualTupleKeys contextualTuples) {
+        public Builder contextualTuples(@Nullable Collection<RelTupleKeyed> contextualTuples) {
             this.contextualTuples = contextualTuples;
             return this;
         }
 
-        public Builder addContextualTuples(List<ConditionalTupleKey> contextualTuples) {
-            if (this.contextualTuples == null) {
-                this.contextualTuples = ContextualTupleKeys.of(new ArrayList<>());
-            }
-            this.contextualTuples.getTupleKeys().addAll(contextualTuples);
-            return this;
-        }
-
-        public Builder addContextualTuple(ConditionalTupleKey contextualTuple) {
-            if (contextualTuples == null) {
-                contextualTuples = ContextualTupleKeys.of(new ArrayList<>());
-            }
-            contextualTuples.getTupleKeys().add(contextualTuple);
-            return this;
-        }
-
-        public Builder context(@Nullable Object context) {
+        public Builder context(@Nullable Map<String, Object> context) {
             this.context = context;
             return this;
         }
@@ -137,13 +145,42 @@ public final class ListUsersRequest {
         }
 
         public ListUsersRequest build() {
-            return new ListUsersRequest(authorizationModelId, object, relation, userFilters, contextualTuples, context,
-                    consistency);
+            return new ListUsersRequest(authorizationModelId,
+                    Preconditions.parameterNonNull(this.object, "object"),
+                    Preconditions.parameterNonNull(this.relation, "relation"),
+                    Preconditions.parameterNonNull(this.userFilters, "userFilters"),
+                    contextualTuples, context, consistency);
         }
     }
 
     public static Builder builder() {
         return new Builder();
+    }
+
+    @Nullable
+    private final String authorizationModelId;
+    private final RelObject object;
+    private final String relation;
+    private final Collection<UserTypeFilter> userFilters;
+    @Nullable
+    private final Collection<RelTupleKeyed> contextualTuples;
+    @Nullable
+    private final Map<String, Object> context;
+    @Nullable
+    private final ConsistencyPreference consistency;
+
+    @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+    ListUsersRequest(@JsonProperty("authorization_model_id") @Nullable String authorizationModelId, RelObject object,
+            String relation, @JsonProperty("user_filters") Collection<UserTypeFilter> userFilters,
+            @JsonProperty("contextual_tuples") @Nullable Collection<RelTupleKeyed> contextualTuples,
+            @Nullable Map<String, Object> context, @Nullable ConsistencyPreference consistency) {
+        this.authorizationModelId = authorizationModelId;
+        this.object = object;
+        this.relation = relation;
+        this.userFilters = userFilters;
+        this.contextualTuples = contextualTuples;
+        this.context = context;
+        this.consistency = consistency;
     }
 
     @JsonProperty("authorization_model_id")
@@ -152,7 +189,8 @@ public final class ListUsersRequest {
         return authorizationModelId;
     }
 
-    public AnyObject getObject() {
+    @JsonFormat(shape = JsonFormat.Shape.OBJECT)
+    public RelObject getObject() {
         return object;
     }
 
@@ -161,18 +199,18 @@ public final class ListUsersRequest {
     }
 
     @JsonProperty("user_filters")
-    public List<UserTypeFilter> getUserFilters() {
+    public Collection<UserTypeFilter> getUserFilters() {
         return userFilters;
     }
 
     @JsonProperty("contextual_tuples")
     @Nullable
-    public ContextualTupleKeys getContextualTuples() {
+    public Collection<RelTupleKeyed> getContextualTuples() {
         return contextualTuples;
     }
 
     @Nullable
-    public Object getContext() {
+    public Map<String, Object> getContext() {
         return context;
     }
 
@@ -183,11 +221,8 @@ public final class ListUsersRequest {
 
     @Override
     public boolean equals(@Nullable Object obj) {
-        if (obj == this)
-            return true;
-        if (obj == null || obj.getClass() != this.getClass())
+        if (!(obj instanceof ListUsersRequest that))
             return false;
-        var that = (ListUsersRequest) obj;
         return Objects.equals(this.authorizationModelId, that.authorizationModelId) &&
                 Objects.equals(this.object, that.object) &&
                 Objects.equals(this.relation, that.relation) &&

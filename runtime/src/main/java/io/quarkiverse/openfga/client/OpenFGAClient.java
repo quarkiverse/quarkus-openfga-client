@@ -11,7 +11,8 @@ import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 import io.quarkiverse.openfga.client.api.API;
-import io.quarkiverse.openfga.client.model.FGAValidationException;
+import io.quarkiverse.openfga.client.model.FGAInputValidationException;
+import io.quarkiverse.openfga.client.model.InputErrorCode;
 import io.quarkiverse.openfga.client.model.Store;
 import io.quarkiverse.openfga.client.model.dto.*;
 import io.quarkiverse.openfga.client.utils.PaginatedList;
@@ -36,11 +37,6 @@ public class OpenFGAClient {
         }
     }
 
-    @Deprecated(since = "2.4.0", forRemoval = true)
-    public Uni<PaginatedList<Store>> listStores(@Nullable Integer pageSize, @Nullable String continuationToken) {
-        return listStores(Pagination.limitedTo(pageSize).andContinuingFrom(continuationToken));
-    }
-
     public Uni<PaginatedList<Store>> listStores() {
         return listStores(ListStoresFilter.ALL, Pagination.DEFAULT);
     }
@@ -57,39 +53,36 @@ public class OpenFGAClient {
         var request = ListStoresRequest.builder()
                 .name(filter.name())
                 .pageSize(pagination.pageSize())
-                .continuationToken(pagination.continuationToken())
+                .continuationToken(pagination.continuationToken().orElse(null))
                 .build();
         return api.listStores(request)
-                .map(res -> new PaginatedList<>(res.getStores(), res.getContinuationToken()));
+                .map(res -> new PaginatedList<>(res.stores(), res.continuationToken()));
     }
 
     public Uni<List<Store>> listAllStores() {
-        return listAllStores(null);
+        return listAllStores(ListStoresFilter.ALL, null);
     }
 
-    public Uni<List<Store>> listAllStores(@Nullable Integer pageSize) {
-        return collectAllPages(pageSize, this::listStores);
+    public Uni<List<Store>> listAllStores(ListStoresFilter filter) {
+        return listAllStores(filter, null);
+    }
+
+    public Uni<List<Store>> listAllStores(ListStoresFilter filter, @Nullable Integer pageSize) {
+        return collectAllPages(pageSize, pagination -> listStores(filter, pagination));
     }
 
     public Uni<Store> createStore(String name) {
         var request = CreateStoreRequest.builder()
                 .name(name)
                 .build();
-        return api.createStore(request).map(CreateStoreResponse::toStore);
+        return api.createStore(request).map(CreateStoreResponse::asStore);
     }
 
     public StoreClient store(String storeId) {
         return new StoreClient(api, Uni.createFrom().item(storeId));
     }
 
-    private static class StoreSearchResult {
-        Optional<String> storeId;
-        Optional<String> token;
-
-        StoreSearchResult(Optional<String> storeId, Optional<String> token) {
-            this.storeId = storeId;
-            this.token = token;
-        }
+    private record StoreSearchResult(Optional<String> storeId, Optional<String> token) {
 
         boolean isNotFinished() {
             return storeId.isEmpty() && token.isPresent();
@@ -109,18 +102,18 @@ public class OpenFGAClient {
                             .continuationToken(lastToken.get())
                             .build();
                     return api.listStores(request)
-                            .onItem().invoke(list -> lastToken.set(list.getContinuationToken()))
+                            .onItem().invoke(list -> lastToken.set(list.continuationToken()))
                             .map(response -> {
 
-                                var storeId = response.getStores().stream()
+                                var storeId = response.stores().stream()
                                         .filter(store -> store.getName().equals(storeIdOrName)
                                                 || store.getId().equals(storeIdOrName))
                                         .map(Store::getId)
                                         .findFirst();
 
                                 Optional<String> token;
-                                if (response.getContinuationToken() != null && !response.getContinuationToken().isEmpty()) {
-                                    token = Optional.of(response.getContinuationToken());
+                                if (response.continuationToken() != null && !response.continuationToken().isEmpty()) {
+                                    token = Optional.of(response.continuationToken());
                                 } else {
                                     token = Optional.empty();
                                 }
@@ -146,11 +139,11 @@ public class OpenFGAClient {
 
     public static Uni<String> authorizationModelIdResolver(API api, String storeId) {
         return api.listAuthorizationModels(storeId, ListAuthorizationModelsRequest.builder().pageSize(1).build())
-                .map(ListAuthorizationModelsResponse::getAuthorizationModels)
+                .map(ListAuthorizationModelsResponse::authorizationModels)
                 .flatMap(models -> {
                     if (models.isEmpty()) {
-                        var notFound = new FGAValidationException(
-                                FGAValidationException.Code.LATEST_AUTHORIZATION_MODEL_NOT_FOUND,
+                        var notFound = new FGAInputValidationException(
+                                InputErrorCode.LATEST_AUTHORIZATION_MODEL_NOT_FOUND,
                                 "No default authorization model found");
                         return Uni.createFrom().failure(notFound);
                     }

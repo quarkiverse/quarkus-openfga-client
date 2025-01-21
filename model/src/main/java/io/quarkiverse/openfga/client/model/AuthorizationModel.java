@@ -6,21 +6,26 @@ import java.util.Objects;
 
 import javax.annotation.Nullable;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import io.quarkiverse.openfga.client.model.schema.Condition;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class AuthorizationModel {
 
+    public AuthorizationModel of(String id, String schemaVersion, List<TypeDefinition> typeDefinitions,
+            @Nullable Map<String, Condition> conditions) {
+        return new AuthorizationModel(id, schemaVersion, typeDefinitions, conditions);
+    }
+
     private final String id;
-
     private final String schemaVersion;
-
     private final List<TypeDefinition> typeDefinitions;
-
     @Nullable
     private final Map<String, Condition> conditions;
 
+    @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     AuthorizationModel(String id, @JsonProperty("schema_version") String schemaVersion,
             @JsonProperty("type_definitions") List<TypeDefinition> typeDefinitions,
             @JsonProperty("conditions") @Nullable Map<String, Condition> conditions) {
@@ -28,11 +33,6 @@ public final class AuthorizationModel {
         this.schemaVersion = Preconditions.parameterNonNull(schemaVersion, "schemaVersion");
         this.typeDefinitions = Preconditions.parameterNonNull(typeDefinitions, "typeDefinitions");
         this.conditions = conditions;
-    }
-
-    public AuthorizationModel of(String id, String schemaVersion, List<TypeDefinition> typeDefinitions,
-            @Nullable Map<String, Condition> conditions) {
-        return new AuthorizationModel(id, schemaVersion, typeDefinitions, conditions);
     }
 
     public String getId() {
@@ -57,11 +57,8 @@ public final class AuthorizationModel {
 
     @Override
     public boolean equals(@Nullable Object obj) {
-        if (obj == this)
-            return true;
-        if (obj == null || obj.getClass() != this.getClass())
+        if (!(obj instanceof AuthorizationModel that))
             return false;
-        var that = (AuthorizationModel) obj;
         return Objects.equals(this.id, that.id) &&
                 Objects.equals(this.typeDefinitions, that.typeDefinitions) &&
                 Objects.equals(this.conditions, that.conditions);

@@ -1,5 +1,6 @@
 package io.quarkiverse.openfga.client.utils;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
@@ -13,17 +14,17 @@ import io.smallrye.mutiny.Uni;
 
 public final class PaginatedList<T> {
 
-    private final List<T> items;
+    private final Collection<T> items;
     @Nullable
     private final String token;
 
-    public PaginatedList(List<T> items, @Nullable String token) {
-        this.items = Preconditions.parameterNonNull(items, "items");
+    public PaginatedList(Collection<T> items, @Nullable String token) {
+        this.items = List.copyOf(Preconditions.parameterNonNull(items, "items"));
         this.token = token;
     }
 
     public Boolean isNotLastPage() {
-        return token != null && !token.isEmpty();
+        return !items.isEmpty() && token != null && !token.isEmpty();
     }
 
     public static <T> Uni<List<T>> collectAllPages(@Nullable Integer pageSize,
@@ -31,14 +32,14 @@ public final class PaginatedList<T> {
         return Multi.createBy()
                 .repeating()
                 .uni(AtomicReference<String>::new,
-                        lastToken -> listGenerator.apply(new Pagination(pageSize, lastToken.get()))
+                        lastToken -> listGenerator.apply(Pagination.continuingFrom(lastToken.get()).andLimitedTo(pageSize))
                                 .onItem().invoke(list -> lastToken.set(list.getToken())))
                 .whilst(PaginatedList::isNotLastPage)
                 .onItem().transformToIterable(PaginatedList::getItems)
                 .collect().asList();
     }
 
-    public List<T> getItems() {
+    public Collection<T> getItems() {
         return items;
     }
 

@@ -1,26 +1,21 @@
 package io.quarkiverse.openfga.client.model;
 
 import java.util.List;
+import java.util.Objects;
+
+import javax.annotation.Nullable;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 
+import io.quarkiverse.openfga.client.model.utils.Preconditions;
+
 public final class Assertions {
 
-    private final List<Assertion> assertions;
-
-    @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-    Assertions(List<Assertion> assertions) {
-        this.assertions = assertions;
-    }
-
-    public static Assertions of(List<Assertion> assertions) {
-        return new Assertions(assertions);
-    }
-
     public static final class Builder {
-        private List<Assertion> assertions;
 
-        public Builder() {
+        private @Nullable List<Assertion> assertions;
+
+        private Builder() {
         }
 
         public Builder assertions(List<Assertion> assertions) {
@@ -45,8 +40,20 @@ public final class Assertions {
         }
 
         public Assertions build() {
-            return new Assertions(assertions);
+            return new Assertions(
+                    Preconditions.parameterNonNull(assertions, "assertions"));
         }
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    private final List<Assertion> assertions;
+
+    @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+    Assertions(List<Assertion> assertions) {
+        this.assertions = assertions;
     }
 
     public List<Assertion> getAssertions() {
@@ -54,18 +61,15 @@ public final class Assertions {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (obj == this)
-            return true;
-        if (obj == null || obj.getClass() != this.getClass())
+    public boolean equals(@Nullable Object obj) {
+        if (!(obj instanceof Assertions that))
             return false;
-        var that = (Assertions) obj;
         return this.assertions.equals(that.assertions);
     }
 
     @Override
     public int hashCode() {
-        return java.util.Objects.hash(assertions);
+        return Objects.hash(assertions);
     }
 
     @Override
