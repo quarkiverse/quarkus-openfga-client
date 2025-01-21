@@ -7,18 +7,18 @@ import javax.annotation.Nullable;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class FGAInternalException extends FGAException {
+public class FGAValidationException extends FGAException {
 
-    private final InternalErrorCode code;
+    private final ErrorCode code;
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-    public FGAInternalException(@JsonProperty("code") InternalErrorCode code,
+    public FGAValidationException(@JsonProperty("code") ErrorCode code,
             @JsonProperty("message") @Nullable String message) {
         super(format("%s (%s)", message, code.name().toLowerCase()));
         this.code = code;
     }
 
-    public InternalErrorCode getCode() {
+    public ErrorCode getCode() {
         return code;
     }
 }

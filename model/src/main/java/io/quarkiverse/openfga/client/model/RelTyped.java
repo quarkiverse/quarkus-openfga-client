@@ -15,7 +15,7 @@ public interface RelTyped {
      *
      * @return the value's type as an {@link RelObjectType}
      */
-    default RelObjectType toType() {
+    default RelObjectType asType() {
         return RelObjectType.of(getType());
     }
 

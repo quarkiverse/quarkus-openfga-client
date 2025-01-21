@@ -110,7 +110,7 @@ public class AuthorizationModelClientTest {
         authorizationModelClient.write(tupleDef)
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitFailure()
-                .assertFailedWith(FGAInputValidationException.class,
+                .assertFailedWith(FGAValidationException.class,
                         "Invalid tuple 'document:123#reader@user:'. " +
                                 "Reason: the 'user' field is malformed (validation_error)");
     }
@@ -261,7 +261,7 @@ public class AuthorizationModelClientTest {
                             .satisfies(e -> {
                                 assertThat(e)
                                         .extracting(CheckError::inputError)
-                                        .isEqualTo(InputErrorCode.VALIDATION_ERROR);
+                                        .isEqualTo(ErrorCode.VALIDATION_ERROR);
                                 assertThat(e)
                                         .extracting(CheckError::message)
                                         .isEqualTo("the 'user' field is malformed");

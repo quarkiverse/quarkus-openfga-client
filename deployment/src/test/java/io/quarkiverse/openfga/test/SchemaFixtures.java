@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import io.quarkiverse.openfga.client.model.*;
 import io.quarkiverse.openfga.client.model.schema.*;
+import io.quarkiverse.openfga.client.model.schema.Condition.Parameter.TypeName;
 
 public final class SchemaFixtures {
 
@@ -122,9 +123,9 @@ public final class SchemaFixtures {
                             .name(ConditionNames.NON_EXPIRED_GRANT)
                             .expression(format("%s < %s + %s", ParameterNames.CURRENT_TIME, ParameterNames.GRANT_TIME,
                                     ParameterNames.GRANT_DURATION))
-                            .addParameter("current_time", "TYPE_NAME_TIMESTAMP")
-                            .addParameter("grant_time", "TYPE_NAME_TIMESTAMP")
-                            .addParameter("grant_duration", "TYPE_NAME_DURATION")
+                            .addParameter("current_time", TypeName.TIMESTAMP)
+                            .addParameter("grant_time", TypeName.TIMESTAMP)
+                            .addParameter("grant_duration", TypeName.DURATION)
                             .build())
             .build();
 

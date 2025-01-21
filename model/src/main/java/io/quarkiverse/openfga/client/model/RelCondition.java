@@ -9,6 +9,13 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
+/**
+ * A condition that must be met for a relationship to be considered valid.
+ * <br>
+ * The condition is defined by the model and can be used to enforce constraints on the relationship.
+ * <br>
+ * The condition must be defined in the model before it can be used in a relationship.
+ */
 public class RelCondition {
 
     public static RelCondition of(String name, @Nullable Map<String, Object> context) {
@@ -20,6 +27,7 @@ public class RelCondition {
     }
 
     private final String name;
+    @Nullable
     private final Map<String, Object> context;
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -28,6 +36,9 @@ public class RelCondition {
         this.context = context;
     }
 
+    /**
+     * The name of the condition that must match a condition defined in the model.
+     */
     public String getName() {
         return name;
     }
@@ -58,9 +69,8 @@ public class RelCondition {
 
     @Override
     public String toString() {
-        return "RelationshipCondition{" +
-                "name='" + name + '\'' +
-                ", context=" + context +
-                '}';
+        return "RelCondition[" +
+                "name=" + name + ", " +
+                "context=" + context + ']';
     }
 }

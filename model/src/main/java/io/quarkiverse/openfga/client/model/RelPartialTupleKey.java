@@ -15,8 +15,6 @@ import io.quarkiverse.openfga.client.model.utils.Preconditions;
 @JsonDeserialize
 public final class RelPartialTupleKey implements RelPartialTupleKeyed {
 
-    public static final RelUser ANY_USER = RelUser.of("*", "*");
-
     public static final class Builder {
 
         @Nullable

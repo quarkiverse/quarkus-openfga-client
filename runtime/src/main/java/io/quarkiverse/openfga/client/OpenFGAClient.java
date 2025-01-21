@@ -11,8 +11,8 @@ import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 import io.quarkiverse.openfga.client.api.API;
-import io.quarkiverse.openfga.client.model.FGAInputValidationException;
-import io.quarkiverse.openfga.client.model.InputErrorCode;
+import io.quarkiverse.openfga.client.model.ErrorCode;
+import io.quarkiverse.openfga.client.model.FGAValidationException;
 import io.quarkiverse.openfga.client.model.Store;
 import io.quarkiverse.openfga.client.model.dto.*;
 import io.quarkiverse.openfga.client.utils.PaginatedList;
@@ -142,8 +142,8 @@ public class OpenFGAClient {
                 .map(ListAuthorizationModelsResponse::authorizationModels)
                 .flatMap(models -> {
                     if (models.isEmpty()) {
-                        var notFound = new FGAInputValidationException(
-                                InputErrorCode.LATEST_AUTHORIZATION_MODEL_NOT_FOUND,
+                        var notFound = new FGAValidationException(
+                                ErrorCode.LATEST_AUTHORIZATION_MODEL_NOT_FOUND,
                                 "No default authorization model found");
                         return Uni.createFrom().failure(notFound);
                     }

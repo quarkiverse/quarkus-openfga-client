@@ -60,7 +60,7 @@ public final class RelObjectType implements RelTyped {
     }
 
     @Override
-    public RelObjectType toType() {
+    public RelObjectType asType() {
         return this;
     }
 

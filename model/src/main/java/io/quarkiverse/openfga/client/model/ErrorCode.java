@@ -3,7 +3,7 @@ package io.quarkiverse.openfga.client.model;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum InputErrorCode {
+public enum ErrorCode {
 
     NO_ERROR("no_error"),
 
@@ -105,7 +105,7 @@ public enum InputErrorCode {
 
     INVALID_START_TIME("invalid_start_time"),
 
-    UNKNOWN("unknown")
+    UNKNOWN("unknown"),
 
     ;
 
@@ -116,13 +116,13 @@ public enum InputErrorCode {
         return value;
     }
 
-    InputErrorCode(String name) {
+    ErrorCode(String name) {
         this.value = name;
     }
 
     @JsonCreator
-    public static InputErrorCode fromValue(String value) {
-        for (InputErrorCode e : InputErrorCode.values()) {
+    public static ErrorCode fromValue(String value) {
+        for (ErrorCode e : ErrorCode.values()) {
             if (e.value.equals(value)) {
                 return e;
             }

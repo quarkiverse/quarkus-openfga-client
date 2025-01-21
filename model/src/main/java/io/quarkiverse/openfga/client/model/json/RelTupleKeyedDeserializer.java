@@ -1,15 +1,16 @@
 package io.quarkiverse.openfga.client.model.json;
 
+import java.io.IOException;
+
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import io.quarkiverse.openfga.client.model.RelTupleDefinition;
 import io.quarkiverse.openfga.client.model.RelTupleKey;
 import io.quarkiverse.openfga.client.model.RelTupleKeyed;
-
-import java.io.IOException;
 
 public class RelTupleKeyedDeserializer extends StdDeserializer<RelTupleKeyed> {
 

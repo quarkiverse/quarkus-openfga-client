@@ -15,6 +15,6 @@ import io.smallrye.common.constraint.Nullable;
  * <br>
  * The message is used to provide additional information about the error.
  */
-public record CheckError(@JsonProperty("input_error") @Nullable InputErrorCode inputError,
+public record CheckError(@JsonProperty("input_error") @Nullable ErrorCode inputError,
         @JsonProperty("internal_error") @Nullable InternalErrorCode internalError, @Nullable String message) {
 }
