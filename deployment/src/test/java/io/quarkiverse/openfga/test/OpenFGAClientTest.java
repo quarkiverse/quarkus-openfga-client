@@ -33,7 +33,8 @@ public class OpenFGAClientTest {
     // Start unit test with extension loaded
     @RegisterExtension
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
-            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class));
+            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
+                    .addClass(SchemaFixtures.class));
 
     @Inject
     API api;
@@ -112,7 +113,7 @@ public class OpenFGAClientTest {
                 .map(Store::getName)
                 .containsExactlyInAnyOrder("testing");
 
-        var list = client.listStores(ListStoresFilter.named("testing"), Pagination.limitedTo(1))
+        var list = client.listStores(ListStoresFilter.named("testing"))
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
@@ -192,7 +193,7 @@ public class OpenFGAClientTest {
                 .map(Store::getName)
                 .containsExactlyInAnyOrder("testing1", "testing2", "testing3");
 
-        var list = client.listAllStores()
+        var list = client.listAllStores(ListStoresFilter.ALL)
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
@@ -211,7 +212,7 @@ public class OpenFGAClientTest {
                 .awaitItem()
                 .getItem();
 
-        var preList = client.listAllStores(1)
+        var preList = client.listAllStores()
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
@@ -224,7 +225,7 @@ public class OpenFGAClientTest {
                 .awaitItem()
                 .assertCompleted();
 
-        var postList = client.listAllStores(1)
+        var postList = client.listAllStores(ListStoresFilter.ALL, 1)
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
@@ -240,7 +241,7 @@ public class OpenFGAClientTest {
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem()
                 .getItem();
-        assertThat(healthzResponse.getStatus())
+        assertThat(healthzResponse.status())
                 .isEqualTo("SERVING");
     }
 

@@ -28,11 +28,11 @@ public class OpenFGAHealthCheck implements AsyncHealthCheck {
         return api.health()
                 .map(response -> {
 
-                    if (response.getStatus().equalsIgnoreCase("SERVING")) {
+                    if (response.status().equalsIgnoreCase("SERVING")) {
                         return builder.up().build();
                     }
 
-                    return builder.down().withData("reported-status", response.getStatus()).build();
+                    return builder.down().withData("reported-status", response.status()).build();
                 })
                 .onFailure().recoverWithItem(x -> builder.withData("failure", x.getMessage()).build());
     }

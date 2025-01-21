@@ -4,13 +4,15 @@ import static io.quarkiverse.openfga.client.utils.PaginatedList.collectAllPages;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
 import io.quarkiverse.openfga.client.api.API;
+import io.quarkiverse.openfga.client.model.RelObjectType;
+import io.quarkiverse.openfga.client.model.RelTuple;
+import io.quarkiverse.openfga.client.model.RelTupleChange;
 import io.quarkiverse.openfga.client.model.Store;
-import io.quarkiverse.openfga.client.model.Tuple;
-import io.quarkiverse.openfga.client.model.TupleChange;
 import io.quarkiverse.openfga.client.model.dto.GetStoreResponse;
 import io.quarkiverse.openfga.client.model.dto.ReadChangesRequest;
 import io.quarkiverse.openfga.client.model.dto.ReadRequest;
@@ -37,90 +39,80 @@ public class StoreClient {
         return storeId.flatMap(api::deleteStore);
     }
 
-    public record ReadChangesFilter(@Nullable String type, @Nullable OffsetDateTime startTime) {
+    public record ReadChangesFilter(Optional<String> type, Optional<OffsetDateTime> startTime) {
 
-        public static final ReadChangesFilter ALL = new ReadChangesFilter(null, null);
+        public static final ReadChangesFilter ALL = new ReadChangesFilter(Optional.empty(), Optional.empty());
 
         public static ReadChangesFilter only(@Nullable String type) {
-            return new ReadChangesFilter(type, null);
+            return new ReadChangesFilter(Optional.ofNullable(type), Optional.empty());
+        }
+
+        public static ReadChangesFilter only(@Nullable RelObjectType type) {
+            return new ReadChangesFilter(Optional.ofNullable(type).map(RelObjectType::getType), Optional.empty());
         }
 
         public static ReadChangesFilter since(@Nullable OffsetDateTime startTime) {
-            return new ReadChangesFilter(null, startTime);
+            return new ReadChangesFilter(Optional.empty(), Optional.ofNullable(startTime));
         }
 
         public ReadChangesFilter andOnly(@Nullable String type) {
-            return new ReadChangesFilter(type, this.startTime);
+            return new ReadChangesFilter(Optional.ofNullable(type), this.startTime);
         }
 
         public ReadChangesFilter andSince(@Nullable OffsetDateTime startTime) {
-            return new ReadChangesFilter(this.type, startTime);
+            return new ReadChangesFilter(this.type, Optional.ofNullable(startTime));
         }
     }
 
-    @Deprecated(since = "2.4.0", forRemoval = true)
-    public Uni<List<TupleChange>> listChanges(@Nullable String type, @Nullable Integer pageSize,
-            @Nullable String continuationToken) {
-        return readChanges(
-                ReadChangesFilter.only(type),
-                Pagination.limitedTo(pageSize).andContinuingFrom(continuationToken))
-                .map(PaginatedList::getItems);
-    }
-
-    public Uni<PaginatedList<TupleChange>> readChanges() {
+    public Uni<PaginatedList<RelTupleChange>> readChanges() {
         return readChanges(ReadChangesFilter.ALL, Pagination.DEFAULT);
     }
 
-    public Uni<PaginatedList<TupleChange>> readChanges(ReadChangesFilter filter) {
+    public Uni<PaginatedList<RelTupleChange>> readChanges(ReadChangesFilter filter) {
         return readChanges(filter, Pagination.DEFAULT);
     }
 
-    public Uni<PaginatedList<TupleChange>> readChanges(Pagination pagination) {
+    public Uni<PaginatedList<RelTupleChange>> readChanges(Pagination pagination) {
         return readChanges(ReadChangesFilter.ALL, pagination);
     }
 
-    public Uni<PaginatedList<TupleChange>> readChanges(ReadChangesFilter filter, Pagination pagination) {
+    public Uni<PaginatedList<RelTupleChange>> readChanges(ReadChangesFilter filter, Pagination pagination) {
         var request = ReadChangesRequest.builder()
-                .type(filter.type)
-                .startTime(filter.startTime)
+                .type(filter.type.orElse(null))
+                .startTime(filter.startTime.orElse(null))
                 .pageSize(pagination.pageSize())
-                .continuationToken(pagination.continuationToken())
+                .continuationToken(pagination.continuationToken().orElse(null))
                 .build();
         return storeId.flatMap(storeId -> api.readChanges(storeId, request))
-                .map(res -> new PaginatedList<>(res.getChanges(), res.getContinuationToken()));
+                .map(res -> new PaginatedList<>(res.changes(), res.continuationToken()));
     }
 
-    public Uni<List<TupleChange>> readAllChanges() {
-        return readAllChanges(null);
+    public Uni<List<RelTupleChange>> readAllChanges(ReadChangesFilter filter) {
+        return readAllChanges(filter, null);
     }
 
-    public Uni<List<TupleChange>> readAllChanges(@Nullable Integer pageSize) {
-        return collectAllPages(pageSize, this::readChanges);
+    public Uni<List<RelTupleChange>> readAllChanges(ReadChangesFilter filter, @Nullable Integer pageSize) {
+        return collectAllPages(pageSize, pagination -> readChanges(filter, pagination));
     }
 
-    @Deprecated(since = "2.4.0", forRemoval = true)
-    public Uni<PaginatedList<Tuple>> readTuples(@Nullable Integer pageSize, @Nullable String continuationToken) {
-        return readTuples(Pagination.limitedTo(pageSize).andContinuingFrom(continuationToken));
-    }
-
-    public Uni<PaginatedList<Tuple>> readTuples() {
+    public Uni<PaginatedList<RelTuple>> readTuples() {
         return readTuples(Pagination.DEFAULT);
     }
 
-    public Uni<PaginatedList<Tuple>> readTuples(Pagination pagination) {
+    public Uni<PaginatedList<RelTuple>> readTuples(Pagination pagination) {
         var request = ReadRequest.builder()
                 .pageSize(pagination.pageSize())
-                .continuationToken(pagination.continuationToken())
+                .continuationToken(pagination.continuationToken().orElse(null))
                 .build();
         return storeId.flatMap(storeId -> api.read(storeId, request))
-                .map(res -> new PaginatedList<>(res.getTuples(), res.getContinuationToken()));
+                .map(res -> new PaginatedList<>(res.tuples(), res.continuationToken()));
     }
 
-    public Uni<List<Tuple>> readAllTuples() {
+    public Uni<List<RelTuple>> readAllTuples() {
         return readAllTuples(null);
     }
 
-    public Uni<List<Tuple>> readAllTuples(@Nullable Integer pageSize) {
+    public Uni<List<RelTuple>> readAllTuples(@Nullable Integer pageSize) {
         return collectAllPages(pageSize, this::readTuples);
     }
 

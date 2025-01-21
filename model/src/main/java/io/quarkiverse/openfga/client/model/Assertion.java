@@ -1,38 +1,48 @@
 package io.quarkiverse.openfga.client.model;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import javax.annotation.Nullable;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class Assertion {
 
-    @JsonProperty("tuple_key")
-    private final TupleKey tupleKey;
+    public static Assertion of(RelTupleKeyed tupleKey, boolean expectation,
+            @Nullable List<RelTupleKeyed> contextualTuples, @Nullable Map<String, Object> context) {
+        return new Assertion(tupleKey, expectation, contextualTuples, context);
+    }
 
+    public static Assertion of(RelTupleKeyed tupleKey, boolean expectation) {
+        return new Assertion(tupleKey, expectation, null, null);
+    }
+
+    private final RelTupleKeyed tupleKey;
     private final boolean expectation;
-
-    @JsonProperty("contextual_tuples")
     @Nullable
-    private final List<TupleKey> contextualTuples;
+    private final Collection<RelTupleKeyed> contextualTuples;
+    private final Map<String, Object> context;
 
-    Assertion(@JsonProperty("tuple_key") TupleKey tupleKey, boolean expectation,
-            @JsonProperty("contextual_tuples") @Nullable List<TupleKey> contextualTuples) {
+    @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+    Assertion(@JsonProperty("tuple_key") RelTupleKeyed tupleKey, boolean expectation,
+            @JsonProperty("contextual_tuples") @Nullable Collection<RelTupleKeyed> contextualTuples,
+            @Nullable Map<String, Object> context) {
         this.tupleKey = Preconditions.parameterNonNull(tupleKey, "tupleKey");
         this.expectation = expectation;
         this.contextualTuples = contextualTuples;
-    }
-
-    public static Assertion of(TupleKey tupleKey, boolean expectation, @Nullable List<TupleKey> contextualTuples) {
-        return new Assertion(tupleKey, expectation, contextualTuples);
+        this.context = context;
     }
 
     @JsonProperty("tuple_key")
-    public TupleKey getTupleKey() {
+    @JsonSerialize(typing = JsonSerialize.Typing.STATIC)
+    public RelTupleKeyed getTupleKey() {
         return tupleKey;
     }
 
@@ -41,18 +51,21 @@ public final class Assertion {
     }
 
     @JsonProperty("contextual_tuples")
+    @JsonSerialize(typing = JsonSerialize.Typing.STATIC)
     @Nullable
-    public List<TupleKey> getContextualTuples() {
+    public Collection<RelTupleKeyed> getContextualTuples() {
         return contextualTuples;
+    }
+
+    @Nullable
+    public Map<String, Object> getContext() {
+        return context;
     }
 
     @Override
     public boolean equals(@Nullable Object obj) {
-        if (obj == this)
-            return true;
-        if (obj == null || obj.getClass() != this.getClass())
+        if (!(obj instanceof Assertion that))
             return false;
-        var that = (Assertion) obj;
         return Objects.equals(this.tupleKey, that.tupleKey) &&
                 this.expectation == that.expectation &&
                 Objects.equals(this.contextualTuples, that.contextualTuples);

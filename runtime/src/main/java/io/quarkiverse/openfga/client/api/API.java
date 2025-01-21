@@ -9,7 +9,6 @@ import static java.lang.String.format;
 
 import java.io.Closeable;
 import java.util.Map;
-import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -36,14 +35,15 @@ import io.vertx.mutiny.uritemplate.Variables;
 public class API implements Closeable {
 
     private final WebClient webClient;
-    private final Optional<Credentials> credentials;
+    @Nullable
+    private final Credentials credentials;
 
     public API(OpenFGAConfig config, boolean tracingEnabled, Vertx vertx, TlsConfigurationRegistry tlsRegistry) {
         this(VertxWebClientFactory.create(config, tracingEnabled, vertx, tlsRegistry),
-                config.sharedKey().map(TokenCredentials::new));
+                config.sharedKey().map(TokenCredentials::new).orElse(null));
     }
 
-    public API(WebClient webClient, Optional<Credentials> credentials) {
+    public API(WebClient webClient, @Nullable Credentials credentials) {
         this.webClient = webClient;
         this.credentials = credentials;
     }
@@ -128,11 +128,6 @@ public class API implements Closeable {
                 ReadAuthorizationModelResponse.class);
     }
 
-    @Deprecated(since = "2.4.0", forRemoval = true)
-    public Uni<ReadChangesResponse> listChanges(String storeId, ReadChangesRequest request) {
-        return readChanges(storeId, request);
-    }
-
     public Uni<ReadChangesResponse> readChanges(String storeId, ReadChangesRequest request) {
         return execute(
                 request("Read Changes",
@@ -140,7 +135,8 @@ public class API implements Closeable {
                         CHANGES_URI,
                         vars(STORE_ID_PARAM, storeId),
                         query(TYPE_PARAM, request.getType(), START_TIME_PARAM, request.getStartTime(),
-                                PAGE_SIZE_PARAM, request.getPageSize(), CONT_TOKEN_PARAM, request.getContinuationToken())),
+                                PAGE_SIZE_PARAM, request.getPageSize(), CONT_TOKEN_PARAM,
+                                request.getContinuationToken())),
                 ExpectedStatus.OK,
                 ReadChangesResponse.class);
     }
@@ -176,6 +172,17 @@ public class API implements Closeable {
                 request,
                 ExpectedStatus.OK,
                 CheckResponse.class);
+    }
+
+    public Uni<BatchCheckResponse> batchCheck(String storeId, BatchCheckRequest request) {
+        return execute(
+                request("Batch Check",
+                        POST,
+                        BATCH_CHECK_URI,
+                        vars(STORE_ID_PARAM, storeId)),
+                request,
+                ExpectedStatus.OK,
+                BatchCheckResponse.class);
     }
 
     public Uni<ExpandResponse> expand(String storeId, ExpandRequest request) {
@@ -315,8 +322,9 @@ public class API implements Closeable {
 
     private <R> HttpRequest<R> prepare(HttpRequest<R> request) {
 
-        // Add creds
-        credentials.ifPresent(request::authentication);
+        if (credentials != null) {
+            request.authentication(credentials);
+        }
 
         return request;
     }
@@ -382,6 +390,7 @@ public class API implements Closeable {
             .of(format("/stores/{store_id}/changes{?%s,%s,%s,%s}", TYPE_PARAM, START_TIME_PARAM, PAGE_SIZE_PARAM,
                     CONT_TOKEN_PARAM));
     private static final UriTemplate CHECK_URI = UriTemplate.of("/stores/{store_id}/check");
+    private static final UriTemplate BATCH_CHECK_URI = UriTemplate.of("/stores/{store_id}/batch-check");
     private static final UriTemplate EXPAND_URI = UriTemplate.of("/stores/{store_id}/expand");
     private static final UriTemplate LIST_OBJECTS_URI = UriTemplate.of("/stores/{store_id}/list-objects");
     private static final UriTemplate LIST_USERS_URI = UriTemplate.of("/stores/{store_id}/list-users");

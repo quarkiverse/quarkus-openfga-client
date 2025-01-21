@@ -4,8 +4,6 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatNoException;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
-import java.util.Map;
-
 import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -14,6 +12,9 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
+
+import io.quarkiverse.openfga.client.model.schema.ObjectRelation;
+import io.quarkiverse.openfga.client.model.schema.Userset;
 
 public class AuthorizationModelSchemaTest {
 
@@ -47,7 +48,7 @@ public class AuthorizationModelSchemaTest {
                     var computedUserset = userset.getComputedUserset();
                     assertThat(computedUserset)
                             .isNotNull()
-                            .isEqualTo(new ObjectRelation("doc:123", "admin"));
+                            .isEqualTo(ObjectRelation.of("doc:123", "admin"));
                 });
     }
 
@@ -62,9 +63,9 @@ public class AuthorizationModelSchemaTest {
                     assertThat(tupleToUserset)
                             .isNotNull()
                             .satisfies(t -> {
-                                assertThat(t.getTupleset())
+                                assertThat(t.tupleset())
                                         .isEqualTo(ObjectRelation.of("a", "b"));
-                                assertThat(t.getComputedUserset())
+                                assertThat(t.computedUserset())
                                         .isEqualTo(ObjectRelation.of("c", "d"));
                             });
                 });
@@ -117,10 +118,10 @@ public class AuthorizationModelSchemaTest {
                     assertThat(difference)
                             .isNotNull()
                             .satisfies(d -> {
-                                assertThat(d.getBase())
+                                assertThat(d.base())
                                         .isNotNull()
                                         .isEqualTo(Userset.direct("a", 1));
-                                assertThat(d.getSubtract())
+                                assertThat(d.subtract())
                                         .isNotNull()
                                         .isEqualTo(Userset.direct("b", 2));
                             });
@@ -136,9 +137,11 @@ public class AuthorizationModelSchemaTest {
                     var typeDefinition = mapper.readValue(json, TypeDefinition.class);
                     assertThat(typeDefinition)
                             .isEqualTo(
-                                    TypeDefinition.of("a", Map.of(
-                                            "b", Userset.computed("c", "d"),
-                                            "e", Userset.computed("f", "g"))));
+                                    TypeDefinition.builder()
+                                            .type("a")
+                                            .addRelation("b", Userset.computed("c", "d"))
+                                            .addRelation("e", Userset.computed("f", "g"))
+                                            .build());
                 });
     }
 
@@ -154,12 +157,16 @@ public class AuthorizationModelSchemaTest {
                             .satisfies(t -> assertThat(t.getTypeDefinitions())
                                     .hasSize(2)
                                     .containsExactlyInAnyOrder(
-                                            TypeDefinition.of("a", Map.of(
-                                                    "b", Userset.computed("c", "d"),
-                                                    "e", Userset.computed("f", "g"))),
-                                            TypeDefinition.of("h", Map.of(
-                                                    "i", Userset.computed("j", "k"),
-                                                    "l", Userset.computed("m", "n")))));
+                                            TypeDefinition.builder()
+                                                    .type("a")
+                                                    .addRelation("b", Userset.computed("c", "d"))
+                                                    .addRelation("e", Userset.computed("f", "g"))
+                                                    .build(),
+                                            TypeDefinition.builder()
+                                                    .type("h")
+                                                    .addRelation("i", Userset.computed("j", "k"))
+                                                    .addRelation("l", Userset.computed("m", "n"))
+                                                    .build()));
                 });
     }
 

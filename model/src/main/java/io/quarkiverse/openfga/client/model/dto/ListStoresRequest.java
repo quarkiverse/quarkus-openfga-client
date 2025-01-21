@@ -9,37 +9,16 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public final class ListStoresRequest {
 
-    @JsonProperty("page_size")
-    @Nullable
-    private final Integer pageSize;
-
-    @JsonProperty("continuation_token")
-    @Nullable
-    private final String continuationToken;
-
-    @JsonProperty("name")
-    @Nullable
-    private final String name;
-
-    @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-    ListStoresRequest(@JsonProperty("page_size") @Nullable Integer pageSize,
-            @JsonProperty("continuation_token") @Nullable String continuationToken,
-            @JsonProperty("name") @Nullable String name) {
-        this.pageSize = pageSize;
-        this.continuationToken = continuationToken;
-        this.name = name;
-    }
-
-    public static ListStoresRequest of(@Nullable Integer pageSize, @Nullable String continuationToken, @Nullable String name) {
-        return new ListStoresRequest(pageSize, continuationToken, name);
-    }
-
     public static final class Builder {
+
+        @Nullable
         private Integer pageSize;
+        @Nullable
         private String continuationToken;
+        @Nullable
         private String name;
 
-        Builder() {
+        private Builder() {
         }
 
         public Builder pageSize(@Nullable Integer pageSize) {
@@ -66,6 +45,22 @@ public final class ListStoresRequest {
         return new Builder();
     }
 
+    @Nullable
+    private final Integer pageSize;
+    @Nullable
+    private final String continuationToken;
+    @Nullable
+    private final String name;
+
+    @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+    ListStoresRequest(@JsonProperty("page_size") @Nullable Integer pageSize,
+            @JsonProperty("continuation_token") @Nullable String continuationToken,
+            @JsonProperty("name") @Nullable String name) {
+        this.pageSize = pageSize;
+        this.continuationToken = continuationToken;
+        this.name = name;
+    }
+
     @JsonProperty("page_size")
     @Nullable
     public Integer getPageSize() {
@@ -85,20 +80,17 @@ public final class ListStoresRequest {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (obj == this)
-            return true;
-        if (obj == null || obj.getClass() != this.getClass())
+    public boolean equals(@Nullable Object obj) {
+        if (!(obj instanceof ListStoresRequest that))
             return false;
-        var that = (ListStoresRequest) obj;
-        return Objects.equals(this.pageSize, that.pageSize) &&
-                Objects.equals(this.continuationToken, that.continuationToken) &&
-                Objects.equals(this.name, that.name);
+        return Objects.equals(pageSize, that.pageSize) &&
+                Objects.equals(continuationToken, that.continuationToken) &&
+                Objects.equals(name, that.name);
     }
 
     @Override
     public int hashCode() {
-        return java.util.Objects.hash(pageSize, continuationToken, name);
+        return Objects.hash(pageSize, continuationToken, name);
     }
 
     @Override

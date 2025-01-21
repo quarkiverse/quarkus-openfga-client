@@ -1,10 +1,10 @@
 package io.quarkiverse.openfga.client;
 
 import java.util.List;
+import java.util.Optional;
 
 import io.quarkiverse.openfga.client.api.API;
 import io.quarkiverse.openfga.client.model.Assertion;
-import io.quarkiverse.openfga.client.model.dto.ReadAssertionsResponse;
 import io.quarkiverse.openfga.client.model.dto.WriteAssertionsRequest;
 import io.smallrye.mutiny.Uni;
 
@@ -20,7 +20,7 @@ public class AssertionsClient {
 
     public Uni<List<Assertion>> list() {
         return config.flatMap(config -> api.readAssertions(config.getStoreId(), config.getAuthorizationModelId()))
-                .map(ReadAssertionsResponse::getAssertions);
+                .map(t -> Optional.ofNullable(t.assertions()).orElse(List.of()));
     }
 
     public Uni<Void> update(List<Assertion> assertions) {
@@ -31,6 +31,10 @@ public class AssertionsClient {
                     .build();
             return api.writeAssertions(config.getStoreId(), request);
         });
+    }
+
+    public Uni<Void> update(Assertion... assertions) {
+        return update(List.of(assertions));
     }
 
 }

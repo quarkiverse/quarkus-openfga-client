@@ -1,7 +1,5 @@
 package io.quarkiverse.openfga.client.model.dto;
 
-import static com.fasterxml.jackson.annotation.JsonCreator.Mode.PROPERTIES;
-
 import java.time.OffsetDateTime;
 import java.util.Objects;
 
@@ -12,43 +10,18 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public final class ReadChangesRequest {
 
-    @Nullable
-    private final String type;
-
-    @JsonProperty("page_size")
-    @Nullable
-    private final Integer pageSize;
-
-    @JsonProperty("continuation_token")
-    @Nullable
-    private final String continuationToken;
-
-    @JsonProperty("start_time")
-    @Nullable
-    private final OffsetDateTime startTime;
-
-    @JsonCreator(mode = PROPERTIES)
-    ReadChangesRequest(@Nullable String type, @JsonProperty("page_size") @Nullable Integer pageSize,
-            @JsonProperty("continuation_token") @Nullable String continuationToken,
-            @JsonProperty("start_time") @Nullable OffsetDateTime startTime) {
-        this.type = type;
-        this.pageSize = pageSize;
-        this.continuationToken = continuationToken;
-        this.startTime = startTime;
-    }
-
-    public static ReadChangesRequest of(@Nullable String type, @Nullable Integer pageSize, @Nullable String continuationToken,
-            @Nullable OffsetDateTime startTime) {
-        return new ReadChangesRequest(type, pageSize, continuationToken, startTime);
-    }
-
     public static final class Builder {
+
+        @Nullable
         private String type;
+        @Nullable
         private Integer pageSize;
+        @Nullable
         private String continuationToken;
+        @Nullable
         private OffsetDateTime startTime;
 
-        public Builder() {
+        private Builder() {
         }
 
         public Builder type(@Nullable String type) {
@@ -81,6 +54,25 @@ public final class ReadChangesRequest {
     }
 
     @Nullable
+    private final String type;
+    @Nullable
+    private final Integer pageSize;
+    @Nullable
+    private final String continuationToken;
+    @Nullable
+    private final OffsetDateTime startTime;
+
+    @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+    ReadChangesRequest(@Nullable String type, @JsonProperty("page_size") @Nullable Integer pageSize,
+            @JsonProperty("continuation_token") @Nullable String continuationToken,
+            @JsonProperty("start_time") @Nullable OffsetDateTime startTime) {
+        this.type = type;
+        this.pageSize = pageSize;
+        this.continuationToken = continuationToken;
+        this.startTime = startTime;
+    }
+
+    @Nullable
     public String getType() {
         return type;
     }
@@ -105,11 +97,8 @@ public final class ReadChangesRequest {
 
     @Override
     public boolean equals(@Nullable Object obj) {
-        if (obj == this)
-            return true;
-        if (obj == null || obj.getClass() != this.getClass())
+        if (!(obj instanceof ReadChangesRequest that))
             return false;
-        var that = (ReadChangesRequest) obj;
         return Objects.equals(this.type, that.type) &&
                 Objects.equals(this.pageSize, that.pageSize) &&
                 Objects.equals(this.continuationToken, that.continuationToken) &&

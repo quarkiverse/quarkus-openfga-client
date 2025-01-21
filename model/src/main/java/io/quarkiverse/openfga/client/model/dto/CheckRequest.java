@@ -1,77 +1,45 @@
 package io.quarkiverse.openfga.client.model.dto;
 
-import static com.fasterxml.jackson.annotation.JsonCreator.Mode.PROPERTIES;
-
+import java.util.Map;
 import java.util.Objects;
 
 import javax.annotation.Nullable;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import io.quarkiverse.openfga.client.model.ConsistencyPreference;
-import io.quarkiverse.openfga.client.model.ContextualTupleKeys;
-import io.quarkiverse.openfga.client.model.TupleKey;
+import io.quarkiverse.openfga.client.model.RelTupleKeyed;
+import io.quarkiverse.openfga.client.model.RelTupleKeys;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class CheckRequest {
 
-    @JsonProperty("tuple_key")
-    private final TupleKey tupleKey;
-
-    @JsonProperty("contextual_tuples")
-    @Nullable
-    private final ContextualTupleKeys contextualTuples;
-
-    @JsonProperty("authorization_model_id")
-    @Nullable
-    private final String authorizationModelId;
-
-    @Nullable
-    private final Boolean trace;
-
-    @Nullable
-    private final Object context;
-
-    @Nullable
-    private final ConsistencyPreference consistency;
-
-    @JsonCreator(mode = PROPERTIES)
-    CheckRequest(@JsonProperty("tuple_key") TupleKey tupleKey,
-            @JsonProperty("contextual_tuples") @Nullable ContextualTupleKeys contextualTuples,
-            @JsonProperty("authorization_model_id") @Nullable String authorizationModelId, @Nullable Boolean trace,
-            @Nullable Object context, @Nullable ConsistencyPreference consistency) {
-        this.tupleKey = Preconditions.parameterNonNull(tupleKey, "tupleKey");
-        this.contextualTuples = contextualTuples;
-        this.authorizationModelId = authorizationModelId;
-        this.trace = trace;
-        this.context = context;
-        this.consistency = consistency;
-    }
-
-    public static CheckRequest of(TupleKey tupleKey, @Nullable ContextualTupleKeys contextualTuples,
-            @Nullable String authorizationModelId, @Nullable Boolean trace,
-            @Nullable Object context, @Nullable ConsistencyPreference consistency) {
-        return new CheckRequest(tupleKey, contextualTuples, authorizationModelId, trace, context, consistency);
-    }
-
     public static final class Builder {
-        private TupleKey tupleKey;
-        private ContextualTupleKeys contextualTuples;
+
+        @Nullable
+        private RelTupleKeyed tupleKey;
+        @Nullable
+        private RelTupleKeys contextualTuples;
+        @Nullable
         private String authorizationModelId;
+        @Nullable
         private Boolean trace;
-        private Object context;
+        @Nullable
+        private Map<String, Object> context;
+        @Nullable
         private ConsistencyPreference consistency;
 
-        Builder() {
+        private Builder() {
         }
 
-        public Builder tupleKey(TupleKey tupleKey) {
+        public Builder tupleKey(RelTupleKeyed tupleKey) {
             this.tupleKey = tupleKey;
             return this;
         }
 
-        public Builder contextualTuples(@Nullable ContextualTupleKeys contextualTuples) {
+        public Builder contextualTuples(@Nullable RelTupleKeys contextualTuples) {
             this.contextualTuples = contextualTuples;
             return this;
         }
@@ -86,7 +54,7 @@ public final class CheckRequest {
             return this;
         }
 
-        public Builder context(@Nullable Object context) {
+        public Builder context(@Nullable Map<String, Object> context) {
             this.context = context;
             return this;
         }
@@ -97,7 +65,9 @@ public final class CheckRequest {
         }
 
         public CheckRequest build() {
-            return new CheckRequest(tupleKey, contextualTuples, authorizationModelId, trace, context, consistency);
+            return new CheckRequest(
+                    Preconditions.parameterNonNull(tupleKey, "tupleKey"), contextualTuples,
+                    authorizationModelId, trace, context, consistency);
         }
     }
 
@@ -105,14 +75,40 @@ public final class CheckRequest {
         return new Builder();
     }
 
+    private final RelTupleKeyed tupleKey;
+    @Nullable
+    private final RelTupleKeys contextualTuples;
+    @Nullable
+    private final String authorizationModelId;
+    @Nullable
+    private final Boolean trace;
+    @Nullable
+    private final Map<String, Object> context;
+    @Nullable
+    private final ConsistencyPreference consistency;
+
+    @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+    CheckRequest(@JsonProperty("tuple_key") RelTupleKeyed tupleKey,
+            @JsonProperty("contextual_tuples") @Nullable RelTupleKeys contextualTuples,
+            @JsonProperty("authorization_model_id") @Nullable String authorizationModelId, @Nullable Boolean trace,
+            @Nullable Map<String, Object> context, @Nullable ConsistencyPreference consistency) {
+        this.tupleKey = tupleKey;
+        this.contextualTuples = contextualTuples;
+        this.authorizationModelId = authorizationModelId;
+        this.trace = trace;
+        this.context = context;
+        this.consistency = consistency;
+    }
+
     @JsonProperty("tuple_key")
-    public TupleKey getTupleKey() {
+    @JsonSerialize(typing = JsonSerialize.Typing.STATIC)
+    public RelTupleKeyed getTupleKey() {
         return tupleKey;
     }
 
     @JsonProperty("contextual_tuples")
     @Nullable
-    public ContextualTupleKeys getContextualTuples() {
+    public RelTupleKeys getContextualTuples() {
         return contextualTuples;
     }
 
@@ -128,7 +124,7 @@ public final class CheckRequest {
     }
 
     @Nullable
-    public Object getContext() {
+    public Map<String, Object> getContext() {
         return context;
     }
 
@@ -139,17 +135,14 @@ public final class CheckRequest {
 
     @Override
     public boolean equals(@Nullable Object obj) {
-        if (obj == this)
-            return true;
-        if (obj == null || obj.getClass() != this.getClass())
+        if (!(obj instanceof CheckRequest that))
             return false;
-        var that = (CheckRequest) obj;
-        return Objects.equals(this.tupleKey, that.tupleKey) &&
-                Objects.equals(this.contextualTuples, that.contextualTuples) &&
-                Objects.equals(this.authorizationModelId, that.authorizationModelId) &&
-                Objects.equals(this.trace, that.trace) &&
-                Objects.equals(this.context, that.context) &&
-                Objects.equals(this.consistency, that.consistency);
+        return Objects.equals(tupleKey, that.tupleKey) &&
+                Objects.equals(contextualTuples, that.contextualTuples) &&
+                Objects.equals(authorizationModelId, that.authorizationModelId) &&
+                Objects.equals(trace, that.trace) &&
+                Objects.equals(context, that.context) &&
+                consistency == that.consistency;
     }
 
     @Override
