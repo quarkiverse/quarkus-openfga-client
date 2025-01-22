@@ -12,8 +12,6 @@ import javax.annotation.Nullable;
 import io.quarkiverse.openfga.client.api.API;
 import io.quarkiverse.openfga.client.model.*;
 import io.quarkiverse.openfga.client.model.dto.*;
-import io.quarkiverse.openfga.client.model.schema.User;
-import io.quarkiverse.openfga.client.model.schema.UsersetTree;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 import io.quarkiverse.openfga.client.utils.PaginatedList;
 import io.quarkiverse.openfga.client.utils.Pagination;
@@ -34,16 +32,16 @@ public class AuthorizationModelClient {
                 .map(ReadAuthorizationModelResponse::authorizationModel);
     }
 
-    public record CheckOptions(Optional<Collection<RelTupleKeyed>> contextualTuples,
+    public record CheckOptions(Optional<Collection<? extends RelTupleKeyed>> contextualTuples,
             Optional<Map<String, Object>> context, Optional<ConsistencyPreference> consistency) {
 
         public static final CheckOptions DEFAULT = new CheckOptions();
 
-        private CheckOptions() {
+        public CheckOptions() {
             this(Optional.empty(), Optional.empty(), Optional.empty());
         }
 
-        public static CheckOptions withContextualTuples(@Nullable Collection<RelTupleKeyed> contextualTuples) {
+        public static CheckOptions withContextualTuples(@Nullable Collection<? extends RelTupleKeyed> contextualTuples) {
             return new CheckOptions(Optional.ofNullable(contextualTuples), Optional.empty(), Optional.empty());
         }
 
@@ -59,7 +57,7 @@ public class AuthorizationModelClient {
             return new CheckOptions(Optional.empty(), Optional.empty(), Optional.ofNullable(consistency));
         }
 
-        public CheckOptions contextualTuples(@Nullable Collection<RelTupleKeyed> contextualTuples) {
+        public CheckOptions contextualTuples(@Nullable Collection<? extends RelTupleKeyed> contextualTuples) {
             return new CheckOptions(Optional.ofNullable(contextualTuples), context, consistency);
         }
 
@@ -99,7 +97,7 @@ public class AuthorizationModelClient {
 
         public static final BatchCheckOptions DEFAULT = new BatchCheckOptions();
 
-        private BatchCheckOptions() {
+        public BatchCheckOptions() {
             this(Optional.empty());
         }
 
@@ -127,16 +125,16 @@ public class AuthorizationModelClient {
         }).map(BatchCheckResponse::result);
     }
 
-    public record ExpandOptions(Optional<Collection<RelTupleKeyed>> contextualTuples,
+    public record ExpandOptions(Optional<Collection<? extends RelTupleKeyed>> contextualTuples,
             Optional<Map<String, Object>> context, Optional<ConsistencyPreference> consistency) {
 
         public static final ExpandOptions DEFAULT = new ExpandOptions();
 
-        private ExpandOptions() {
+        public ExpandOptions() {
             this(Optional.empty(), Optional.empty(), Optional.empty());
         }
 
-        public static ExpandOptions withContextualTuples(@Nullable Collection<RelTupleKeyed> contextualTuples) {
+        public static ExpandOptions withContextualTuples(@Nullable Collection<? extends RelTupleKeyed> contextualTuples) {
             return new ExpandOptions(Optional.ofNullable(contextualTuples), Optional.empty(), Optional.empty());
         }
 
@@ -152,7 +150,7 @@ public class AuthorizationModelClient {
             return new ExpandOptions(Optional.empty(), Optional.empty(), Optional.ofNullable(consistency));
         }
 
-        public ExpandOptions contextualTuples(@Nullable Collection<RelTupleKeyed> contextualTuples) {
+        public ExpandOptions contextualTuples(@Nullable Collection<? extends RelTupleKeyed> contextualTuples) {
             return new ExpandOptions(Optional.ofNullable(contextualTuples), context, consistency);
         }
 
@@ -169,11 +167,11 @@ public class AuthorizationModelClient {
         }
     }
 
-    public Uni<UsersetTree> expand(RelTupleKeyed tupleKey) {
+    public Uni<Schema.UsersetTree> expand(RelTupleKeyed tupleKey) {
         return expand(tupleKey, ExpandOptions.DEFAULT);
     }
 
-    public Uni<UsersetTree> expand(RelPartialTupleKeyed tupleKey, ExpandOptions options) {
+    public Uni<Schema.UsersetTree> expand(RelPartialTupleKeyed tupleKey, ExpandOptions options) {
         return config.flatMap(config -> {
             var request = ExpandRequest.builder()
                     .authorizationModelId(config.getAuthorizationModelId())
@@ -187,12 +185,12 @@ public class AuthorizationModelClient {
                 .map(ExpandResponse::tree);
     }
 
-    public record ListOptions(Optional<Collection<RelTupleKeyed>> contextualTuples,
+    public record ListOptions(Optional<Collection<? extends RelTupleKeyed>> contextualTuples,
             Optional<Map<String, Object>> context, Optional<ConsistencyPreference> consistency) {
 
         public static final ListOptions DEFAULT = new ListOptions();
 
-        public static ListOptions of(@Nullable Collection<RelTupleKeyed> contextualTuples,
+        public static ListOptions of(@Nullable Collection<? extends RelTupleKeyed> contextualTuples,
                 @Nullable Map<String, Object> context, @Nullable ConsistencyPreference consistency) {
             return new ListOptions(Optional.ofNullable(contextualTuples), Optional.ofNullable(context),
                     Optional.ofNullable(consistency));
@@ -202,7 +200,7 @@ public class AuthorizationModelClient {
             this(Optional.empty(), Optional.empty(), Optional.empty());
         }
 
-        public static ListOptions withContextualTuples(@Nullable Collection<RelTupleKeyed> contextualTuples) {
+        public static ListOptions withContextualTuples(@Nullable Collection<? extends RelTupleKeyed> contextualTuples) {
             return new ListOptions(Optional.ofNullable(contextualTuples), Optional.empty(), Optional.empty());
         }
 
@@ -218,7 +216,7 @@ public class AuthorizationModelClient {
             return new ListOptions(Optional.empty(), Optional.empty(), Optional.ofNullable(consistency));
         }
 
-        public ListOptions contextualTuples(@Nullable Collection<RelTupleKeyed> contextualTuples) {
+        public ListOptions contextualTuples(@Nullable Collection<? extends RelTupleKeyed> contextualTuples) {
             return new ListOptions(Optional.ofNullable(contextualTuples), context, consistency);
         }
 
@@ -235,30 +233,30 @@ public class AuthorizationModelClient {
         }
     }
 
-    public record ListObjectsFilter(Optional<String> type, Optional<String> relation, Optional<RelUser> user) {
+    public record ListObjectsFilter(Optional<String> type, Optional<String> relation, Optional<RelEntity> user) {
 
-        private static ListObjectsFilter empty() {
-            return new ListObjectsFilter(Optional.empty(), Optional.empty(), Optional.empty());
+        public ListObjectsFilter() {
+            this(Optional.empty(), Optional.empty(), Optional.empty());
         }
 
         public static ListObjectsFilter byObjectType(String type) {
-            return empty().objectType(type);
+            return new ListObjectsFilter().objectType(type);
         }
 
         public static ListObjectsFilter byObjectType(RelTyped type) {
-            return empty().objectType(type);
+            return new ListObjectsFilter().objectType(type);
         }
 
         public static ListObjectsFilter byRelation(String relation) {
-            return empty().relation(relation);
+            return new ListObjectsFilter().relation(relation);
         }
 
-        public static ListObjectsFilter byUser(RelUser user) {
-            return empty().user(user);
+        public static ListObjectsFilter byUser(RelEntity user) {
+            return new ListObjectsFilter().user(user);
         }
 
         public static ListObjectsFilter byUser(String user) {
-            return empty().user(user);
+            return new ListObjectsFilter().user(user);
         }
 
         public ListObjectsFilter objectType(String type) {
@@ -273,7 +271,7 @@ public class AuthorizationModelClient {
             return new ListObjectsFilter(type, Optional.of(relation), user);
         }
 
-        public ListObjectsFilter user(RelUser user) {
+        public ListObjectsFilter user(RelEntity user) {
             return new ListObjectsFilter(type, relation, Optional.of(user));
         }
 
@@ -296,7 +294,7 @@ public class AuthorizationModelClient {
                     .authorizationModelId(config.getAuthorizationModelId())
                     .type(type)
                     .relation(relation)
-                    .user(user)
+                    .user(user.asUser())
                     .contextualTuples(options.contextualTuples.orElse(null))
                     .context(options.context.orElse(null))
                     .consistency(options.consistency.orElse(null))
@@ -305,42 +303,49 @@ public class AuthorizationModelClient {
         }).map(ListObjectsResponse::objects);
     }
 
-    public record ListUsersFilter(Optional<RelObject> object, Optional<String> relation,
+    /**
+     * Filter for listing users matching a specific object, relation, and user type(s).
+     *
+     * @param object The object to filter by.
+     * @param relation The relation to filter by.
+     * @param userFilters The user type filters to apply.
+     */
+    public record ListUsersFilter(Optional<RelEntity> object, Optional<String> relation,
             Optional<Collection<ListUsersRequest.UserTypeFilter>> userFilters) {
 
-        private static ListUsersFilter empty() {
-            return new ListUsersFilter(Optional.empty(), Optional.empty(), Optional.empty());
+        private ListUsersFilter() {
+            this(Optional.empty(), Optional.empty(), Optional.empty());
         }
 
         public static ListUsersFilter byObject(RelObject object) {
-            return empty().object(object);
+            return new ListUsersFilter().object(object);
         }
 
         public static ListUsersFilter byObject(String object) {
-            return empty().object(object);
+            return new ListUsersFilter().object(object);
         }
 
         public static ListUsersFilter byRelation(String relation) {
-            return empty().relation(relation);
+            return new ListUsersFilter().relation(relation);
         }
 
         public static ListUsersFilter byUserFilters(Collection<ListUsersRequest.UserTypeFilter> userFilters) {
-            return empty().userFilters(userFilters);
+            return new ListUsersFilter().userFilters(userFilters);
         }
 
         public static ListUsersFilter byUserFilters(ListUsersRequest.UserTypeFilter... userFilter) {
-            return empty().userFilters(userFilter);
+            return new ListUsersFilter().userFilters(userFilter);
         }
 
         public static ListUsersFilter byUserType(String type) {
-            return empty().userType(type);
+            return new ListUsersFilter().userType(type);
         }
 
         public static ListUsersFilter byUserType(RelTyped type) {
-            return empty().userType(type);
+            return new ListUsersFilter().userType(type);
         }
 
-        public ListUsersFilter object(RelObject object) {
+        public ListUsersFilter object(RelEntity object) {
             return new ListUsersFilter(Preconditions.parameterNonNullToOptional(object, "object"), relation, userFilters);
         }
 
@@ -375,16 +380,16 @@ public class AuthorizationModelClient {
         }
     }
 
-    public Uni<Collection<User>> listUsers(ListUsersFilter filter) {
+    public Uni<Collection<RelTyped>> listUsers(ListUsersFilter filter) {
         return listUsers(filter, ListOptions.DEFAULT);
     }
 
-    public Uni<Collection<User>> listUsers(ListUsersFilter filter, ListOptions options) {
+    public Uni<Collection<RelTyped>> listUsers(ListUsersFilter filter, ListOptions options) {
         Preconditions.parameterNonNull(filter, "filter");
         return config.flatMap(config -> {
             var request = ListUsersRequest.builder()
                     .authorizationModelId(config.getAuthorizationModelId())
-                    .object(filter.object.orElseThrow())
+                    .object(filter.object.map(RelEntity::asObject).orElseThrow())
                     .relation(filter.relation.orElseThrow())
                     .userFilters(filter.userFilters.orElseThrow())
                     .contextualTuples(options.contextualTuples.orElse(null))
@@ -392,12 +397,12 @@ public class AuthorizationModelClient {
                     .consistency(options.consistency.orElse(null))
                     .build();
             return api.listUsers(config.getStoreId(), request);
-        }).map(ListUsersResponse::users);
+        }).map(ListUsersResponse::asRel);
     }
 
-    public record ReadFilter(Optional<RelTyped> typeOrObject, Optional<String> relation, Optional<RelUser> user) {
+    public record ReadFilter(Optional<RelTyped> typeOrObject, Optional<String> relation, Optional<RelEntity> user) {
 
-        public static final ReadFilter ALL = new ReadFilter(Optional.empty(), Optional.empty(), Optional.empty());
+        public static final ReadFilter ALL = new ReadFilter();
 
         public static ReadFilter byObjectType(@Nullable RelTyped type) {
             return ReadFilter.ALL.objectType(type);
@@ -407,7 +412,7 @@ public class AuthorizationModelClient {
             return ReadFilter.ALL.objectType(type);
         }
 
-        public static ReadFilter byObject(@Nullable RelObject object) {
+        public static ReadFilter byObject(@Nullable RelEntity object) {
             return ReadFilter.ALL.object(object);
         }
 
@@ -419,12 +424,16 @@ public class AuthorizationModelClient {
             return ReadFilter.ALL.relation(relation);
         }
 
-        public static ReadFilter byUser(@Nullable RelUser user) {
+        public static ReadFilter byUser(@Nullable RelEntity user) {
             return ReadFilter.ALL.user(user);
         }
 
         public static ReadFilter byUser(@Nullable String user) {
             return ReadFilter.ALL.user(user);
+        }
+
+        public ReadFilter() {
+            this(Optional.empty(), Optional.empty(), Optional.empty());
         }
 
         public ReadFilter objectType(@Nullable RelTyped type) {
@@ -435,7 +444,7 @@ public class AuthorizationModelClient {
             return new ReadFilter(Optional.ofNullable(type).map(RelObject::valueOf), relation, user);
         }
 
-        public ReadFilter object(@Nullable RelObject object) {
+        public ReadFilter object(@Nullable RelEntity object) {
             return new ReadFilter(Optional.ofNullable(object), relation, user);
         }
 
@@ -447,7 +456,7 @@ public class AuthorizationModelClient {
             return new ReadFilter(typeOrObject, Optional.ofNullable(relation), user);
         }
 
-        public ReadFilter user(@Nullable RelUser user) {
+        public ReadFilter user(@Nullable RelEntity user) {
             return new ReadFilter(typeOrObject, relation, Optional.ofNullable(user));
         }
 
@@ -475,7 +484,7 @@ public class AuthorizationModelClient {
                     .tupleKey(ReadRequest.TupleKeyFilter.builder()
                             .typeOrObject(filter.typeOrObject.orElse(null))
                             .relation(filter.relation.orElse(null))
-                            .user(filter.user.orElse(null))
+                            .user(filter.user.map(RelEntity::asUser).orElse(null))
                             .build())
                     .pageSize(options.pageSize())
                     .continuationToken(options.continuationToken().orElse(null))

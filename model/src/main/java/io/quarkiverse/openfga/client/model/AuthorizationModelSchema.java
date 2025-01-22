@@ -1,6 +1,8 @@
 package io.quarkiverse.openfga.client.model;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
 import java.util.*;
 
 import javax.annotation.Nullable;
@@ -8,7 +10,8 @@ import javax.annotation.Nullable;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import io.quarkiverse.openfga.client.model.schema.Condition;
+import io.quarkiverse.openfga.client.model.Schema.Condition;
+import io.quarkiverse.openfga.client.model.Schema.TypeDefinition;
 import io.quarkiverse.openfga.client.model.utils.ModelMapper;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 

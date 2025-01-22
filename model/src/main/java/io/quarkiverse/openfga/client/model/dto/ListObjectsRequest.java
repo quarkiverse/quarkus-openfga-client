@@ -9,7 +9,10 @@ import javax.annotation.Nullable;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import io.quarkiverse.openfga.client.model.*;
+import io.quarkiverse.openfga.client.model.ConsistencyPreference;
+import io.quarkiverse.openfga.client.model.RelTupleKeyed;
+import io.quarkiverse.openfga.client.model.RelTupleKeys;
+import io.quarkiverse.openfga.client.model.RelUser;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class ListObjectsRequest {
@@ -25,7 +28,7 @@ public final class ListObjectsRequest {
         @Nullable
         private RelUser user;
         @Nullable
-        private Collection<RelTupleKeyed> contextualTuples;
+        private Collection<? extends RelTupleKeyed> contextualTuples;
         @Nullable
         private Map<String, Object> context;
         @Nullable
@@ -54,7 +57,7 @@ public final class ListObjectsRequest {
             return this;
         }
 
-        public Builder contextualTuples(@Nullable Collection<RelTupleKeyed> contextualTuples) {
+        public Builder contextualTuples(@Nullable Collection<? extends RelTupleKeyed> contextualTuples) {
             this.contextualTuples = contextualTuples;
             return this;
         }

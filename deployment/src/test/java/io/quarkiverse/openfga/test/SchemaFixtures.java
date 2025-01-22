@@ -1,10 +1,9 @@
 package io.quarkiverse.openfga.test;
 
-import static java.lang.String.format;
+import static io.quarkiverse.openfga.client.model.Schema.*;
 
 import io.quarkiverse.openfga.client.model.*;
-import io.quarkiverse.openfga.client.model.schema.*;
-import io.quarkiverse.openfga.client.model.schema.Condition.Parameter.TypeName;
+import io.quarkiverse.openfga.client.model.Schema.Condition.Parameter.TypeName;
 
 public final class SchemaFixtures {
 
@@ -32,82 +31,144 @@ public final class SchemaFixtures {
         public static final String GRANTEE = "grantee";
     }
 
-    public static final TypeDefinition userTypeDef = TypeDefinition.of(ObjectTypeNames.USER);
-    public static final TypeDefinition groupTypeDef = TypeDefinition.of(ObjectTypeNames.GROUP);
-    public static final TypeDefinition documentTypeDef = TypeDefinition.builder()
+    public static final TypeDefinition userTypeDef = typeDefinition(ObjectTypeNames.USER);
+    public static final TypeDefinition groupTypeDef = typeDefinition(ObjectTypeNames.GROUP);
+    public static final TypeDefinition documentTypeDef = typeDefinition()
             .type(ObjectTypeNames.DOCUMENT)
-            .addRelation(RelationshipNames.READER, Userset.direct())
-            .addRelation(RelationshipNames.WRITER, Userset.direct())
-            .addRelation(RelationshipNames.OWNER, Userset.direct())
-            .addRelation(RelationshipNames.GRANTEE, Userset.direct())
+            .addRelation(RelationshipNames.READER, thisUserset())
+            .addRelation(RelationshipNames.WRITER, thisUserset())
+            .addRelation(RelationshipNames.OWNER, thisUserset())
+            .addRelation(RelationshipNames.GRANTEE, thisUserset())
             .metadata(
-                    Metadata.builder()
+                    typeMetadata()
                             .addRelation(
                                     RelationshipNames.READER,
-                                    RelationMetadata.of(
-                                            RelationReference.of(ObjectTypeNames.USER),
-                                            RelationReference.of(ObjectTypeNames.GROUP)))
+                                    typeMetadataRelation()
+                                            .addDirectlyRelatedUserTypes(
+                                                    typeMetadataRelationReference()
+                                                            .type(ObjectTypeNames.USER)
+                                                            .build(),
+                                                    typeMetadataRelationReference()
+                                                            .type(ObjectTypeNames.GROUP)
+                                                            .build())
+                                            .build())
                             .addRelation(
                                     RelationshipNames.WRITER,
-                                    RelationMetadata.of(RelationReference.of(ObjectTypeNames.USER)))
+                                    typeMetadataRelation()
+                                            .addDirectlyRelatedUserTypes(
+                                                    typeMetadataRelationReference()
+                                                            .type(ObjectTypeNames.USER)
+                                                            .build())
+                                            .build())
                             .addRelation(
                                     RelationshipNames.OWNER,
-                                    RelationMetadata.of(RelationReference.of(ObjectTypeNames.USER)))
+                                    typeMetadataRelation()
+                                            .addDirectlyRelatedUserTypes(
+                                                    typeMetadataRelationReference()
+                                                            .type(ObjectTypeNames.USER)
+                                                            .build())
+                                            .build())
                             .addRelation(
                                     RelationshipNames.GRANTEE,
-                                    RelationMetadata.of(RelationReference.of(ObjectTypeNames.USER)))
+                                    typeMetadataRelation()
+                                            .addDirectlyRelatedUserTypes(
+                                                    typeMetadataRelationReference()
+                                                            .type(ObjectTypeNames.USER)
+                                                            .build())
+                                            .build())
                             .build())
             .build();
-    public static final TypeDefinition otherDocumentTypeDef = TypeDefinition.builder()
+
+    public static final TypeDefinition otherDocumentTypeDef = typeDefinition()
             .type(ObjectTypeNames.OTHER_DOCUMENT)
-            .addRelation(RelationshipNames.READER, Userset.direct())
-            .addRelation(RelationshipNames.WRITER, Userset.direct())
-            .addRelation(RelationshipNames.OWNER, Userset.direct())
-            .addRelation(RelationshipNames.GRANTEE, Userset.direct())
+            .addRelation(RelationshipNames.READER, thisUserset())
+            .addRelation(RelationshipNames.WRITER, thisUserset())
+            .addRelation(RelationshipNames.OWNER, thisUserset())
+            .addRelation(RelationshipNames.GRANTEE, thisUserset())
             .metadata(
-                    Metadata.builder()
+                    typeMetadata()
                             .addRelation(
                                     RelationshipNames.READER,
-                                    RelationMetadata.of(
-                                            RelationReference.of(ObjectTypeNames.USER),
-                                            RelationReference.of(ObjectTypeNames.GROUP)))
+                                    typeMetadataRelation()
+                                            .addDirectlyRelatedUserTypes(
+                                                    typeMetadataRelationReference()
+                                                            .type(ObjectTypeNames.USER)
+                                                            .build(),
+                                                    typeMetadataRelationReference()
+                                                            .type(ObjectTypeNames.GROUP)
+                                                            .build())
+                                            .build())
                             .addRelation(
                                     RelationshipNames.WRITER,
-                                    RelationMetadata.of(RelationReference.of(ObjectTypeNames.USER)))
+                                    typeMetadataRelation()
+                                            .addDirectlyRelatedUserTypes(
+                                                    typeMetadataRelationReference()
+                                                            .type(ObjectTypeNames.USER)
+                                                            .build())
+                                            .build())
                             .addRelation(
                                     RelationshipNames.OWNER,
-                                    RelationMetadata.of(RelationReference.of(ObjectTypeNames.USER)))
+                                    typeMetadataRelation()
+                                            .addDirectlyRelatedUserTypes(
+                                                    typeMetadataRelationReference()
+                                                            .type(ObjectTypeNames.USER)
+                                                            .build())
+                                            .build())
                             .addRelation(
                                     RelationshipNames.GRANTEE,
-                                    RelationMetadata.of(RelationReference.of(ObjectTypeNames.USER)))
+                                    typeMetadataRelation()
+                                            .addDirectlyRelatedUserTypes(
+                                                    typeMetadataRelationReference()
+                                                            .type(ObjectTypeNames.USER)
+                                                            .build())
+                                            .build())
                             .build())
             .build();
-    public static final TypeDefinition documentWithConditionTypeDef = TypeDefinition.builder()
+
+    public static final TypeDefinition documentWithConditionTypeDef = typeDefinition()
             .type(ObjectTypeNames.DOCUMENT)
-            .addRelation(RelationshipNames.READER, Userset.direct())
-            .addRelation(RelationshipNames.WRITER, Userset.direct())
-            .addRelation(RelationshipNames.OWNER, Userset.direct())
-            .addRelation(RelationshipNames.GRANTEE, Userset.direct())
+            .addRelation(RelationshipNames.READER, thisUserset())
+            .addRelation(RelationshipNames.WRITER, thisUserset())
+            .addRelation(RelationshipNames.OWNER, thisUserset())
+            .addRelation(RelationshipNames.GRANTEE, thisUserset())
             .metadata(
-                    Metadata.builder()
+                    typeMetadata()
                             .addRelation(
                                     RelationshipNames.READER,
-                                    RelationMetadata.of(
-                                            RelationReference.of(ObjectTypeNames.USER),
-                                            RelationReference.of(ObjectTypeNames.GROUP)))
+                                    typeMetadataRelation()
+                                            .addDirectlyRelatedUserTypes(
+                                                    typeMetadataRelationReference()
+                                                            .type(ObjectTypeNames.USER)
+                                                            .build(),
+                                                    typeMetadataRelationReference()
+                                                            .type(ObjectTypeNames.GROUP)
+                                                            .build())
+                                            .build())
                             .addRelation(
                                     RelationshipNames.WRITER,
-                                    RelationMetadata.of(RelationReference.of(ObjectTypeNames.USER)))
+                                    typeMetadataRelation()
+                                            .addDirectlyRelatedUserTypes(
+                                                    typeMetadataRelationReference()
+                                                            .type(ObjectTypeNames.USER)
+                                                            .build())
+                                            .build())
                             .addRelation(
                                     RelationshipNames.OWNER,
-                                    RelationMetadata.of(RelationReference.of(ObjectTypeNames.USER)))
+                                    typeMetadataRelation()
+                                            .addDirectlyRelatedUserTypes(
+                                                    typeMetadataRelationReference()
+                                                            .type(ObjectTypeNames.USER)
+                                                            .build())
+                                            .build())
                             .addRelation(
                                     RelationshipNames.GRANTEE,
-                                    RelationMetadata.of(
-                                            RelationReference.builder()
-                                                    .type(ObjectTypeNames.USER)
-                                                    .condition(ConditionNames.NON_EXPIRED_GRANT)
-                                                    .build()))
+                                    typeMetadataRelation()
+                                            .addDirectlyRelatedUserTypes(
+                                                    typeMetadataRelationReference()
+                                                            .type(ObjectTypeNames.USER)
+                                                            .condition(ConditionNames.NON_EXPIRED_GRANT)
+                                                            .build())
+                                            .build())
                             .build())
             .build();
 
@@ -119,10 +180,11 @@ public final class SchemaFixtures {
             .addTypeDefinitions(userTypeDef, groupTypeDef, documentWithConditionTypeDef, otherDocumentTypeDef)
             .addCondition(
                     ConditionNames.NON_EXPIRED_GRANT,
-                    Condition.builder()
+                    condition()
                             .name(ConditionNames.NON_EXPIRED_GRANT)
-                            .expression(format("%s < %s + %s", ParameterNames.CURRENT_TIME, ParameterNames.GRANT_TIME,
-                                    ParameterNames.GRANT_DURATION))
+                            .expression("%s < %s + %s"
+                                    .formatted(ParameterNames.CURRENT_TIME, ParameterNames.GRANT_TIME,
+                                            ParameterNames.GRANT_DURATION))
                             .addParameter("current_time", TypeName.TIMESTAMP)
                             .addParameter("grant_time", TypeName.TIMESTAMP)
                             .addParameter("grant_duration", TypeName.DURATION)

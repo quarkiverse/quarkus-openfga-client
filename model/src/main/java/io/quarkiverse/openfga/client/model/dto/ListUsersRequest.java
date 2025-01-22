@@ -10,7 +10,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import io.quarkiverse.openfga.client.model.*;
+import io.quarkiverse.openfga.client.model.ConsistencyPreference;
+import io.quarkiverse.openfga.client.model.RelObject;
+import io.quarkiverse.openfga.client.model.RelTupleKeyed;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class ListUsersRequest {
@@ -100,7 +102,7 @@ public final class ListUsersRequest {
         @Nullable
         private Collection<UserTypeFilter> userFilters;
         @Nullable
-        private Collection<RelTupleKeyed> contextualTuples;
+        private Collection<? extends RelTupleKeyed> contextualTuples;
         @Nullable
         private Map<String, Object> context;
         @Nullable
@@ -129,7 +131,7 @@ public final class ListUsersRequest {
             return this;
         }
 
-        public Builder contextualTuples(@Nullable Collection<RelTupleKeyed> contextualTuples) {
+        public Builder contextualTuples(@Nullable Collection<? extends RelTupleKeyed> contextualTuples) {
             this.contextualTuples = contextualTuples;
             return this;
         }
@@ -163,7 +165,7 @@ public final class ListUsersRequest {
     private final String relation;
     private final Collection<UserTypeFilter> userFilters;
     @Nullable
-    private final Collection<RelTupleKeyed> contextualTuples;
+    private final Collection<? extends RelTupleKeyed> contextualTuples;
     @Nullable
     private final Map<String, Object> context;
     @Nullable
@@ -172,7 +174,7 @@ public final class ListUsersRequest {
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     ListUsersRequest(@JsonProperty("authorization_model_id") @Nullable String authorizationModelId, RelObject object,
             String relation, @JsonProperty("user_filters") Collection<UserTypeFilter> userFilters,
-            @JsonProperty("contextual_tuples") @Nullable Collection<RelTupleKeyed> contextualTuples,
+            @JsonProperty("contextual_tuples") @Nullable Collection<? extends RelTupleKeyed> contextualTuples,
             @Nullable Map<String, Object> context, @Nullable ConsistencyPreference consistency) {
         this.authorizationModelId = authorizationModelId;
         this.object = object;
@@ -205,7 +207,7 @@ public final class ListUsersRequest {
 
     @JsonProperty("contextual_tuples")
     @Nullable
-    public Collection<RelTupleKeyed> getContextualTuples() {
+    public Collection<? extends RelTupleKeyed> getContextualTuples() {
         return contextualTuples;
     }
 

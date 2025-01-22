@@ -1,5 +1,6 @@
 package io.quarkiverse.openfga.client.model;
 
+import static io.quarkiverse.openfga.client.model.Schema.*;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatNoException;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
@@ -13,8 +14,8 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 
-import io.quarkiverse.openfga.client.model.schema.ObjectRelation;
-import io.quarkiverse.openfga.client.model.schema.Userset;
+import io.quarkiverse.openfga.client.model.Schema.TypeDefinition;
+import io.quarkiverse.openfga.client.model.Schema.Userset;
 
 public class AuthorizationModelSchemaTest {
 
@@ -26,15 +27,14 @@ public class AuthorizationModelSchemaTest {
 
     @Test
     void testUsersetWithThisRead() {
-        var json = "{\"this\": {\"any\":\"value\"}}";
+        var json = "{\"this\": {}}";
 
         assertThatNoException()
                 .isThrownBy(() -> {
                     var userset = mapper.readValue(json, Userset.class);
-                    var directUserset = userset.getDirectUserset();
+                    var directUserset = userset.self_();
                     assertThat(directUserset)
-                            .isNotNull()
-                            .containsEntry("any", "value");
+                            .isNotNull();
                 });
     }
 
@@ -45,10 +45,10 @@ public class AuthorizationModelSchemaTest {
         assertThatNoException()
                 .isThrownBy(() -> {
                     var userset = mapper.readValue(json, Userset.class);
-                    var computedUserset = userset.getComputedUserset();
+                    var computedUserset = userset.computedUserset();
                     assertThat(computedUserset)
                             .isNotNull()
-                            .isEqualTo(ObjectRelation.of("doc:123", "admin"));
+                            .isEqualTo(objectRelation("doc:123", "admin"));
                 });
     }
 
@@ -59,71 +59,71 @@ public class AuthorizationModelSchemaTest {
         assertThatNoException()
                 .isThrownBy(() -> {
                     var userset = mapper.readValue(json, Userset.class);
-                    var tupleToUserset = userset.getTupleToUserset();
+                    var tupleToUserset = userset.tupleToUserset();
                     assertThat(tupleToUserset)
                             .isNotNull()
                             .satisfies(t -> {
                                 assertThat(t.tupleset())
-                                        .isEqualTo(ObjectRelation.of("a", "b"));
+                                        .isEqualTo(objectRelation("a", "b"));
                                 assertThat(t.computedUserset())
-                                        .isEqualTo(ObjectRelation.of("c", "d"));
+                                        .isEqualTo(objectRelation("c", "d"));
                             });
                 });
     }
 
     @Test
     void testUsersetWithUnionRead() {
-        var json = "{\"union\": {\"child\":[{\"this\":{\"a\":1}}, {\"computedUserset\": {\"object\": \"b\", \"relation\": \"c\"}}]}}";
+        var json = "{\"union\": {\"child\":[{\"this\":{}}, {\"computedUserset\": {\"object\": \"b\", \"relation\": \"c\"}}]}}";
 
         assertThatNoException()
                 .isThrownBy(() -> {
                     var userset = mapper.readValue(json, Userset.class);
-                    var union = userset.getUnion();
+                    var union = userset.union();
                     assertThat(union)
                             .isNotNull()
-                            .satisfies(u -> assertThat(u.getChild())
+                            .satisfies(u -> assertThat(u.child())
                                     .hasSize(2)
                                     .containsExactlyInAnyOrder(
-                                            Userset.direct("a", 1),
-                                            Userset.computed("b", "c")));
+                                            thisUserset(),
+                                            computedUserset("b", "c")));
                 });
     }
 
     @Test
     void testUsersetWithIntersectionRead() {
-        var json = "{\"intersection\": {\"child\":[{\"this\":{\"a\":1}}, {\"computedUserset\": {\"object\": \"b\", \"relation\": \"c\"}}]}}";
+        var json = "{\"intersection\": {\"child\":[{\"this\":{}}, {\"computedUserset\": {\"object\": \"b\", \"relation\": \"c\"}}]}}";
 
         assertThatNoException()
                 .isThrownBy(() -> {
                     var userset = mapper.readValue(json, Userset.class);
-                    var intersection = userset.getIntersection();
+                    var intersection = userset.intersection();
                     assertThat(intersection)
                             .isNotNull()
-                            .satisfies(i -> assertThat(i.getChild())
+                            .satisfies(i -> assertThat(i.child())
                                     .hasSize(2)
                                     .containsExactlyInAnyOrder(
-                                            Userset.direct("a", 1),
-                                            Userset.computed("b", "c")));
+                                            thisUserset(),
+                                            computedUserset("b", "c")));
                 });
     }
 
     @Test
     void testUsersetWithDifferenceRead() {
-        var json = "{\"difference\":{\"base\":{\"this\":{\"a\":1}},\"subtract\":{\"this\":{\"b\":2}}}}";
+        var json = "{\"difference\":{\"base\":{\"this\":{}},\"subtract\":{\"this\":{}}}}";
 
         assertThatNoException()
                 .isThrownBy(() -> {
                     var userset = mapper.readValue(json, Userset.class);
-                    var difference = userset.getDifference();
+                    var difference = userset.difference();
                     assertThat(difference)
                             .isNotNull()
                             .satisfies(d -> {
                                 assertThat(d.base())
                                         .isNotNull()
-                                        .isEqualTo(Userset.direct("a", 1));
+                                        .isEqualTo(thisUserset());
                                 assertThat(d.subtract())
                                         .isNotNull()
-                                        .isEqualTo(Userset.direct("b", 2));
+                                        .isEqualTo(thisUserset());
                             });
                 });
     }
@@ -139,8 +139,8 @@ public class AuthorizationModelSchemaTest {
                             .isEqualTo(
                                     TypeDefinition.builder()
                                             .type("a")
-                                            .addRelation("b", Userset.computed("c", "d"))
-                                            .addRelation("e", Userset.computed("f", "g"))
+                                            .addRelation("b", computedUserset("c", "d"))
+                                            .addRelation("e", computedUserset("f", "g"))
                                             .build());
                 });
     }
@@ -159,52 +159,15 @@ public class AuthorizationModelSchemaTest {
                                     .containsExactlyInAnyOrder(
                                             TypeDefinition.builder()
                                                     .type("a")
-                                                    .addRelation("b", Userset.computed("c", "d"))
-                                                    .addRelation("e", Userset.computed("f", "g"))
+                                                    .addRelation("b", computedUserset("c", "d"))
+                                                    .addRelation("e", computedUserset("f", "g"))
                                                     .build(),
                                             TypeDefinition.builder()
                                                     .type("h")
-                                                    .addRelation("i", Userset.computed("j", "k"))
-                                                    .addRelation("l", Userset.computed("m", "n"))
+                                                    .addRelation("i", computedUserset("j", "k"))
+                                                    .addRelation("l", computedUserset("m", "n"))
                                                     .build()));
                 });
-    }
-
-    @Test
-    void testDirectUsersetBuild() {
-        var direct1 = Userset.direct("a", 1)
-                .getDirectUserset();
-        assertThat(direct1).containsEntry("a", 1);
-
-        var direct2 = Userset.direct("a", 1, "b", 2)
-                .getDirectUserset();
-        assertThat(direct2)
-                .containsEntry("a", 1)
-                .containsEntry("b", 2);
-
-        var direct3 = Userset.direct("a", 1, "b", 2, "c", 3)
-                .getDirectUserset();
-        assertThat(direct3)
-                .containsEntry("a", 1)
-                .containsEntry("b", 2)
-                .containsEntry("c", 3);
-
-        var direct4 = Userset.direct("a", 1, "b", 2, "c", 3, "d", 4)
-                .getDirectUserset();
-        assertThat(direct4)
-                .containsEntry("a", 1)
-                .containsEntry("b", 2)
-                .containsEntry("c", 3)
-                .containsEntry("d", 4);
-
-        var direct5 = Userset.direct("a", 1, "b", 2, "c", 3, "d", 4, "e", 5)
-                .getDirectUserset();
-        assertThat(direct5)
-                .containsEntry("a", 1)
-                .containsEntry("b", 2)
-                .containsEntry("c", 3)
-                .containsEntry("d", 4)
-                .containsEntry("e", 5);
     }
 
 }
