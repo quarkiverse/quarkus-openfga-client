@@ -8,8 +8,8 @@ import javax.annotation.Nullable;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import io.quarkiverse.openfga.client.model.TypeDefinition;
-import io.quarkiverse.openfga.client.model.schema.Condition;
+import io.quarkiverse.openfga.client.model.Schema.Condition;
+import io.quarkiverse.openfga.client.model.Schema.TypeDefinition;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class WriteAuthorizationModelRequest {

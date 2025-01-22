@@ -26,8 +26,6 @@ import io.quarkiverse.openfga.client.AuthorizationModelClient.*;
 import io.quarkiverse.openfga.client.OpenFGAClient;
 import io.quarkiverse.openfga.client.StoreClient;
 import io.quarkiverse.openfga.client.model.*;
-import io.quarkiverse.openfga.client.model.CheckResult;
-import io.quarkiverse.openfga.client.model.schema.*;
 import io.quarkiverse.openfga.client.utils.PaginatedList;
 import io.quarkiverse.openfga.client.utils.Pagination;
 import io.quarkus.test.QuarkusUnitTest;
@@ -289,38 +287,30 @@ public class AuthorizationModelClientTest {
 
         assertThat(expanded)
                 .isNotNull()
-                .satisfies(t -> {
-                    assertThat(t)
-                            .extracting(UsersetTree::getRoot, as(type(Node.class)))
-                            .satisfies(u -> {
-                                assertThat(u)
-                                        .extracting(Node::name)
-                                        .isEqualTo("document:123#reader");
-                                assertThat(u)
-                                        .extracting(Node::leaf, as(type(Leaf.class)))
-                                        .isNotNull()
-                                        .extracting(Leaf::users, as(type(Users.class)))
-                                        .isNotNull()
-                                        .extracting(Users::users, as(iterable(String.class)))
-                                        .isNotNull()
-                                        .containsExactlyInAnyOrder(userMe.toString());
-                                assertThat(u)
-                                        .extracting(Node::computed)
-                                        .isNull();
-                                assertThat(u)
-                                        .extracting(Node::tupleToUserset)
-                                        .isNull();
-                                assertThat(u)
-                                        .extracting(Node::difference)
-                                        .isNull();
-                                assertThat(u)
-                                        .extracting(Node::union)
-                                        .isNull();
-                                assertThat(u)
-                                        .extracting(Node::intersection)
-                                        .isNull();
-                            });
-                });
+                .satisfies(t -> assertThat(t)
+                        .extracting(Schema.UsersetTree::root, as(type(Schema.UsersetTree.Node.class)))
+                        .satisfies(u -> {
+                            assertThat(u)
+                                    .extracting(Schema.UsersetTree.Node::name)
+                                    .isEqualTo("document:123#reader");
+                            assertThat(u)
+                                    .extracting(Schema.UsersetTree.Node::leaf, as(type(Schema.UsersetTree.Leaf.class)))
+                                    .isNotNull()
+                                    .extracting(Schema.UsersetTree.Leaf::users, as(type(Schema.Users.class)))
+                                    .isNotNull()
+                                    .extracting(Schema.Users::users, as(iterable(String.class)))
+                                    .isNotNull()
+                                    .containsExactlyInAnyOrder(userMe.toString());
+                            assertThat(u)
+                                    .extracting(Schema.UsersetTree.Node::difference)
+                                    .isNull();
+                            assertThat(u)
+                                    .extracting(Schema.UsersetTree.Node::union)
+                                    .isNull();
+                            assertThat(u)
+                                    .extracting(Schema.UsersetTree.Node::intersection)
+                                    .isNull();
+                        }));
     }
 
     @Test
@@ -344,38 +334,30 @@ public class AuthorizationModelClientTest {
 
         assertThat(expanded)
                 .isNotNull()
-                .satisfies(t -> {
-                    assertThat(t)
-                            .extracting(UsersetTree::getRoot, as(type(Node.class)))
-                            .satisfies(u -> {
-                                assertThat(u)
-                                        .extracting(Node::name)
-                                        .isEqualTo("document:123#reader");
-                                assertThat(u)
-                                        .extracting(Node::leaf, as(type(Leaf.class)))
-                                        .isNotNull()
-                                        .extracting(Leaf::users, as(type(Users.class)))
-                                        .isNotNull()
-                                        .extracting(Users::users, as(iterable(String.class)))
-                                        .isNotNull()
-                                        .containsExactlyInAnyOrder(userMe.toString(), userYou.toString());
-                                assertThat(u)
-                                        .extracting(Node::computed)
-                                        .isNull();
-                                assertThat(u)
-                                        .extracting(Node::tupleToUserset)
-                                        .isNull();
-                                assertThat(u)
-                                        .extracting(Node::difference)
-                                        .isNull();
-                                assertThat(u)
-                                        .extracting(Node::union)
-                                        .isNull();
-                                assertThat(u)
-                                        .extracting(Node::intersection)
-                                        .isNull();
-                            });
-                });
+                .satisfies(t -> assertThat(t)
+                        .extracting(Schema.UsersetTree::root, as(type(Schema.UsersetTree.Node.class)))
+                        .satisfies(u -> {
+                            assertThat(u)
+                                    .extracting(Schema.UsersetTree.Node::name)
+                                    .isEqualTo("document:123#reader");
+                            assertThat(u)
+                                    .extracting(Schema.UsersetTree.Node::leaf, as(type(Schema.UsersetTree.Leaf.class)))
+                                    .isNotNull()
+                                    .extracting(Schema.UsersetTree.Leaf::users, as(type(Schema.Users.class)))
+                                    .isNotNull()
+                                    .extracting(Schema.Users::users, as(iterable(String.class)))
+                                    .isNotNull()
+                                    .containsExactlyInAnyOrder(userMe.toString(), userYou.toString());
+                            assertThat(u)
+                                    .extracting(Schema.UsersetTree.Node::difference)
+                                    .isNull();
+                            assertThat(u)
+                                    .extracting(Schema.UsersetTree.Node::union)
+                                    .isNull();
+                            assertThat(u)
+                                    .extracting(Schema.UsersetTree.Node::intersection)
+                                    .isNull();
+                        }));
     }
 
     @Test
@@ -404,38 +386,30 @@ public class AuthorizationModelClientTest {
 
         assertThat(expanded)
                 .isNotNull()
-                .satisfies(t -> {
-                    assertThat(t)
-                            .extracting(UsersetTree::getRoot, as(type(Node.class)))
-                            .satisfies(u -> {
-                                assertThat(u)
-                                        .extracting(Node::name)
-                                        .isEqualTo("document:123#grantee");
-                                assertThat(u)
-                                        .extracting(Node::leaf, as(type(Leaf.class)))
-                                        .isNotNull()
-                                        .extracting(Leaf::users, as(type(Users.class)))
-                                        .isNotNull()
-                                        .extracting(Users::users, as(iterable(String.class)))
-                                        .isNotNull()
-                                        .containsExactlyInAnyOrder(userMe.toString());
-                                assertThat(u)
-                                        .extracting(Node::computed)
-                                        .isNull();
-                                assertThat(u)
-                                        .extracting(Node::tupleToUserset)
-                                        .isNull();
-                                assertThat(u)
-                                        .extracting(Node::difference)
-                                        .isNull();
-                                assertThat(u)
-                                        .extracting(Node::union)
-                                        .isNull();
-                                assertThat(u)
-                                        .extracting(Node::intersection)
-                                        .isNull();
-                            });
-                });
+                .satisfies(t -> assertThat(t)
+                        .extracting(Schema.UsersetTree::root, as(type(Schema.UsersetTree.Node.class)))
+                        .satisfies(u -> {
+                            assertThat(u)
+                                    .extracting(Schema.UsersetTree.Node::name)
+                                    .isEqualTo("document:123#grantee");
+                            assertThat(u)
+                                    .extracting(Schema.UsersetTree.Node::leaf, as(type(Schema.UsersetTree.Leaf.class)))
+                                    .isNotNull()
+                                    .extracting(Schema.UsersetTree.Leaf::users, as(type(Schema.Users.class)))
+                                    .isNotNull()
+                                    .extracting(Schema.Users::users, as(iterable(String.class)))
+                                    .isNotNull()
+                                    .containsExactlyInAnyOrder(userMe.toString());
+                            assertThat(u)
+                                    .extracting(Schema.UsersetTree.Node::difference)
+                                    .isNull();
+                            assertThat(u)
+                                    .extracting(Schema.UsersetTree.Node::union)
+                                    .isNull();
+                            assertThat(u)
+                                    .extracting(Schema.UsersetTree.Node::intersection)
+                                    .isNull();
+                        }));
     }
 
     @Test
@@ -701,8 +675,8 @@ public class AuthorizationModelClientTest {
     }
 
     @Test
-    @DisplayName("List All Users for an Object, Relation, and User Type")
-    public void listAllUsersForObjectRelationUserType() {
+    @DisplayName("List Users")
+    public void listUser() {
 
         var aTupleDef = document123.define("writer", userMe);
         var bTupleDef = document456.define("writer", userMe);
@@ -719,6 +693,30 @@ public class AuthorizationModelClientTest {
                 .getItem();
 
         assertThat(list)
-                .containsOnly(User.object("user", "me"), User.object("user", "you"));
+                .containsOnly(userMe, userYou);
+    }
+
+    @Test
+    @DisplayName("List Users With Contextual Tuples")
+    public void listUsersWithContextualTuples() {
+
+        var aTupleDef = document123.define(RelationshipNames.WRITER, userMe);
+        var bTupleDef = document123.define(RelationshipNames.WRITER, userYou);
+
+        authorizationModelClient.write(aTupleDef)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem();
+
+        var list = authorizationModelClient.listUsers(
+                ListUsersFilter.byObject(document123)
+                        .relation(RelationshipNames.WRITER)
+                        .userType(userType),
+                ListOptions.withContextualTuples(bTupleDef))
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+
+        assertThat(list)
+                .containsOnly(userMe, userYou);
     }
 }
