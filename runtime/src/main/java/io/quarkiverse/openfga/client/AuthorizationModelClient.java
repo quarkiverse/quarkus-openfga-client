@@ -167,7 +167,7 @@ public class AuthorizationModelClient {
         }
     }
 
-    public Uni<Schema.UsersetTree> expand(RelTupleKeyed tupleKey) {
+    public Uni<Schema.UsersetTree> expand(RelPartialTupleKeyed tupleKey) {
         return expand(tupleKey, ExpandOptions.DEFAULT);
     }
 
@@ -317,7 +317,7 @@ public class AuthorizationModelClient {
             this(Optional.empty(), Optional.empty(), Optional.empty());
         }
 
-        public static ListUsersFilter byObject(RelObject object) {
+        public static ListUsersFilter byObject(RelEntity object) {
             return new ListUsersFilter().object(object);
         }
 
