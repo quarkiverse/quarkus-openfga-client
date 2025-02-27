@@ -5,16 +5,16 @@ import static java.lang.String.format;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
+import io.quarkus.bootstrap.runner.ClassLoadingResource;
+import io.quarkus.commons.classloading.ClassLoaderHelper;
 import org.jboss.logging.Logger;
 import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.Network;
@@ -41,11 +41,13 @@ import io.quarkus.deployment.builditem.DockerStatusBuildItem;
 import io.quarkus.deployment.builditem.LaunchModeBuildItem;
 import io.quarkus.deployment.console.ConsoleInstalledBuildItem;
 import io.quarkus.deployment.console.StartupLogCompressor;
-import io.quarkus.deployment.dev.devservices.GlobalDevServicesConfig;
+import io.quarkus.deployment.dev.devservices.DevServicesConfig;
 import io.quarkus.deployment.logging.LoggingSetupBuildItem;
+import io.quarkus.deployment.util.FileUtil;
 import io.quarkus.devservices.common.ContainerLocator;
 import io.quarkus.runtime.configuration.ConfigUtils;
 import io.quarkus.runtime.configuration.ConfigurationException;
+import io.quarkus.runtime.util.ClassPathUtils;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.Vertx;
 
@@ -69,14 +71,14 @@ public class DevServicesOpenFGAProcessor {
     private static volatile DevServicesOpenFGAConfig capturedDevServicesConfiguration;
     private static volatile boolean first = true;
 
-    @BuildStep(onlyIfNot = IsNormal.class, onlyIf = GlobalDevServicesConfig.Enabled.class)
+    @BuildStep(onlyIfNot = IsNormal.class, onlyIf = DevServicesConfig.Enabled.class)
     public DevServicesResultBuildItem startContainers(OpenFGABuildTimeConfig config,
             Optional<ConsoleInstalledBuildItem> consoleInstalledBuildItem,
             LaunchModeBuildItem launchMode,
             DockerStatusBuildItem dockerStatusBuildItem,
             CuratedApplicationShutdownBuildItem closeBuildItem,
             LoggingSetupBuildItem loggingSetupBuildItem,
-            GlobalDevServicesConfig devServicesConfig,
+            DevServicesConfig devServicesConfig,
             BuildProducer<DevServicesResultBuildItem> devServicesResults) {
 
         DevServicesOpenFGAConfig currentDevServicesConfiguration = config.devservices();
@@ -104,7 +106,7 @@ public class DevServicesOpenFGAProcessor {
                 loggingSetupBuildItem);
         try {
             devService = startContainer(dockerStatusBuildItem, currentDevServicesConfiguration, launchMode,
-                    devServicesConfig.timeout);
+                    devServicesConfig.timeout());
             if (devService != null) {
 
                 if (devService.isOwner()) {
@@ -323,11 +325,10 @@ public class DevServicesOpenFGAProcessor {
                 .or(() -> devServicesConfig.authorizationModelLocation()
                         .map(location -> {
                             try {
-                                var authModelPath = resolvePath(location);
-                                return Files.readString(authModelPath);
+                                return readLocation(location);
                             } catch (Throwable x) {
                                 throw new RuntimeException(
-                                        format("Unable to load authorization model from '%s'", location));
+                                        format("Unable to load authorization model from '%s'", location), x);
                             }
                         }))
                 .map(authModelJSON -> {
@@ -344,11 +345,10 @@ public class DevServicesOpenFGAProcessor {
                 .or(() -> devServicesConfig.authorizationTuplesLocation()
                         .map(location -> {
                             try {
-                                var authModelPath = resolvePath(location);
-                                return Files.readString(authModelPath);
+                                return readLocation(location);
                             } catch (Throwable x) {
                                 throw new RuntimeException(
-                                        format("Unable to load authorization tuples from '%s'", location));
+                                        format("Unable to load authorization tuples from '%s'", location), x);
                             }
                         }))
                 .map(authTuplesJSON -> {
@@ -360,31 +360,52 @@ public class DevServicesOpenFGAProcessor {
                 });
     }
 
+    private static String readLocation(String location) throws IOException {
+        if (location.startsWith("filesystem:")) {
+            var path = Path.of(location.substring("filesystem:".length()));
+            return Files.readString(path);
+        }
+
+        URL resourceURL = getLocationResource(location);
+        return ClassPathUtils.readStream(resourceURL, (stream) -> {
+            try {
+                var contents = FileUtil.readFileContents(stream);
+                return new String(contents);
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to read resource: " + location, e);
+            }
+        });
+    }
+
     private static Path resolvePath(String location) throws IOException {
         if (location.startsWith("filesystem:")) {
             return Path.of(location.substring("filesystem:".length()));
         }
 
-        // Strip any 'classpath:' protocol prefixes because they are assumed
-        // but not recognized by ClassLoader.getResources()
-        if (location.startsWith("classpath:")) {
-            location = location.substring("classpath:".length());
-        }
-
-        return Collections.list(QuarkusClassLoader.getSystemResources(location))
-                .stream()
-                .findFirst()
-                .map(DevServicesOpenFGAProcessor::getPath)
-                .orElseThrow(() -> new IOException("Authorization model not found"));
+        URL resourceURL = getLocationResource(location);
+        return ClassPathUtils.toLocalPath(resourceURL);
     }
 
-    private static Path getPath(URL url) {
-        try {
-            return Paths.get(url.toURI());
-        } catch (URISyntaxException e) {
-            log.error("Parsing path failed: {}", url.getPath(), e);
-            throw new IllegalArgumentException(e);
+    private static URL getLocationResource(String location) throws IOException {
+
+        // Strip any 'classpath:' protocol prefixes because they are assumed
+        // but not recognized by ClassLoader.getResources()
+        String resourceLocation;
+        if (location.startsWith("classpath:")) {
+            resourceLocation = location.substring("classpath:".length());
+        } else {
+            resourceLocation = location;
         }
+
+        URL resourceURL = Thread.currentThread().getContextClassLoader().getResource(resourceLocation);
+        if (resourceURL == null) {
+            resourceURL = QuarkusClassLoader.getSystemResource(resourceLocation);
+        }
+
+        if (resourceURL == null) {
+            throw new IOException("Resource not found: " + resourceLocation);
+        }
+        return resourceURL;
     }
 
     private static void withAPI(String host, Integer port, boolean tlsEnabled, Duration startupTimout,
