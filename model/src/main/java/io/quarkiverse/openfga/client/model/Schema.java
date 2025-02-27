@@ -1026,6 +1026,10 @@ public interface Schema {
     }
 
     record ObjectRelation(@Nullable String object, @Nullable String relation) {
+        public ObjectRelation(@Nullable String object, @Nullable String relation) {
+            this.object = object == null ? "" : object;
+            this.relation = relation;
+        }
     }
 
     static UsersetTree usersetTree(UsersetTree.Node root) {
