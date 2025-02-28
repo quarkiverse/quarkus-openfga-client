@@ -8,21 +8,29 @@ import static io.vertx.mutiny.core.http.HttpHeaders.CONTENT_TYPE;
 import static java.lang.String.format;
 
 import java.io.Closeable;
+import java.security.SecureRandom;
+import java.time.Clock;
 import java.util.Map;
+import java.util.Random;
 
 import javax.annotation.Nullable;
 
+import org.jboss.logging.Logger;
+
+import io.quarkiverse.openfga.client.api.auth.CredentialsProvider;
+import io.quarkiverse.openfga.client.api.auth.OAuthCredentialsProvider;
+import io.quarkiverse.openfga.client.api.auth.PresharedKeyCredentialsProvider;
+import io.quarkiverse.openfga.client.api.auth.UnauthenticatedCredentialsProvider;
 import io.quarkiverse.openfga.client.model.dto.*;
 import io.quarkiverse.openfga.client.model.utils.ModelMapper;
 import io.quarkiverse.openfga.runtime.config.OpenFGAConfig;
+import io.quarkus.runtime.configuration.ConfigurationException;
 import io.quarkus.tls.TlsConfigurationRegistry;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.RequestOptions;
 import io.vertx.core.impl.NoStackTraceThrowable;
-import io.vertx.ext.auth.authentication.Credentials;
-import io.vertx.ext.auth.authentication.TokenCredentials;
 import io.vertx.mutiny.core.Vertx;
 import io.vertx.mutiny.core.buffer.Buffer;
 import io.vertx.mutiny.ext.web.client.HttpRequest;
@@ -34,22 +42,71 @@ import io.vertx.mutiny.uritemplate.Variables;
 
 public class API implements Closeable {
 
+    private static final Logger log = Logger.getLogger(API.class);
+
     private final WebClient webClient;
-    @Nullable
-    private final Credentials credentials;
+    private final Clock clock;
+    private final Random random;
+    private final CredentialsProvider credentialsProvider;
+
+    public API(WebClient webClient, CredentialsProvider credentialsProvider, Clock clock, Random random) {
+        this.webClient = webClient;
+        this.clock = clock;
+        this.random = random;
+        this.credentialsProvider = credentialsProvider;
+    }
+
+    public API(WebClient webClient, CredentialsProvider credentialsProvider) {
+        this(webClient, credentialsProvider, Clock.systemUTC(), new SecureRandom());
+    }
 
     public API(OpenFGAConfig config, boolean tracingEnabled, Vertx vertx, TlsConfigurationRegistry tlsRegistry) {
         this(VertxWebClientFactory.create(config, tracingEnabled, vertx, tlsRegistry),
-                config.sharedKey().map(TokenCredentials::new).orElse(null));
+                configureCredentialsProvider(config));
     }
 
-    public API(WebClient webClient, @Nullable Credentials credentials) {
-        this.webClient = webClient;
-        this.credentials = credentials;
+    @SuppressWarnings("removal")
+    public static CredentialsProvider configureCredentialsProvider(OpenFGAConfig config) {
+        if (config.sharedKey().isPresent()) {
+            if (config.credentials().method().isPresent()) {
+                throw new ConfigurationException("Deprecated shared-key and credentials configuration provided");
+            }
+            log.warn(
+                    "The shared-key configuration is deprecated and will be removed in a future release, use credentials instead");
+            return new PresharedKeyCredentialsProvider(config.sharedKey().get());
+        }
+        var method = config.credentials().method().orElse(OpenFGAConfig.Credentials.Method.NONE);
+        switch (method) {
+            case NONE -> {
+                log.info("Configuring unauthenticated");
+                return new UnauthenticatedCredentialsProvider();
+            }
+            case PRESHARED -> {
+                var sharedKey = config.credentials().preshared()
+                        .orElseThrow(() -> new ConfigurationException("Missing preshared credentials"));
+                log.info("Configuring preshared key");
+                return new PresharedKeyCredentialsProvider(sharedKey.key());
+            }
+            case OIDC -> {
+                var oidc = config.credentials().oidc()
+                        .orElseThrow(() -> new ConfigurationException("Missing oidc credentials"));
+                log.info("Configuring client credentials");
+                return new OAuthCredentialsProvider(oidc, Clock.systemUTC(), new SecureRandom());
+            }
+            default -> throw new ConfigurationException("Unsupported credentials method: " + method);
+        }
     }
 
     public void close() {
         webClient.close();
+    }
+
+    public Clock getClock() {
+        return clock;
+    }
+
+    public Random getRandom() {
+        return random;
     }
 
     public Uni<ListStoresResponse> listStores(ListStoresRequest request) {
@@ -249,67 +306,26 @@ public class API implements Closeable {
                 HealthzResponse.class);
     }
 
-    private <B, R> Uni<R> execute(HttpRequest<Buffer> request, B body, ExpectedStatus expectedStatus, Class<R> responseType) {
-        return Uni.createFrom()
-                .deferred(() -> {
-                    try {
-                        return prepare(request)
-                                .putHeader(ACCEPT.toString(), APPLICATION_JSON)
-                                .putHeader(CONTENT_TYPE.toString(), APPLICATION_JSON)
-                                .sendBuffer(Buffer.buffer(ModelMapper.mapper.writeValueAsString(body)));
-                    } catch (Throwable t) {
-                        return Uni.createFrom().failure(t);
-                    }
-                })
-                .onItem().transformToUni(response -> {
-                    try {
-                        checkJSONResponse(response, expectedStatus);
-                        return Uni.createFrom().item(ModelMapper.mapper.readValue(response.bodyAsString(), responseType));
-                    } catch (Throwable e) {
-                        return Uni.createFrom().failure(e);
-                    }
-                });
-    }
-
-    private <B> Uni<Void> execute(HttpRequest<Buffer> request, B body, ExpectedStatus expectedStatus) {
-        return Uni.createFrom()
-                .deferred(() -> {
-                    try {
-                        return prepare(request)
-                                .putHeader(CONTENT_TYPE.toString(), APPLICATION_JSON)
-                                .sendBuffer(Buffer.buffer(ModelMapper.mapper.writeValueAsString(body)));
-                    } catch (Throwable t) {
-                        return Uni.createFrom().failure(t);
-                    }
-                })
-                .onItem().transformToUni(response -> {
-                    try {
-                        checkStatus(response, expectedStatus);
-                        return Uni.createFrom().nullItem();
-                    } catch (Throwable e) {
-                        return Uni.createFrom().failure(e);
-                    }
-                });
-    }
-
-    private <R> Uni<R> execute(HttpRequest<Buffer> request, ExpectedStatus expectedStatus, Class<R> responseType) {
-        return prepare(request)
+    public <B, R> Uni<R> execute(HttpRequest<Buffer> request, B body, ExpectedStatus expectedStatus, Class<R> responseType) {
+        return serialize(body).onItem().transformToUni(bodyBuffer -> prepare(request).flatMap(preparedRequest -> preparedRequest
                 .putHeader(ACCEPT.toString(), APPLICATION_JSON)
-                .as(BodyCodec.buffer())
-                .send()
+                .putHeader(CONTENT_TYPE.toString(), APPLICATION_JSON)
+                .sendBuffer(bodyBuffer)
                 .onItem().transformToUni(response -> {
                     try {
                         checkJSONResponse(response, expectedStatus);
-                        return Uni.createFrom().item(ModelMapper.mapper.readValue(response.bodyAsString(), responseType));
+                        return Uni.createFrom()
+                                .item(ModelMapper.mapper.readValue(response.bodyAsString(), responseType));
                     } catch (Throwable e) {
                         return Uni.createFrom().failure(e);
                     }
-                });
+                })));
     }
 
-    private Uni<Void> execute(HttpRequest<Buffer> request, ExpectedStatus expectedStatus) {
-        return prepare(request)
-                .send()
+    public <B> Uni<Void> execute(HttpRequest<Buffer> request, B body, ExpectedStatus expectedStatus) {
+        return serialize(body).onItem().transformToUni(bodyBuffer -> prepare(request).flatMap(preparedRequest -> preparedRequest
+                .putHeader(CONTENT_TYPE.toString(), APPLICATION_JSON)
+                .sendBuffer(bodyBuffer)
                 .onItem().transformToUni(response -> {
                     try {
                         checkStatus(response, expectedStatus);
@@ -317,19 +333,54 @@ public class API implements Closeable {
                     } catch (Throwable e) {
                         return Uni.createFrom().failure(e);
                     }
-                });
+                })));
     }
 
-    private <R> HttpRequest<R> prepare(HttpRequest<R> request) {
+    public <R> Uni<R> execute(HttpRequest<Buffer> request, ExpectedStatus expectedStatus, Class<R> responseType) {
+        return prepare(request)
+                .flatMap(preparedRequest -> preparedRequest
+                        .putHeader(ACCEPT.toString(), APPLICATION_JSON)
+                        .as(BodyCodec.buffer())
+                        .send()
+                        .onItem().transformToUni(response -> {
+                            try {
+                                checkJSONResponse(response, expectedStatus);
+                                return Uni.createFrom()
+                                        .item(ModelMapper.mapper.readValue(response.bodyAsString(), responseType));
+                            } catch (Throwable e) {
+                                return Uni.createFrom().failure(e);
+                            }
+                        }));
+    }
 
-        if (credentials != null) {
-            request.authentication(credentials);
+    public Uni<Void> execute(HttpRequest<Buffer> request, ExpectedStatus expectedStatus) {
+        return prepare(request)
+                .flatMap(preparedRequest -> preparedRequest.send()
+                        .onItem().transformToUni(response -> {
+                            try {
+                                checkStatus(response, expectedStatus);
+                                return Uni.createFrom().nullItem();
+                            } catch (Throwable e) {
+                                return Uni.createFrom().failure(e);
+                            }
+                        }));
+    }
+
+    private <R> Uni<HttpRequest<R>> prepare(HttpRequest<R> request) {
+
+        return credentialsProvider.getTokenCredentials(webClient)
+                .onItem().transform(request::authentication);
+    }
+
+    private <B> Uni<Buffer> serialize(B body) {
+        try {
+            return Uni.createFrom().item(Buffer.buffer(ModelMapper.mapper.writeValueAsString(body)));
+        } catch (Throwable t) {
+            return Uni.createFrom().failure(t);
         }
-
-        return request;
     }
 
-    private HttpRequest<Buffer> request(String operationName, HttpMethod method, UriTemplate uriTemplate, Variables variables,
+    public HttpRequest<Buffer> request(String operationName, HttpMethod method, UriTemplate uriTemplate, Variables variables,
             Map<String, String> query) {
         for (Map.Entry<String, String> entry : query.entrySet()) {
             variables.set(entry.getKey(), entry.getValue());
@@ -337,7 +388,7 @@ public class API implements Closeable {
         return request(operationName, method, uriTemplate, variables);
     }
 
-    private HttpRequest<Buffer> request(String operationName, HttpMethod method, UriTemplate uriTemplate, Variables variables) {
+    public HttpRequest<Buffer> request(String operationName, HttpMethod method, UriTemplate uriTemplate, Variables variables) {
         RequestOptions options = new RequestOptions()
                 .setURI(uriTemplate.expandToString(variables))
                 .setTraceOperation(format("FGA | %s", operationName.toUpperCase()));

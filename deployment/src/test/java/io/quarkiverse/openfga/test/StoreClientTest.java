@@ -7,6 +7,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.tuple;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
 import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import jakarta.inject.Inject;
@@ -259,7 +260,7 @@ public class StoreClientTest {
 
         Thread.sleep(1000);
 
-        var time = OffsetDateTime.now();
+        var time = OffsetDateTime.now().minus(100, ChronoUnit.MILLIS);
 
         authorizationModelClient.write(
                 List.of(docTuple4, docTuple5, docTuple6),

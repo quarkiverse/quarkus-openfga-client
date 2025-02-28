@@ -1,17 +1,17 @@
 [
   {
-    "object": "thing:1",
+    "user": "user:tester1",
     "relation": "owner",
-    "user": "user:me"
+    "object": "doc:a-simple.txt"
   },
   {
-    "object": "thing:2",
+    "user": "user:tester2",
     "relation": "owner",
-    "user": "user:you"
+    "object": "doc:other.pdf"
   },
   {
-    "object": "thing:2",
-    "relation": "reader",
-    "user": "user:me"
+    "user": "user:tester2",
+    "relation": "viewer",
+    "object": "doc:a-simple.txt"
   }
 ]
