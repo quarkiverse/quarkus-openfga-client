@@ -11,6 +11,7 @@ import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.ShutdownContext;
 import io.quarkus.runtime.annotations.Recorder;
 import io.quarkus.tls.TlsConfigurationRegistry;
+import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.Vertx;
 
 @Recorder
@@ -35,11 +36,19 @@ public class OpenFGARecorder {
         return new RuntimeValue<>(storeClient);
     }
 
-    public RuntimeValue<AuthorizationModelClient> createAuthModelClient(RuntimeValue<API> api, OpenFGAConfig config) {
-        var configResolver = storeIdResolver(api.getValue(), config.store(), config.alwaysResolveStoreId())
-                .flatMap(storeId -> OpenFGAClient.authorizationModelIdResolver(api.getValue(), storeId)
-                        .map(modelId -> new ClientConfig(storeId, modelId)));
-        var authModelClient = new AuthorizationModelClient(api.getValue(), configResolver);
+    public RuntimeValue<AuthorizationModelClient> createAuthModelClient(RuntimeValue<API> apiValue, OpenFGAConfig config) {
+        var api = apiValue.getValue();
+        var configResolver = storeIdResolver(api, config.store(), config.alwaysResolveStoreId())
+                .flatMap(storeId -> {
+                    var authModelId = config.authorizationModelId();
+                    if (authModelId.isPresent()) {
+                        return Uni.createFrom().item(new ClientConfig(storeId, authModelId.get()));
+                    } else {
+                        return OpenFGAClient.authorizationModelIdResolver(api, storeId)
+                                .map(modelId -> new ClientConfig(storeId, modelId));
+                    }
+                });
+        var authModelClient = new AuthorizationModelClient(api, configResolver);
         return new RuntimeValue<>(authModelClient);
     }
 

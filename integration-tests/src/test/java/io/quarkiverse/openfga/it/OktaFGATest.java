@@ -1,11 +1,9 @@
 package io.quarkiverse.openfga.it;
 
 import static org.assertj.core.api.Assumptions.assumeThat;
-
-import java.util.Optional;
+import static org.eclipse.microprofile.config.ConfigProvider.getConfig;
 
 import org.assertj.core.api.InstanceOfAssertFactories;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.BeforeEach;
 
 import io.quarkus.test.junit.QuarkusTest;
@@ -21,21 +19,12 @@ public class OktaFGATest extends SharedTest {
         public String getConfigProfile() {
             return "okta";
         }
-
-        @Override
-        public String[] commandLineParameters() {
-            return new String[] { "-Dtest.init-assertions=false", "-Dtest.list-stores-allowed=false" };
-        }
     }
-
-    @ConfigProperty(name = "quarkus.openfga.credentials.oidc.client-id")
-    Optional<String> clientId;
-
-    @ConfigProperty(name = "quarkus.openfga.credentials.oidc.client-secret")
-    Optional<String> clientSecret;
 
     @BeforeEach
     public void check() {
+        var clientId = getConfig().getOptionalValue("quarkus.openfga.credentials.oidc.client-id", String.class);
+        var clientSecret = getConfig().getOptionalValue("quarkus.openfga.credentials.oidc.client-secret", String.class);
         var fail = """
                 OIDC Client %s is not set, skipping test. \
                 Must be provided via OKTA_FGA_CLIENT_SECRET environment variable \
