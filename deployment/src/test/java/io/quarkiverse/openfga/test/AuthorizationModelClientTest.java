@@ -72,6 +72,21 @@ public class AuthorizationModelClientTest {
     }
 
     @Test
+    @DisplayName("Returned Schema Matches")
+    public void testSchemaMatches() {
+        var model = authorizationModelClient.get()
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+        assertThat(model.getSchemaVersion())
+                .isEqualTo(SchemaFixtures.schema.getSchemaVersion());
+        assertThat(model.getTypeDefinitions())
+                .isEqualTo(SchemaFixtures.schema.getTypeDefinitions());
+        assertThat(model.getConditions())
+                .isEqualTo(SchemaFixtures.schema.getConditions());
+    }
+
+    @Test
     @DisplayName("Read & Write Tuples")
     public void readWriteTuples() {
 

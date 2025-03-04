@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.quarkiverse.openfga.client.model.Schema.Condition;
 import io.quarkiverse.openfga.client.model.Schema.TypeDefinition;
+import io.quarkiverse.openfga.client.model.utils.Maps;
 import io.quarkiverse.openfga.client.model.utils.ModelMapper;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
@@ -104,7 +105,7 @@ public final class AuthorizationModelSchema {
             @Nullable Map<String, Condition> conditions) {
         this.schemaVersion = schemaVersion;
         this.typeDefinitions = Preconditions.parameterNonNull(typeDefinitions, "typeDefinitions");
-        this.conditions = conditions;
+        this.conditions = Maps.emptyToNull(conditions);
     }
 
     @JsonProperty("schema_version")

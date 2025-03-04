@@ -100,8 +100,8 @@ public class AuthorizationModelsClientTest {
                             .extracting(AuthorizationModel::getTypeDefinitions, as(iterable(TypeDefinition.class)))
                             .containsExactlyInAnyOrderElementsOf(SchemaFixtures.schema.getTypeDefinitions());
                     assertThat(model)
-                            .extracting(AuthorizationModel::getConditions, as(map(String.class, Condition.class)))
-                            .isEmpty();
+                            .extracting(AuthorizationModel::getConditions)
+                            .isNull();
                 });
     }
 
@@ -130,8 +130,8 @@ public class AuthorizationModelsClientTest {
                             .extracting(AuthorizationModel::getTypeDefinitions, as(iterable(TypeDefinition.class)))
                             .containsExactlyInAnyOrderElementsOf(SchemaFixtures.schema.getTypeDefinitions());
                     assertThat(model)
-                            .extracting(AuthorizationModel::getConditions, as(map(String.class, Condition.class)))
-                            .isEmpty();
+                            .extracting(AuthorizationModel::getConditions)
+                            .isNull();
                 });
         assertThat(page1)
                 .extracting(PaginatedList::getToken, as(STRING))
@@ -156,8 +156,8 @@ public class AuthorizationModelsClientTest {
                             .extracting(AuthorizationModel::getTypeDefinitions, as(iterable(TypeDefinition.class)))
                             .containsExactlyInAnyOrderElementsOf(SchemaFixtures.schema.getTypeDefinitions());
                     assertThat(model)
-                            .extracting(AuthorizationModel::getConditions, as(map(String.class, Condition.class)))
-                            .isEmpty();
+                            .extracting(AuthorizationModel::getConditions)
+                            .isNull();
                 });
         assertThat(page2)
                 .extracting(PaginatedList::getToken, as(STRING))
@@ -182,8 +182,8 @@ public class AuthorizationModelsClientTest {
                             .extracting(AuthorizationModel::getTypeDefinitions, as(iterable(TypeDefinition.class)))
                             .containsExactlyInAnyOrderElementsOf(SchemaFixtures.schema.getTypeDefinitions());
                     assertThat(model)
-                            .extracting(AuthorizationModel::getConditions, as(map(String.class, Condition.class)))
-                            .isEmpty();
+                            .extracting(AuthorizationModel::getConditions)
+                            .isNull();
                 });
         assertThat(page3)
                 .extracting(PaginatedList::getToken, as(STRING))
@@ -234,8 +234,8 @@ public class AuthorizationModelsClientTest {
                             .extracting(AuthorizationModel::getTypeDefinitions, as(iterable(TypeDefinition.class)))
                             .containsExactlyInAnyOrderElementsOf(SchemaFixtures.schema.getTypeDefinitions());
                     assertThat(model)
-                            .extracting(AuthorizationModel::getConditions, as(map(String.class, Condition.class)))
-                            .isEmpty();
+                            .extracting(AuthorizationModel::getConditions)
+                            .isNull();
                 });
     }
 
@@ -267,8 +267,8 @@ public class AuthorizationModelsClientTest {
                             .extracting(AuthorizationModel::getTypeDefinitions, as(iterable(TypeDefinition.class)))
                             .containsExactlyInAnyOrderElementsOf(SchemaFixtures.schema.getTypeDefinitions());
                     assertThat(model)
-                            .extracting(AuthorizationModel::getConditions, as(map(String.class, Condition.class)))
-                            .isEmpty();
+                            .extracting(AuthorizationModel::getConditions)
+                            .isNull();
                 });
     }
 
