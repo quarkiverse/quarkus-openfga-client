@@ -1,0 +1,1004 @@
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[.header-title]##Configuration property##
+h|Type
+h|Default
+
+a| [[quarkus-openfga-client_quarkus-openfga-url]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-url[`quarkus.openfga.url`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.url+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+OpenFGA server URL.
+
+Example: link:http://openfga:8080[http://openfga:8080]
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_URL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_URL+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/URL.html[URL]
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-openfga-client_quarkus-openfga-store]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-store[`quarkus.openfga.store`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.store+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Store id or name for default `StoreClient` bean.
+
+If the provided property does not match the OpenFGA store id format (`^++[++ABCDEFGHJKMNPQRSTVWXYZ0-9++]{++26`$++}++) it will be treated as a store name and a matching store id will be resolved at runtime.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_STORE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_STORE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-openfga-client_quarkus-openfga-always-resolve-store-id]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-always-resolve-store-id[`quarkus.openfga.always-resolve-store-id`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.always-resolve-store-id+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Always Treat `store` as the name of a store and resolve the store id at runtime.
+
+If true, the store id will always be resolved at runtime regardless of the format of the `store` property. Otherwise, the store id will be resolved only when `store` does not match the OpenFGA store id format.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_ALWAYS_RESOLVE_STORE_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_ALWAYS_RESOLVE_STORE_ID+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+a| [[quarkus-openfga-client_quarkus-openfga-authorization-model-id]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-authorization-model-id[`quarkus.openfga.authorization-model-id`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.authorization-model-id+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Authorization model id for default `AuthorizationModelClient` bean.
+
+If none is provided, the default bean will target the default authorization model for the store.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_AUTHORIZATION_MODEL_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_AUTHORIZATION_MODEL_ID+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-openfga-client_quarkus-openfga-tls-configuration-name]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-tls-configuration-name[`quarkus.openfga.tls-configuration-name`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.tls-configuration-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The name of the TLS configuration to use.
+
+If not set and the default TLS configuration is configured (`quarkus.tls.++*++`) then that will be used. If a name is configured, it uses the configuration from `quarkus.tls.<name>.++*++` If a name is configured, but no TLS configuration is found with that name then an error will be thrown.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_TLS_CONFIGURATION_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_TLS_CONFIGURATION_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-openfga-client_quarkus-openfga-connect-timeout]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-connect-timeout[`quarkus.openfga.connect-timeout`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.connect-timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Timeout to establish a connection with OpenFGA.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_CONNECT_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_CONNECT_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-openfga-client_quarkus-openfga[icon:question-circle[title=More information about the Duration format]]
+|`5S`
+
+a| [[quarkus-openfga-client_quarkus-openfga-read-timeout]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-read-timeout[`quarkus.openfga.read-timeout`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.read-timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Request timeout on OpenFGA.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_READ_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_READ_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-openfga-client_quarkus-openfga[icon:question-circle[title=More information about the Duration format]]
+|`5S`
+
+a| [[quarkus-openfga-client_quarkus-openfga-non-proxy-hosts]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-non-proxy-hosts[`quarkus.openfga.non-proxy-hosts`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.non-proxy-hosts+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+List of remote hosts that are not proxied when the client is configured to use a proxy. This list serves the same purpose as the JVM `nonProxyHosts` configuration.
+
+Entries can use the _++*++_ wildcard character for pattern matching, e.g _++*++.example.com_ matches _www.example.com_.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_NON_PROXY_HOSTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_NON_PROXY_HOSTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|list of string
+|
+
+h|[[quarkus-openfga-client_section_quarkus-openfga-health]] [.section-name.section-level0]##link:#quarkus-openfga-client_section_quarkus-openfga-health[Health Check Configuration]##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-health-enabled]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-health-enabled[`quarkus.openfga.health.enabled`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.health.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether a health check is published in case the smallrye-health extension is present.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_HEALTH_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_HEALTH_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`true`
+
+
+h|[[quarkus-openfga-client_section_quarkus-openfga-tracing]] [.section-name.section-level0]##link:#quarkus-openfga-client_section_quarkus-openfga-tracing[Tracing Configuration]##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-tracing-enabled]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-tracing-enabled[`quarkus.openfga.tracing.enabled`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.tracing.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Whether tracing spans of client commands are reported.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_TRACING_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_TRACING_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`true`
+
+
+h|[[quarkus-openfga-client_section_quarkus-openfga-devservices]] [.section-name.section-level0]##link:#quarkus-openfga-client_section_quarkus-openfga-devservices[Dev Services Configuration]##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-enabled]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-enabled[`quarkus.openfga.devservices.enabled`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.devservices.enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+If DevServices has been explicitly enabled or disabled. DevServices is generally enabled by default, unless there is an existing configuration present.
+
+When DevServices is enabled Quarkus will attempt to automatically configure and start a database when running in 'dev' or 'test' mode.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_DEVSERVICES_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_DEVSERVICES_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-image-name]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-image-name[`quarkus.openfga.devservices.image-name`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.devservices.image-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The container image name to use, for container based DevServices providers.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_DEVSERVICES_IMAGE_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_DEVSERVICES_IMAGE_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-shared]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-shared[`quarkus.openfga.devservices.shared`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.devservices.shared+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Indicates if the OpenFGA instance managed by Quarkus DevServices is shared. When shared, Quarkus looks for running containers using label-based service discovery. If a matching container is found, it is used, and so a second one is not started. Otherwise, DevServices for OpenFGA starts a new container.
+
+The discovery uses the `quarkus-dev-service-openfga` label. The value is configured using the `service-name` property.
+
+Container sharing is only used in 'dev' mode.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_DEVSERVICES_SHARED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_DEVSERVICES_SHARED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`true`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-service-name]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-service-name[`quarkus.openfga.devservices.service-name`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.devservices.service-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+The value of the `quarkus-dev-service-openfga` label attached to the started container. This property is used when `shared` is set to `true`. In this case, before starting a container, DevServices for OpenFGA looks for a container with the `quarkus-dev-service-openfga` label set to the configured value. If found, it will use this container instead of starting a new one, otherwise it starts a new container with the `quarkus-dev-service-openfga` label set to the specified value.
+
+This property is used when you need multiple shared OpenFGA instances.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_DEVSERVICES_SERVICE_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_DEVSERVICES_SERVICE_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`openfga`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-http-port]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-http-port[`quarkus.openfga.devservices.http-port`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.devservices.http-port+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Optional fixed port the HTTP service will be bound to.
+
+If not defined, the port will be chosen randomly.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_DEVSERVICES_HTTP_PORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_DEVSERVICES_HTTP_PORT+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-grpc-port]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-grpc-port[`quarkus.openfga.devservices.grpc-port`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.devservices.grpc-port+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Optional fixed port the gRPC service will be bound to.
+
+If not defined, the port will be chosen randomly.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_DEVSERVICES_GRPC_PORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_DEVSERVICES_GRPC_PORT+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-playground-port]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-playground-port[`quarkus.openfga.devservices.playground-port`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.devservices.playground-port+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Optional fixed port the Playground service will be bound to.
+
+If not defined, the port will be chosen randomly.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_DEVSERVICES_PLAYGROUND_PORT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_DEVSERVICES_PLAYGROUND_PORT+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-store-name]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-store-name[`quarkus.openfga.devservices.store-name`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.devservices.store-name+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Name of authorization store to create for DevServices.
+
+Defaults to "dev".
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_DEVSERVICES_STORE_NAME+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_DEVSERVICES_STORE_NAME+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`dev`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-authorization-model]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-authorization-model[`quarkus.openfga.devservices.authorization-model`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.devservices.authorization-model+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+JSON formatted authorization model to upload during DevServices initialization.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_DEVSERVICES_AUTHORIZATION_MODEL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_DEVSERVICES_AUTHORIZATION_MODEL+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-authorization-model-location]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-authorization-model-location[`quarkus.openfga.devservices.authorization-model-location`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.devservices.authorization-model-location+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Location of JSON formatted authorization model file to upload during DevServices initialization.
+
+The location can be prefixed with `classpath:` or `filesystem:` to specify where the file will be read from; if not prefixed, it will be read from the classpath.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_DEVSERVICES_AUTHORIZATION_MODEL_LOCATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_DEVSERVICES_AUTHORIZATION_MODEL_LOCATION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-authorization-tuples]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-authorization-tuples[`quarkus.openfga.devservices.authorization-tuples`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.devservices.authorization-tuples+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+JSON formatted authorization tuples to upload during DevServices initialization.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_DEVSERVICES_AUTHORIZATION_TUPLES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_DEVSERVICES_AUTHORIZATION_TUPLES+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-authorization-tuples-location]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-authorization-tuples-location[`quarkus.openfga.devservices.authorization-tuples-location`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.devservices.authorization-tuples-location+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Location of JSON formatted authorization tuples file to upload during DevServices initialization.
+
+The location can be prefixed with `classpath:` or `filesystem:` to specify where the file will be read from; if not prefixed, it will be read from the classpath.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_DEVSERVICES_AUTHORIZATION_TUPLES_LOCATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_DEVSERVICES_AUTHORIZATION_TUPLES_LOCATION+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-authentication-method]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-authentication-method[`quarkus.openfga.devservices.authentication.method`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.devservices.authentication.method+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Authentication method to configure for the dev services instance.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_DEVSERVICES_AUTHENTICATION_METHOD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_DEVSERVICES_AUTHENTICATION_METHOD+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`none`, `preshared`, `oidc`
+|`none`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-authentication-preshared-keys]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-authentication-preshared-keys[`quarkus.openfga.devservices.authentication.preshared.keys`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.devservices.authentication.preshared.keys+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Pre-shared authentication keys.
+
+The dev services OpenFGA instance will be configured with these pre-shared keys for authentication.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_DEVSERVICES_AUTHENTICATION_PRESHARED_KEYS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_DEVSERVICES_AUTHENTICATION_PRESHARED_KEYS+++`
+endif::add-copy-button-to-env-var[]
+--
+|list of string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-authentication-oidc-issuer]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-authentication-oidc-issuer[`quarkus.openfga.devservices.authentication.oidc.issuer`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.devservices.authentication.oidc.issuer+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+OIDC issuer (authorization server) signing the tokens, and where the keys will be fetched from.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_DEVSERVICES_AUTHENTICATION_OIDC_ISSUER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_DEVSERVICES_AUTHENTICATION_OIDC_ISSUER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-authentication-oidc-audience]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-authentication-oidc-audience[`quarkus.openfga.devservices.authentication.oidc.audience`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.devservices.authentication.oidc.audience+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+OIDC audience of the tokens being signed by the authorization server.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_DEVSERVICES_AUTHENTICATION_OIDC_AUDIENCE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_DEVSERVICES_AUTHENTICATION_OIDC_AUDIENCE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-authentication-oidc-issuer-aliases]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-authentication-oidc-issuer-aliases[`quarkus.openfga.devservices.authentication.oidc.issuer-aliases`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.devservices.authentication.oidc.issuer-aliases+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+OIDC issuer DNS aliases that will be accepted as valid when verifying the `iss` field of the JWTs.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_DEVSERVICES_AUTHENTICATION_OIDC_ISSUER_ALIASES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_DEVSERVICES_AUTHENTICATION_OIDC_ISSUER_ALIASES+++`
+endif::add-copy-button-to-env-var[]
+--
+|list of string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-authentication-oidc-subjects]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-authentication-oidc-subjects[`quarkus.openfga.devservices.authentication.oidc.subjects`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.devservices.authentication.oidc.subjects+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+OIDC subject names that will be accepted as valid when verifying the `sub` field of the JWTs. If empty, every `sub` will be allowed
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_DEVSERVICES_AUTHENTICATION_OIDC_SUBJECTS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_DEVSERVICES_AUTHENTICATION_OIDC_SUBJECTS+++`
+endif::add-copy-button-to-env-var[]
+--
+|list of string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-authentication-oidc-client-id-claims]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-authentication-oidc-client-id-claims[`quarkus.openfga.devservices.authentication.oidc.client-id-claims`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.devservices.authentication.oidc.client-id-claims+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+ClientID claims that will be used to parse the clientID - configure in order of priority (first is highest).
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_DEVSERVICES_AUTHENTICATION_OIDC_CLIENT_ID_CLAIMS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_DEVSERVICES_AUTHENTICATION_OIDC_CLIENT_ID_CLAIMS+++`
+endif::add-copy-button-to-env-var[]
+--
+|list of string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-tls-pem-certificate-path]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-tls-pem-certificate-path[`quarkus.openfga.devservices.tls.pem-certificate-path`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.devservices.tls.pem-certificate-path+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Path to file containing a PEM encoded certificate to use for the DevServices OpenFGA instance.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_DEVSERVICES_TLS_PEM_CERTIFICATE_PATH+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_DEVSERVICES_TLS_PEM_CERTIFICATE_PATH+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-tls-pem-key-path]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-tls-pem-key-path[`quarkus.openfga.devservices.tls.pem-key-path`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.devservices.tls.pem-key-path+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Path to file containing a PEM encoded private key to use for the DevServices OpenFGA instance.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_DEVSERVICES_TLS_PEM_KEY_PATH+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_DEVSERVICES_TLS_PEM_KEY_PATH+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-startup-timeout]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-startup-timeout[`quarkus.openfga.devservices.startup-timeout`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.devservices.startup-timeout+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Timeout while creating the store/authorizationModel
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_DEVSERVICES_STARTUP_TIMEOUT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_DEVSERVICES_STARTUP_TIMEOUT+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-openfga-client_quarkus-openfga[icon:question-circle[title=More information about the Duration format]]
+|`5S`
+
+
+h|[[quarkus-openfga-client_section_quarkus-openfga-credentials]] [.section-name.section-level0]##link:#quarkus-openfga-client_section_quarkus-openfga-credentials[Credentials Configuration]##
+h|Type
+h|Default
+
+a| [[quarkus-openfga-client_quarkus-openfga-credentials-method]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-credentials-method[`quarkus.openfga.credentials.method`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.credentials.method+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Credentials method to use for authentication.
+
+When set to `preshared`, the required `quarkus.openfga.credentials.preshared.++*++` keys must be provided.
+
+When set to `oidc`, the required `quarkus.openfga.credentials.oidc.++*++` keys must be provided.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_CREDENTIALS_METHOD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_CREDENTIALS_METHOD+++`
+endif::add-copy-button-to-env-var[]
+--
+a|`none`, `preshared`, `oidc`
+|`none`
+
+h|[[quarkus-openfga-client_section_quarkus-openfga-credentials-preshared]] [.section-name.section-level1]##link:#quarkus-openfga-client_section_quarkus-openfga-credentials-preshared[Pre-shared Authentication Key Credentials Configuration]##
+h|Type
+h|Default
+
+a| [[quarkus-openfga-client_quarkus-openfga-credentials-preshared-key]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-credentials-preshared-key[`quarkus.openfga.credentials.preshared.key`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.credentials.preshared.key+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Pre-shared authentication key.
+
+The dev services OpenFGA instance will be configured with these pre-shared keys for authentication.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_CREDENTIALS_PRESHARED_KEY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_CREDENTIALS_PRESHARED_KEY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+
+h|[[quarkus-openfga-client_section_quarkus-openfga-credentials-oidc]] [.section-name.section-level1]##link:#quarkus-openfga-client_section_quarkus-openfga-credentials-oidc[OIDC Client Credentials Configuration]##
+h|Type
+h|Default
+
+a| [[quarkus-openfga-client_quarkus-openfga-credentials-oidc-client-id]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-credentials-oidc-client-id[`quarkus.openfga.credentials.oidc.client-id`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.credentials.oidc.client-id+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+OAuth client id.
+
+The client id is used to identify the client to the authorization server and is provided by the authorization service.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_CREDENTIALS_OIDC_CLIENT_ID+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_CREDENTIALS_OIDC_CLIENT_ID+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-openfga-client_quarkus-openfga-credentials-oidc-client-secret]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-credentials-oidc-client-secret[`quarkus.openfga.credentials.oidc.client-secret`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.credentials.oidc.client-secret+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+OAuth client secret.
+
+The client secret is used to authenticate the client to the authorization server and is provided by the authorization service.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_CREDENTIALS_OIDC_CLIENT_SECRET+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_CREDENTIALS_OIDC_CLIENT_SECRET+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-openfga-client_quarkus-openfga-credentials-oidc-audience]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-credentials-oidc-audience[`quarkus.openfga.credentials.oidc.audience`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.credentials.oidc.audience+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+OAuth audience URI.
+
+The audience for the access token, typically the URL of the service that will consume the token. This is generally configured in the authorization service.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_CREDENTIALS_OIDC_AUDIENCE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_CREDENTIALS_OIDC_AUDIENCE+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/URI.html[URI]
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-openfga-client_quarkus-openfga-credentials-oidc-scopes]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-credentials-oidc-scopes[`quarkus.openfga.credentials.oidc.scopes`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.credentials.oidc.scopes+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+OAuth scopes.
+
+The scopes to request for the access token.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_CREDENTIALS_OIDC_SCOPES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_CREDENTIALS_OIDC_SCOPES+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-openfga-client_quarkus-openfga-credentials-oidc-token-issuer]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-credentials-oidc-token-issuer[`quarkus.openfga.credentials.oidc.token-issuer`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.credentials.oidc.token-issuer+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+OAuth token issuer URL.
+
+The URL of the authorization service that will issue the access token.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_CREDENTIALS_OIDC_TOKEN_ISSUER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_CREDENTIALS_OIDC_TOKEN_ISSUER+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/URI.html[URI]
+|required icon:exclamation-circle[title=Configuration property is required]
+
+a| [[quarkus-openfga-client_quarkus-openfga-credentials-oidc-token-issuer-path]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-credentials-oidc-token-issuer-path[`quarkus.openfga.credentials.oidc.token-issuer-path`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.credentials.oidc.token-issuer-path+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+OAuth token issuer path.
+
+The path of the token issuer endpoint, relative to the `token-issuer()` URL.
+
+Default value is `/oauth/token`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_CREDENTIALS_OIDC_TOKEN_ISSUER_PATH+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_CREDENTIALS_OIDC_TOKEN_ISSUER_PATH+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a| [[quarkus-openfga-client_quarkus-openfga-credentials-oidc-token-expiration-threshold]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-credentials-oidc-token-expiration-threshold[`quarkus.openfga.credentials.oidc.token-expiration-threshold`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.credentials.oidc.token-expiration-threshold+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Token expiration threshold.
+
+The duration before the token expiration at which the token should be refreshed.
+
+Default value is `300s`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_CREDENTIALS_OIDC_TOKEN_EXPIRATION_THRESHOLD+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_CREDENTIALS_OIDC_TOKEN_EXPIRATION_THRESHOLD+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-openfga-client_quarkus-openfga[icon:question-circle[title=More information about the Duration format]]
+|
+
+a| [[quarkus-openfga-client_quarkus-openfga-credentials-oidc-token-expiration-threshold-jitter]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-credentials-oidc-token-expiration-threshold-jitter[`quarkus.openfga.credentials.oidc.token-expiration-threshold-jitter`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.credentials.oidc.token-expiration-threshold-jitter+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Token expiration threshold jitter.
+
+The maximum jitter to add to the token expiration threshold.
+
+Default value is `60s`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_CREDENTIALS_OIDC_TOKEN_EXPIRATION_THRESHOLD_JITTER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_CREDENTIALS_OIDC_TOKEN_EXPIRATION_THRESHOLD_JITTER+++`
+endif::add-copy-button-to-env-var[]
+--
+|link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-openfga-client_quarkus-openfga[icon:question-circle[title=More information about the Duration format]]
+|
+
+
+
+|===
+
+ifndef::no-duration-note[]
+[NOTE]
+[id=duration-note-anchor-quarkus-openfga-client_quarkus-openfga]
+.About the Duration format
+====
+To write duration values, use the standard `java.time.Duration` format.
+See the link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html#parse(java.lang.CharSequence)[Duration#parse() Java API documentation] for more information.
+
+You can also use a simplified format, starting with a number:
+
+* If the value is only a number, it represents time in seconds.
+* If the value is a number followed by `ms`, it represents time in milliseconds.
+
+In other cases, the simplified format is translated to the `java.time.Duration` format for parsing:
+
+* If the value is a number followed by `h`, `m`, or `s`, it is prefixed with `PT`.
+* If the value is a number followed by `d`, it is prefixed with `P`.
+====
+endif::no-duration-note[]

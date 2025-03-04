@@ -1,6 +1,7 @@
 package io.quarkiverse.openfga.deployment;
 
 import io.quarkiverse.openfga.runtime.config.OpenFGAConfig;
+import io.quarkus.runtime.annotations.ConfigDocSection;
 import io.quarkus.runtime.annotations.ConfigPhase;
 import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
@@ -22,8 +23,9 @@ public interface OpenFGABuildTimeConfig {
     }
 
     /**
-     * Health check configuration.
+     * Health Check Configuration
      */
+    @ConfigDocSection
     Health health();
 
     /**
@@ -38,13 +40,15 @@ public interface OpenFGABuildTimeConfig {
     }
 
     /**
-     * Tracing configuration.
+     * Tracing Configuration
      */
+    @ConfigDocSection
     Tracing tracing();
 
     /**
-     * Dev services configuration.
+     * Dev Services Configuration
      */
+    @ConfigDocSection
     DevServicesOpenFGAConfig devservices();
 
 }

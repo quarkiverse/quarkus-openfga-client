@@ -212,4 +212,4 @@ class Example {
 [[extension-configuration-reference]]
 == Extension Configuration Reference
 
-include::includes/quarkus-openfga.adoc[leveloffset=+1, opts=optional]
+include::includes/quarkus-openfga-client.adoc[leveloffset=+1, opts=optional]

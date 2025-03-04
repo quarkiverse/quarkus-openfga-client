@@ -8,8 +8,7 @@ import java.util.Optional;
 
 import io.quarkiverse.openfga.client.AuthorizationModelClient;
 import io.quarkiverse.openfga.client.StoreClient;
-import io.quarkus.runtime.annotations.ConfigPhase;
-import io.quarkus.runtime.annotations.ConfigRoot;
+import io.quarkus.runtime.annotations.*;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
 
@@ -17,19 +16,24 @@ import io.smallrye.config.WithDefault;
 @ConfigRoot(phase = ConfigPhase.RUN_TIME)
 public interface OpenFGAConfig {
 
-    Duration DEFAULT_TOKEN_EXPIRATION_THRESHOLD = Duration.ofSeconds(300);
-    Duration DEFAULT_TOKEN_EXPIRATION_THRESHOLD_JITTER = Duration.ofSeconds(60);
-
+    @ConfigGroup
     interface Credentials {
 
         enum Method {
+            @ConfigDocEnumValue("none")
             NONE,
+            @ConfigDocEnumValue("preshared")
             PRESHARED,
+            @ConfigDocEnumValue("oidc")
             OIDC,
         }
 
+        @ConfigGroup
         interface OIDC {
+
             String DEFAULT_TOKEN_ISSUER_PATH = "/oauth/token";
+            Duration DEFAULT_TOKEN_EXPIRATION_THRESHOLD = Duration.ofSeconds(300);
+            Duration DEFAULT_TOKEN_EXPIRATION_THRESHOLD_JITTER = Duration.ofSeconds(60);
 
             /**
              * OAuth client id.
@@ -98,6 +102,7 @@ public interface OpenFGAConfig {
             Optional<Duration> tokenExpirationThresholdJitter();
         }
 
+        @ConfigGroup
         interface Preshared {
             /**
              * Pre-shared authentication key.
@@ -111,22 +116,25 @@ public interface OpenFGAConfig {
         /**
          * Credentials method to use for authentication.
          * <p>
-         * If not set, the default method is {@link Method#NONE}.
+         * When set to {@code preshared},
+         * the required {@code preshared} configuration keys must be provided.
+         * <p>
+         * When set to {@code oidc},
+         * the required {@code oidc} configuration keys must be provided.
          */
+        @ConfigDocDefault("none")
         Optional<Method> method();
 
         /**
-         * Pre-shared authentication key.
-         * <p>
-         * Only used when {@link #method()} is set to {@link Method#PRESHARED}.
+         * Pre-shared Authentication Key Credentials Configuration
          */
+        @ConfigDocSection
         Optional<Preshared> preshared();
 
         /**
-         * OIDC client credentials.
-         * <p>
-         * Only used when {@link #method()} is set to {@link Method#OIDC}.
+         * OIDC Client Credentials Configuration
          */
+        @ConfigDocSection
         Optional<OIDC> oidc();
     }
 
@@ -142,14 +150,16 @@ public interface OpenFGAConfig {
     URL url();
 
     /**
-     * Credentials configuration.
+     * Credentials Configuration
      */
+    @ConfigDocSection
     Credentials credentials();
 
     /**
      * Shared authentication key.
      * <p>
-     * This property is deprecated and will be removed in a future release, use {@link #()} instead.
+     * This property is deprecated and will be removed in a future release,
+     * use {@link Credentials.Preshared#key()} instead.
      */
     @Deprecated(since = "3.1.0", forRemoval = true)
     Optional<String> sharedKey();

@@ -1,6 +1,6 @@
 package io.quarkiverse.openfga.client.api.auth;
 
-import static io.quarkiverse.openfga.runtime.config.OpenFGAConfig.Credentials.OIDC.DEFAULT_TOKEN_ISSUER_PATH;
+import static io.quarkiverse.openfga.runtime.config.OpenFGAConfig.Credentials.OIDC.*;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -10,7 +10,6 @@ import java.util.Random;
 import io.quarkiverse.openfga.client.model.dto.auth.CredentialsFlowRequest;
 import io.quarkiverse.openfga.client.model.dto.auth.CredentialsFlowResponse;
 import io.quarkiverse.openfga.client.model.utils.ModelMapper;
-import io.quarkiverse.openfga.runtime.config.OpenFGAConfig;
 import io.quarkiverse.openfga.runtime.config.OpenFGAConfig.Credentials.OIDC;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpMethod;
@@ -42,8 +41,8 @@ public class OAuthCredentialsProvider implements CredentialsProvider {
         this.currentAccessToken = new AccessToken(
                 "",
                 Instant.EPOCH,
-                config.tokenExpirationThreshold().orElse(OpenFGAConfig.DEFAULT_TOKEN_EXPIRATION_THRESHOLD),
-                config.tokenExpirationThresholdJitter().orElse(OpenFGAConfig.DEFAULT_TOKEN_EXPIRATION_THRESHOLD_JITTER));
+                config.tokenExpirationThreshold().orElse(DEFAULT_TOKEN_EXPIRATION_THRESHOLD),
+                config.tokenExpirationThresholdJitter().orElse(DEFAULT_TOKEN_EXPIRATION_THRESHOLD_JITTER));
         this.clock = clock;
         this.random = random;
     }
