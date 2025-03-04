@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.quarkiverse.openfga.client.model.Schema.Condition;
 import io.quarkiverse.openfga.client.model.Schema.TypeDefinition;
+import io.quarkiverse.openfga.client.model.utils.Maps;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
 public final class AuthorizationModel {
@@ -33,7 +34,7 @@ public final class AuthorizationModel {
         this.id = Preconditions.parameterNonNull(id, "id");
         this.schemaVersion = Preconditions.parameterNonNull(schemaVersion, "schemaVersion");
         this.typeDefinitions = Preconditions.parameterNonNull(typeDefinitions, "typeDefinitions");
-        this.conditions = conditions;
+        this.conditions = Maps.emptyToNull(conditions);
     }
 
     public String getId() {

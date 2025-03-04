@@ -742,9 +742,9 @@ endif::add-copy-button-to-config-props[]
 --
 Credentials method to use for authentication.
 
-When set to `preshared`, the required `quarkus.openfga.credentials.preshared.++*++` keys must be provided.
+When set to `preshared`, the required `preshared` configuration keys must be provided.
 
-When set to `oidc`, the required `quarkus.openfga.credentials.oidc.++*++` keys must be provided.
+When set to `oidc`, the required `oidc` configuration keys must be provided.
 
 
 ifdef::add-copy-button-to-env-var[]
