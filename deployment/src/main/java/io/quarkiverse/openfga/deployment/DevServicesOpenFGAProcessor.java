@@ -167,7 +167,7 @@ public class DevServicesOpenFGAProcessor {
             return null;
         }
 
-        boolean needToStart = !ConfigUtils.isPropertyPresent(URL_CONFIG_KEY);
+        boolean needToStart = !ConfigUtils.isPropertyNonEmpty(URL_CONFIG_KEY);
         if (!needToStart) {
             log.debug("Not starting devservices for default OpenFGA client as url has been provided");
             return null;
