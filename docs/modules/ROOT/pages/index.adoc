@@ -12,7 +12,8 @@ Find Grained Authorization for Quarkus applications.
 
 == Installation
 
-If you want to use this extension, you need to add the `io.quarkiverse.openfga:quarkus-openfga-client` extension first to your build file.
+To use this extension,
+you need to add the `io.quarkiverse.openfga:quarkus-openfga-client` extension first to your build file.
 
 For instance, with Maven, add the following dependency to your POM file:
 
@@ -25,7 +26,7 @@ For instance, with Maven, add the following dependency to your POM file:
 </dependency>
 ----
 
-Or with Gradle, add the dependency to your `build.gradle`:
+Or with Gradle, add the dependency to your `build.gradle` or `build.gradle.kts` file:
 
 [source,kotlin,subs=attributes+]
 ----
@@ -47,6 +48,60 @@ quarkus.openfga.store=my-app-authz
 #quarkus.openfga.authorization-model-id=11G22H33I44J55K66L77M88N99
 ----
 
+=== Credentials
+
+The client supports configuring Pre-Shared Key and dynamic OIDC credentials for authentication, in addition to the
+default of providing no credentials.
+
+To enable a specific credentials method, set the `quarkus.openfga.credentials.method` property to the desired
+method, either `none`, `preshared`, or `oidc`.
+If no credentials method is explicitly configured, the client will default to `none` and provide no credentials.
+
+[source,properties]
+----
+quarkus.openfga.credentials.method=preshared
+----
+
+NOTE: The selected credentials method must be configured in the OpenFGA instance separately.
+
+==== Pre-Shared Key
+
+When using the pre-Shared Key method, the client requires the `quarkus.openfga.credentials.preshared.key` property to
+be set to a pre-shared key configured in the OpenFGA instance.
+
+[source,properties]
+----
+quarkus.openfga.credentials.method=preshared
+quarkus.openfga.credentials.preshared.key=my-secret-key # <1>
+----
+<1> (*required*) A pre-shared key configured in the OpenFGA instance.
+
+==== OIDC
+
+When using the OIDC method, the client requires a number of properties to be set that are provided by
+the OIDC provider.
+
+[source,properties]
+----
+quarkus.openfga.credentials.method=oidc
+quarkus.openfga.credentials.oidc.client-id=my-client-id # <1>
+quarkus.openfga.credentials.oidc.client-secret=my-client-secret # <2>
+quarkus.openfga.credentials.oidc.audience=https://my-audience # <3>
+quarkus.openfga.credentials.oidc.token-issuer=https://my-oidc-provider.com # <4>
+quarkus.openfga.credentials.oidc.token-issuer-path=/oauth2/token # <5>
+----
+<1> (*required*) Client ID provided by the OIDC provider.
+<2> (*required*) Client Secret provided by the OIDC provider.
+<3> (*required*) Audience provided by the OIDC provider.
+<4> (*required*) Token issuer URL provided by the OIDC provider, this can be a full URL to the token issuer endpoint
+    or just the base URL of the OIDC provider.
+<5> (*optional*) The OIDC provider's token issuer path, which is resolved against the `token-issuer` property to
+    determine the full token issuer URL. This is only required if the token issuer URL does not include the token
+    issuer path.
+
+There are additional properties that can be provided to configure the OIDC client, these are detailed in the
+link:#extension-configuration-reference[Extension Configuration Reference].
+
 [[configuration-devservices]]
 === DevServices
 
@@ -54,9 +109,56 @@ The extension supports Quarkus's DevServices and will start and configure a loca
 `url` configuration property is provided. Additionally it will automatically create and configure an authorization
 store in the server.
 
-In addition to starting and creating an authorization store, an authorization model can be initialized in the store
-by configuring the `quarkus.openfga.devservices.authorization-model` or
-`quarkus.openfga.devservices.authorization-model.lcation` property.
+==== Configuration
+
+To enable DevServices, set the `quarkus.openfga.devservices.enabled` property to `true`, which is enabled for the
+`dev` and `test` profiles by default.
+This will start a local OpenFGA instance to run *unauthenticated*, initialize an empty store and configure the
+client to connect to the local instance.
+
+==== Startup Initialization
+
+In addition to starting and creating an authorization store, an authorization model and/or tuples can be loaded
+into the store on startup by providing the appropriate configuration properties.
+
+[source,properties]
+----
+quarkus.openfga.devservices.enabled=true
+quarkus.openfga.devservices.authorization-model-location=auth-model.json # <1>
+quarkus.openfga.devservices.authorization-tuples-location=auth-tuples.json # <2>
+----
+<1> (*optional*) The location of the authorization model JSON file to load into the store.
+<2> (*optional*) The location of the authorization tuples JSON file to load into the store.
+
+NOTE: The authorization model and tuples JSON files are loaded from the classpath by default, but can be loaded from a
+filesystem path by prefixing the location with `filesystem:`. As in, `filesystem:/path/to/auth-model.json`.
+
+
+===== Authentication
+
+For most development and test use cases an unauthenticated configuration is sufficient.
+However, for simulating a production  environment, the DevServices instance can be configured to use a
+specific authorization method by setting the `quarkus.openfga.devservices.authentication.method` property to
+the desired method, either `none`, `preshared`, or `oidc`.
+
+Here is an example configuration for using the pre-shared key method:
+
+[source,properties]
+----
+quarkus.openfga.devservices.authentication.method=preshared
+quarkus.openfga.devservices.authentication.preshared.keys=my-secret-key # <1>
+----
+<1> (*required*) A pre-shared key to use for authentication.
+    This can be a single key or a comma-separated list of keys.
+
+This will configure the DevServices instance to use the pre-shared key method for authentication and pass
+the provided key(s) to the instance.
+Additionally, the client will be configured to use the same method and one of the provided keys to authenticate
+with the DevServices instance.
+
+NOTE: For OIDC, the OpenFGA requires you to use a separate OIDC provider to authenticate the DevServices instance.
+See the link:#extension-configuration-reference[Extension Configuration Reference] for the specific configuration
+properties available.
 
 [[basic-usage]]
 == Basic Usage
@@ -110,4 +212,4 @@ class Example {
 [[extension-configuration-reference]]
 == Extension Configuration Reference
 
-include::includes/quarkus-openfga.adoc[leveloffset=+1, opts=optional]
+include::includes/quarkus-openfga-client.adoc[leveloffset=+1, opts=optional]

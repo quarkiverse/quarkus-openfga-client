@@ -1,12 +1,101 @@
 package io.quarkiverse.openfga.deployment;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
 
 import io.smallrye.config.WithDefault;
 
 public interface DevServicesOpenFGAConfig {
+
+    /**
+     * TLS configuration to use for the DevServices OpenFGA instance.
+     */
+    interface Tls {
+
+        /**
+         * Path to file containing a PEM encoded certificate to use for the DevServices OpenFGA instance.
+         */
+        String pemCertificatePath();
+
+        /**
+         * Path to file containing a PEM encoded private key to use for the DevServices OpenFGA instance.
+         */
+        String pemKeyPath();
+    }
+
+    interface Authentication {
+
+        enum Method {
+            NONE,
+            PRESHARED,
+            OIDC,
+        }
+
+        interface OIDC {
+            /**
+             * OIDC issuer (authorization server) signing the tokens, and where the keys will be fetched from.
+             */
+            String issuer();
+
+            /**
+             * OIDC audience of the tokens being signed by the authorization server.
+             */
+            String audience();
+
+            /**
+             * OIDC issuer DNS aliases that will be accepted as valid when verifying the `iss` field of the JWTs.
+             */
+            Optional<List<String>> issuerAliases();
+
+            /**
+             * OIDC subject names that will be accepted as valid when verifying the `sub` field of the JWTs.
+             * If empty, every `sub` will be allowed
+             */
+            Optional<List<String>> subjects();
+
+            /**
+             * ClientID claims that will be used to parse the clientID - configure in order of priority
+             * (first is highest).
+             */
+            Optional<List<String>> clientIdClaims();
+        }
+
+        interface Preshared {
+            /**
+             * Pre-shared authentication keys.
+             * <p>
+             * The dev services OpenFGA instance will be configured with
+             * these pre-shared keys for authentication.
+             */
+            List<String> keys();
+        }
+
+        /**
+         * Authentication method to configure for the dev services instance.
+         */
+        @WithDefault("none")
+        Method method();
+
+        /**
+         * Pre-shared authentication keys.
+         * <p>
+         * If {@code method} is set to {@code preshared},
+         * the dev services OpenFGA instance will be configured with
+         * these pre-shared keys for authentication.
+         */
+        Optional<Preshared> preshared();
+
+        /**
+         * OIDC Configuration.
+         * <p>
+         * If {@code method} is set to {@code oidc},
+         * the dev services OpenFGA instance will be configured with
+         * these OIDC settings for authentication.
+         */
+        Optional<OIDC> oidc();
+    }
 
     /**
      * If DevServices has been explicitly enabled or disabled. DevServices is generally enabled
@@ -113,25 +202,14 @@ public interface DevServicesOpenFGAConfig {
     Optional<String> authorizationTuplesLocation();
 
     /**
-     * TLS configuration to use for the DevServices OpenFGA instance.
+     * Authentication configuration to use for the DevServices OpenFGA instance.
      */
-    interface Tls {
-
-        /**
-         * Path to file containing a PEM encoded certificate to use for the DevServices OpenFGA instance.
-         */
-        Optional<String> pemCertificatePath();
-
-        /**
-         * Path to file containing a PEM encoded private key to use for the DevServices OpenFGA instance.
-         */
-        Optional<String> pemKeyPath();
-    }
+    Authentication authentication();
 
     /**
      * TLS configuration to use for the DevServices OpenFGA instance.
      */
-    Tls tls();
+    Optional<Tls> tls();
 
     /**
      * Timeout while creating the store/authorizationModel

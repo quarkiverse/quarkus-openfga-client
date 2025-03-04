@@ -1,0 +1,28 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "/oauth/token",
+    "formParameters": {
+      "grant_type": {
+        "matches": "client_credentials"
+      },
+      "client_id": {
+        "matches": "test-client-id"
+      },
+      "client_secret": {
+        "matches": "test-client-secret"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "jsonBody": {
+        "access_token": "test-preshared-key",
+        "token_type": "bearer",
+        "expires_in": 3600
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

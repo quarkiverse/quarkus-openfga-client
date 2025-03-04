@@ -24,6 +24,7 @@ import java.util.List;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 
@@ -91,5 +92,11 @@ public class OpenFGAResource {
     @Produces(APPLICATION_JSON)
     public Uni<List<Assertion>> listAssertions() {
         return assertionsClient.list();
+    }
+
+    @PUT
+    @Path("assertions")
+    public Uni<Void> putAssertions(List<Assertion> assertions) {
+        return assertionsClient.update(assertions);
     }
 }

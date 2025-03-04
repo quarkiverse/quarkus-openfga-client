@@ -5,103 +5,221 @@
       "type": "user"
     },
     {
+      "metadata": {
+        "relations": {
+          "member": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              }
+            ]
+          }
+        }
+      },
+      "relations": {
+        "member": {
+          "this": {}
+        }
+      },
       "type": "group"
     },
     {
-      "type": "thing",
-      "relations": {
-        "reader": {
-          "this": {}
-        },
-        "writer": {
-          "this": {}
-        },
-        "owner": {
-          "this": {}
-        }
-      },
       "metadata": {
         "relations": {
-          "reader": {
-            "directly_related_user_types": [
-              {
-                "type": "user"
-              },
-              {
-                "type": "group"
-              }
-            ]
-          },
-          "writer": {
-            "directly_related_user_types": [
-              {
-                "type": "user"
-              },
-              {
-                "type": "group"
-              }
-            ]
-          },
+          "can_create_file": {},
           "owner": {
             "directly_related_user_types": [
               {
                 "type": "user"
+              }
+            ]
+          },
+          "parent": {
+            "directly_related_user_types": [
+              {
+                "type": "folder"
+              }
+            ]
+          },
+          "viewer": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
               },
               {
+                "type": "user",
+                "wildcard": {}
+              },
+              {
+                "relation": "member",
                 "type": "group"
               }
             ]
           }
         }
-      }
+      },
+      "relations": {
+        "can_create_file": {
+          "computedUserset": {
+            "relation": "owner"
+          }
+        },
+        "owner": {
+          "this": {}
+        },
+        "parent": {
+          "this": {}
+        },
+        "viewer": {
+          "union": {
+            "child": [
+              {
+                "this": {}
+              },
+              {
+                "computedUserset": {
+                  "relation": "owner"
+                }
+              },
+              {
+                "tupleToUserset": {
+                  "computedUserset": {
+                    "relation": "viewer"
+                  },
+                  "tupleset": {
+                    "relation": "parent"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "type": "folder"
     },
     {
-      "type": "other-thing",
-      "relations": {
-        "reader": {
-          "this": {}
-        },
-        "writer": {
-          "this": {}
-        },
-        "owner": {
-          "this": {}
-        }
-      },
       "metadata": {
         "relations": {
-          "reader": {
-            "directly_related_user_types": [
-              {
-                "type": "user"
-              },
-              {
-                "type": "group"
-              }
-            ]
-          },
-          "writer": {
-            "directly_related_user_types": [
-              {
-                "type": "user"
-              },
-              {
-                "type": "group"
-              }
-            ]
-          },
+          "can_change_owner": {},
+          "can_read": {},
+          "can_share": {},
+          "can_write": {},
           "owner": {
             "directly_related_user_types": [
               {
                 "type": "user"
+              }
+            ]
+          },
+          "parent": {
+            "directly_related_user_types": [
+              {
+                "type": "folder"
+              }
+            ]
+          },
+          "viewer": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
               },
               {
+                "type": "user",
+                "wildcard": {}
+              },
+              {
+                "relation": "member",
                 "type": "group"
               }
             ]
           }
         }
-      }
+      },
+      "relations": {
+        "can_change_owner": {
+          "computedUserset": {
+            "relation": "owner"
+          }
+        },
+        "can_read": {
+          "union": {
+            "child": [
+              {
+                "computedUserset": {
+                  "relation": "viewer"
+                }
+              },
+              {
+                "computedUserset": {
+                  "relation": "owner"
+                }
+              },
+              {
+                "tupleToUserset": {
+                  "computedUserset": {
+                    "relation": "viewer"
+                  },
+                  "tupleset": {
+                    "relation": "parent"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "can_share": {
+          "union": {
+            "child": [
+              {
+                "computedUserset": {
+                  "relation": "owner"
+                }
+              },
+              {
+                "tupleToUserset": {
+                  "computedUserset": {
+                    "relation": "owner"
+                  },
+                  "tupleset": {
+                    "relation": "parent"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "can_write": {
+          "union": {
+            "child": [
+              {
+                "computedUserset": {
+                  "relation": "owner"
+                }
+              },
+              {
+                "tupleToUserset": {
+                  "computedUserset": {
+                    "relation": "owner"
+                  },
+                  "tupleset": {
+                    "relation": "parent"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "owner": {
+          "this": {}
+        },
+        "parent": {
+          "this": {}
+        },
+        "viewer": {
+          "this": {}
+        }
+      },
+      "type": "doc"
     }
   ]
 }
