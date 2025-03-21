@@ -31,6 +31,39 @@ public interface Schema {
         return TypeDefinition.Metadata.Relation.Reference.builder();
     }
 
+    final class SourceInfo {
+        private final String file;
+
+        @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+        SourceInfo(@Nullable String file) {
+            this.file = Strings.emptyToNull(file);
+        }
+
+        public String getFile() {
+            return file;
+        }
+
+        @Override
+        public boolean equals(java.lang.Object o) {
+            if (this == o)
+                return true;
+            if (!(o instanceof SourceInfo that))
+                return false;
+            return Objects.equals(file, that.file);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(file);
+        }
+
+        @Override
+        public String toString() {
+            return "SourceInfo[" +
+                    "file=" + file + ']';
+        }
+    }
+
     final class TypeDefinition {
 
         public static final class Metadata {
@@ -157,7 +190,7 @@ public interface Schema {
                     private String module;
 
                     @Nullable
-                    private String sourceInfo;
+                    private SourceInfo sourceInfo;
 
                     private Builder() {
                     }
@@ -190,7 +223,7 @@ public interface Schema {
                         return this;
                     }
 
-                    public Builder sourceInfo(@Nullable String sourceInfo) {
+                    public Builder sourceInfo(@Nullable SourceInfo sourceInfo) {
                         this.sourceInfo = sourceInfo;
                         return this;
                     }
@@ -212,15 +245,15 @@ public interface Schema {
 
                 @JsonProperty("source_info")
                 @Nullable
-                private final String sourceInfo;
+                private final SourceInfo sourceInfo;
 
                 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
                 Relation(@JsonProperty("directly_related_user_types") @Nullable List<Reference> directlyRelatedUserTypes,
                         @Nullable String module,
-                        @JsonProperty("source_info") @Nullable String sourceInfo) {
+                        @JsonProperty("source_info") @Nullable SourceInfo sourceInfo) {
                     this.directlyRelatedUserTypes = directlyRelatedUserTypes;
                     this.module = Strings.emptyToNull(module);
-                    this.sourceInfo = Strings.emptyToNull(sourceInfo);
+                    this.sourceInfo = sourceInfo;
                 }
 
                 @JsonProperty("directly_related_user_types")
@@ -236,7 +269,7 @@ public interface Schema {
 
                 @JsonProperty("source_info")
                 @Nullable
-                public String getSourceInfo() {
+                public SourceInfo getSourceInfo() {
                     return sourceInfo;
                 }
 
@@ -273,7 +306,7 @@ public interface Schema {
                 private String module;
 
                 @Nullable
-                private String sourceInfo;
+                private SourceInfo sourceInfo;
 
                 private Builder() {
                 }
@@ -315,7 +348,7 @@ public interface Schema {
                     return this;
                 }
 
-                public Builder sourceInfo(@Nullable String sourceInfo) {
+                public Builder sourceInfo(@Nullable SourceInfo sourceInfo) {
                     this.sourceInfo = sourceInfo;
                     return this;
                 }
@@ -337,13 +370,13 @@ public interface Schema {
 
             @JsonProperty("source_info")
             @Nullable
-            private final String sourceInfo;
+            private final SourceInfo sourceInfo;
 
             @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-            Metadata(@Nullable Map<String, Relation> relations, @Nullable String module, @Nullable String sourceInfo) {
+            Metadata(@Nullable Map<String, Relation> relations, @Nullable String module, @Nullable SourceInfo sourceInfo) {
                 this.relations = relations;
                 this.module = Strings.emptyToNull(module);
-                this.sourceInfo = Strings.emptyToNull(sourceInfo);
+                this.sourceInfo = sourceInfo;
             }
 
             @Nullable
@@ -358,7 +391,7 @@ public interface Schema {
 
             @JsonProperty("source_info")
             @Nullable
-            public String getSourceInfo() {
+            public SourceInfo getSourceInfo() {
                 return sourceInfo;
             }
 
@@ -647,7 +680,7 @@ public interface Schema {
             public static final class Builder {
 
                 @Nullable
-                private String sourceInfo;
+                private SourceInfo sourceInfo;
                 @Nullable
                 private String module;
                 private final Map<String, java.lang.Object> extra = new HashMap<>();
@@ -655,7 +688,7 @@ public interface Schema {
                 private Builder() {
                 }
 
-                public Builder sourceInfo(@Nullable String sourceInfo) {
+                public Builder sourceInfo(@Nullable SourceInfo sourceInfo) {
                     this.sourceInfo = sourceInfo;
                     return this;
                 }
@@ -697,23 +730,23 @@ public interface Schema {
             }
 
             @Nullable
-            private final String sourceInfo;
+            private final SourceInfo sourceInfo;
             @Nullable
             private final String module;
             private final Map<String, java.lang.Object> extra;
 
             @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-            Metadata(@JsonProperty("source_info") @Nullable String sourceInfo,
+            Metadata(@JsonProperty("source_info") @Nullable SourceInfo sourceInfo,
                     @JsonProperty("module") @Nullable String module,
                     @JsonAnySetter @Nullable Map<String, java.lang.Object> extra) {
-                this.sourceInfo = Strings.emptyToNull(sourceInfo);
+                this.sourceInfo = sourceInfo;
                 this.module = Strings.emptyToNull(module);
                 this.extra = Optional.ofNullable(extra).map(HashMap::new).orElseGet(HashMap::new);
             }
 
             @JsonProperty("source_info")
             @Nullable
-            public String getSourceInfo() {
+            public SourceInfo getSourceInfo() {
                 return sourceInfo;
             }
 
