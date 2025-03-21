@@ -441,7 +441,7 @@ public class AuthorizationModelClient {
         }
 
         public ReadFilter objectType(@Nullable String type) {
-            return new ReadFilter(Optional.ofNullable(type).map(RelObject::valueOf), relation, user);
+            return new ReadFilter(Optional.ofNullable(type).map(RelObjectType::of), relation, user);
         }
 
         public ReadFilter object(@Nullable RelEntity object) {
