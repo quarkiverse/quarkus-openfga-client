@@ -1,29 +1,17 @@
 package io.quarkiverse.openfga.client.model;
 
 import static io.quarkiverse.openfga.client.model.Schema.*;
+import static io.quarkiverse.openfga.client.model.utils.ModelMapper.mapper;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatNoException;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
 import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
-
 import io.quarkiverse.openfga.client.model.Schema.TypeDefinition;
 import io.quarkiverse.openfga.client.model.Schema.Userset;
 
 public class AuthorizationModelSchemaTest {
-
-    ObjectMapper mapper = new JsonMapper()
-            .registerModule(new JavaTimeModule())
-            .registerModule(new Jdk8Module())
-            .registerModule(new ParameterNamesModule())
-            .setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
     @Test
     void testUsersetWithThisRead() {

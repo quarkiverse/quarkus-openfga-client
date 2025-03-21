@@ -1,0 +1,148 @@
+{
+  "schema_version": "1.2",
+  "type_definitions": [
+    {
+      "metadata": {
+        "module": "core",
+        "source_info": {
+          "file": "core.fga"
+        }
+      },
+      "type": "user"
+    },
+    {
+      "metadata": {
+        "module": "core",
+        "relations": {
+          "admin": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              }
+            ]
+          },
+          "can_create_space": {
+            "module": "wiki",
+            "source_info": {
+              "file": "wiki.fga"
+            }
+          },
+          "member": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              }
+            ]
+          }
+        },
+        "source_info": {
+          "file": "core.fga"
+        }
+      },
+      "relations": {
+        "admin": {
+          "this": {}
+        },
+        "can_create_space": {
+          "computedUserset": {
+            "relation": "admin"
+          }
+        },
+        "member": {
+          "this": {}
+        }
+      },
+      "type": "organization"
+    },
+    {
+      "metadata": {
+        "module": "core",
+        "relations": {
+          "member": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              }
+            ]
+          }
+        },
+        "source_info": {
+          "file": "core.fga"
+        }
+      },
+      "relations": {
+        "member": {
+          "this": {}
+        }
+      },
+      "type": "group"
+    },
+    {
+      "metadata": {
+        "module": "wiki",
+        "relations": {
+          "can_view_pages": {},
+          "organization": {
+            "directly_related_user_types": [
+              {
+                "type": "organization"
+              }
+            ]
+          }
+        },
+        "source_info": {
+          "file": "wiki.fga"
+        }
+      },
+      "relations": {
+        "can_view_pages": {
+          "tupleToUserset": {
+            "computedUserset": {
+              "relation": "member"
+            },
+            "tupleset": {
+              "relation": "organization"
+            }
+          }
+        },
+        "organization": {
+          "this": {}
+        }
+      },
+      "type": "space"
+    },
+    {
+      "metadata": {
+        "module": "wiki",
+        "relations": {
+          "owner": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              }
+            ]
+          },
+          "space": {
+            "directly_related_user_types": [
+              {
+                "type": "space"
+              }
+            ]
+          }
+        },
+        "source_info": {
+          "file": "wiki.fga"
+        }
+      },
+      "relations": {
+        "owner": {
+          "this": {}
+        },
+        "space": {
+          "this": {}
+        }
+      },
+      "type": "page"
+    }
+  ]
+}
