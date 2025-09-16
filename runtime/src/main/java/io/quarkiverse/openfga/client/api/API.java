@@ -79,7 +79,7 @@ public class API implements Closeable {
         switch (method) {
             case NONE -> {
                 log.info("Configuring unauthenticated");
-                return new UnauthenticatedCredentialsProvider();
+                return UnauthenticatedCredentialsProvider.INSTANCE;
             }
             case PRESHARED -> {
                 var sharedKey = config.credentials().preshared()

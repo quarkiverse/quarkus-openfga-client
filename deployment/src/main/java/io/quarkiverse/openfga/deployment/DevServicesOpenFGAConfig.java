@@ -97,6 +97,8 @@ public interface DevServicesOpenFGAConfig {
         Optional<OIDC> oidc();
     }
 
+    String DEFAULT_SERVICE_NAME = "openfga";
+
     /**
      * If DevServices has been explicitly enabled or disabled. DevServices is generally enabled
      * by default, unless there is an existing configuration present.
@@ -135,7 +137,7 @@ public interface DevServicesOpenFGAConfig {
      * <p>
      * This property is used when you need multiple shared OpenFGA instances.
      */
-    @WithDefault("openfga")
+    @WithDefault(DEFAULT_SERVICE_NAME)
     String serviceName();
 
     /**
