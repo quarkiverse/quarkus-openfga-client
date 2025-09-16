@@ -4,6 +4,8 @@ import static io.quarkiverse.openfga.client.OpenFGAClient.storeIdResolver;
 
 import java.util.function.Supplier;
 
+import jakarta.inject.Inject;
+
 import io.quarkiverse.openfga.client.*;
 import io.quarkiverse.openfga.client.api.API;
 import io.quarkiverse.openfga.runtime.config.OpenFGAConfig;
@@ -17,10 +19,25 @@ import io.vertx.mutiny.core.Vertx;
 @Recorder
 public class OpenFGARecorder {
 
-    public RuntimeValue<API> createAPI(OpenFGAConfig config, boolean tracingEnabled,
+    private final RuntimeValue<OpenFGAConfig> configValue;
+
+    @Inject
+    public OpenFGARecorder(RuntimeValue<OpenFGAConfig> configValue) {
+        this.configValue = configValue;
+    }
+
+    protected OpenFGARecorder() {
+        configValue = null;
+    }
+
+    OpenFGAConfig getConfig() {
+        return configValue.getValue();
+    }
+
+    public RuntimeValue<API> createAPI(boolean tracingEnabled,
             RuntimeValue<io.vertx.core.Vertx> vertx, Supplier<TlsConfigurationRegistry> tlsRegistry,
             ShutdownContext shutdownContext) {
-        var api = new API(config, tracingEnabled, Vertx.newInstance(vertx.getValue()), tlsRegistry.get());
+        var api = new API(getConfig(), tracingEnabled, Vertx.newInstance(vertx.getValue()), tlsRegistry.get());
         shutdownContext.addShutdownTask(api::close);
         return new RuntimeValue<>(api);
     }
@@ -30,13 +47,15 @@ public class OpenFGARecorder {
         return new RuntimeValue<>(openFGAClient);
     }
 
-    public RuntimeValue<StoreClient> createStoreClient(RuntimeValue<API> api, OpenFGAConfig config) {
+    public RuntimeValue<StoreClient> createStoreClient(RuntimeValue<API> api) {
+        var config = getConfig();
         var storeIdResolver = storeIdResolver(api.getValue(), config.store(), config.alwaysResolveStoreId());
         StoreClient storeClient = new StoreClient(api.getValue(), storeIdResolver);
         return new RuntimeValue<>(storeClient);
     }
 
-    public RuntimeValue<AuthorizationModelClient> createAuthModelClient(RuntimeValue<API> apiValue, OpenFGAConfig config) {
+    public RuntimeValue<AuthorizationModelClient> createAuthModelClient(RuntimeValue<API> apiValue) {
+        var config = getConfig();
         var api = apiValue.getValue();
         var configResolver = storeIdResolver(api, config.store(), config.alwaysResolveStoreId())
                 .flatMap(storeId -> {
@@ -52,13 +71,15 @@ public class OpenFGARecorder {
         return new RuntimeValue<>(authModelClient);
     }
 
-    public RuntimeValue<AuthorizationModelsClient> createAuthModelsClient(RuntimeValue<API> api, OpenFGAConfig config) {
+    public RuntimeValue<AuthorizationModelsClient> createAuthModelsClient(RuntimeValue<API> api) {
+        var config = getConfig();
         var storeIdResolver = storeIdResolver(api.getValue(), config.store(), config.alwaysResolveStoreId());
         var authModelsClient = new AuthorizationModelsClient(api.getValue(), storeIdResolver);
         return new RuntimeValue<>(authModelsClient);
     }
 
-    public RuntimeValue<AssertionsClient> createAssertionsClient(RuntimeValue<API> api, OpenFGAConfig config) {
+    public RuntimeValue<AssertionsClient> createAssertionsClient(RuntimeValue<API> api) {
+        var config = getConfig();
         var configResolver = storeIdResolver(api.getValue(), config.store(), config.alwaysResolveStoreId())
                 .flatMap(storeId -> OpenFGAClient.authorizationModelIdResolver(api.getValue(), storeId)
                         .map(modelId -> new ClientConfig(storeId, modelId)));

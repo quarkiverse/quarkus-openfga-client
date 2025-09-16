@@ -11,7 +11,6 @@ import io.quarkiverse.openfga.client.*;
 import io.quarkiverse.openfga.client.api.API;
 import io.quarkiverse.openfga.client.model.Store;
 import io.quarkiverse.openfga.runtime.OpenFGARecorder;
-import io.quarkiverse.openfga.runtime.config.OpenFGAConfig;
 import io.quarkiverse.openfga.runtime.health.OpenFGAHealthCheck;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.deployment.Capabilities;
@@ -50,7 +49,6 @@ class OpenFGAProcessor {
     @Record(RUNTIME_INIT)
     ServiceStartBuildItem registerSyntheticBeans(
             OpenFGABuildTimeConfig buildTimeConfig,
-            OpenFGAConfig runtimeConfig,
             VertxBuildItem vertxBuildItem,
             Optional<TlsRegistryBuildItem> tlsRegistryBuildItem,
             ShutdownContextBuildItem shutdownContextBuildItem,
@@ -62,8 +60,7 @@ class OpenFGAProcessor {
         var tlsRegistrySupplier = tlsRegistryBuildItem.map(TlsRegistryBuildItem::registry)
                 .orElse(() -> null);
 
-        var apiValue = recorder.createAPI(
-                runtimeConfig, buildTimeConfig.tracing().enabled(),
+        var apiValue = recorder.createAPI(buildTimeConfig.tracing().enabled(),
                 vertxBuildItem.getVertx(), tlsRegistrySupplier,
                 shutdownContextBuildItem);
 
@@ -87,28 +84,28 @@ class OpenFGAProcessor {
                 SyntheticBeanBuildItem.configure(StoreClient.class)
                         .scope(ApplicationScoped.class)
                         .setRuntimeInit()
-                        .runtimeValue(recorder.createStoreClient(apiValue, runtimeConfig))
+                        .runtimeValue(recorder.createStoreClient(apiValue))
                         .done());
 
         syntheticBeans.produce(
                 SyntheticBeanBuildItem.configure(AuthorizationModelClient.class)
                         .scope(ApplicationScoped.class)
                         .setRuntimeInit()
-                        .runtimeValue(recorder.createAuthModelClient(apiValue, runtimeConfig))
+                        .runtimeValue(recorder.createAuthModelClient(apiValue))
                         .done());
 
         syntheticBeans.produce(
                 SyntheticBeanBuildItem.configure(AuthorizationModelsClient.class)
                         .scope(ApplicationScoped.class)
                         .setRuntimeInit()
-                        .runtimeValue(recorder.createAuthModelsClient(apiValue, runtimeConfig))
+                        .runtimeValue(recorder.createAuthModelsClient(apiValue))
                         .done());
 
         syntheticBeans.produce(
                 SyntheticBeanBuildItem.configure(AssertionsClient.class)
                         .scope(ApplicationScoped.class)
                         .setRuntimeInit()
-                        .runtimeValue(recorder.createAssertionsClient(apiValue, runtimeConfig))
+                        .runtimeValue(recorder.createAssertionsClient(apiValue))
                         .done());
 
         return new ServiceStartBuildItem("openfga-client");
