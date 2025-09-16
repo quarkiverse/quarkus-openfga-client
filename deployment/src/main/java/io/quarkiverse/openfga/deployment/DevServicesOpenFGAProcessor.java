@@ -33,12 +33,11 @@ import io.quarkiverse.openfga.client.model.dto.CreateStoreRequest;
 import io.quarkiverse.openfga.client.model.dto.WriteAuthorizationModelRequest;
 import io.quarkiverse.openfga.client.model.dto.WriteRequest;
 import io.quarkus.bootstrap.classloading.QuarkusClassLoader;
-import io.quarkus.deployment.IsNormal;
+import io.quarkus.deployment.IsDevServicesSupportedByLaunchMode;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.builditem.*;
 import io.quarkus.deployment.dev.devservices.DevServicesConfig;
-import io.quarkus.deployment.logging.LoggingSetupBuildItem;
 import io.quarkus.deployment.util.FileUtil;
 import io.quarkus.devservices.common.*;
 import io.quarkus.runtime.LaunchMode;
@@ -79,12 +78,10 @@ public class DevServicesOpenFGAProcessor {
     static final ContainerLocator openFGAContainerLocator = ContainerLocator
             .locateContainerWithLabels(OPEN_FGA_EXPOSED_HTTP_PORT, DEV_SERVICE_LABEL);
 
-    @BuildStep(onlyIfNot = IsNormal.class, onlyIf = DevServicesConfig.Enabled.class)
+    @BuildStep(onlyIf = { IsDevServicesSupportedByLaunchMode.class, DevServicesConfig.Enabled.class })
     public void startContainers(OpenFGABuildTimeConfig config,
             LaunchModeBuildItem launchModeBuildItem,
             DockerStatusBuildItem dockerStatusBuildItem,
-            CuratedApplicationShutdownBuildItem closeBuildItem,
-            LoggingSetupBuildItem loggingSetupBuildItem,
             List<DevServicesSharedNetworkBuildItem> sharedNetworkBuildItem,
             DevServicesComposeProjectBuildItem composeProjectBuildItem,
             DevServicesConfig devServicesConfig,
@@ -510,13 +507,13 @@ public class DevServicesOpenFGAProcessor {
         public QuarkusOpenFGAContainer(DockerImageName dockerImageName, DevServicesOpenFGAConfig config,
                 String defaultNetworkId, boolean useSharedNetwork) {
             super(dockerImageName);
+            this.waitStrategy.withStartupTimeout(config.startupTimeout());
             this.fixedExposedHttpPort = config.httpPort();
             this.fixedExposedGrpcPort = config.grpcPort();
             this.fixedExposedPlaygroundPort = config.playgroundPort();
             this.useSharedNetwork = useSharedNetwork;
             this.sharedHostName = ConfigureUtil.configureNetwork(this, defaultNetworkId, useSharedNetwork, "openfga");
 
-            withStartupTimeout(config.startupTimeout());
             configureCommand(config);
         }
 
