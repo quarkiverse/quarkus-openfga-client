@@ -8,14 +8,16 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Duration;
 import java.util.*;
-import java.util.function.BiFunction;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.jboss.logging.Logger;
 import org.testcontainers.containers.BindMode;
-import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.openfga.OpenFGAContainer;
 import org.testcontainers.utility.DockerImageName;
@@ -34,17 +36,12 @@ import io.quarkus.bootstrap.classloading.QuarkusClassLoader;
 import io.quarkus.deployment.IsNormal;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
-import io.quarkus.deployment.builditem.CuratedApplicationShutdownBuildItem;
-import io.quarkus.deployment.builditem.DevServicesResultBuildItem;
-import io.quarkus.deployment.builditem.DevServicesResultBuildItem.RunningDevService;
-import io.quarkus.deployment.builditem.DockerStatusBuildItem;
-import io.quarkus.deployment.builditem.LaunchModeBuildItem;
-import io.quarkus.deployment.console.ConsoleInstalledBuildItem;
-import io.quarkus.deployment.console.StartupLogCompressor;
+import io.quarkus.deployment.builditem.*;
 import io.quarkus.deployment.dev.devservices.DevServicesConfig;
 import io.quarkus.deployment.logging.LoggingSetupBuildItem;
 import io.quarkus.deployment.util.FileUtil;
-import io.quarkus.devservices.common.ContainerLocator;
+import io.quarkus.devservices.common.*;
+import io.quarkus.runtime.LaunchMode;
 import io.quarkus.runtime.configuration.ConfigUtils;
 import io.quarkus.runtime.configuration.ConfigurationException;
 import io.quarkus.runtime.util.ClassPathUtils;
@@ -55,18 +52,18 @@ public class DevServicesOpenFGAProcessor {
 
     private static final Logger log = Logger.getLogger(DevServicesOpenFGAProcessor.class);
 
-    static final String OPEN_FGA_VERSION = "v1.8.13";
-    static final String OPEN_FGA_IMAGE = "openfga/openfga:" + OPEN_FGA_VERSION;
-    static final int OPEN_FGA_EXPOSED_HTTP_PORT = 8080;
-    static final int OPEN_FGA_EXPOSED_GRPC_PORT = 8081;
-    static final int OPEN_FGA_EXPOSED_PLAY_PORT = 3000;
-    static final String DEV_SERVICE_LABEL = "quarkus-dev-service-openfga";
+    public static final String OPEN_FGA_VERSION = "v1.8.13";
+    public static final String OPEN_FGA_IMAGE_NAME = "openfga/openfga";
+    public static final String OPEN_FGA_IMAGE = OPEN_FGA_IMAGE_NAME + ":" + OPEN_FGA_VERSION;
+    public static final String DEV_SERVICE_LABEL = "quarkus-dev-service-openfga";
+    public static final int OPEN_FGA_EXPOSED_HTTP_PORT = 8080;
+    public static final int OPEN_FGA_EXPOSED_GRPC_PORT = 8081;
+    public static final int OPEN_FGA_EXPOSED_PLAY_PORT = 3000;
     static final String CONFIG_PREFIX = "quarkus.openfga.";
     static final String URL_CONFIG_KEY = CONFIG_PREFIX + "url";
     static final String STORE_ID_CONFIG_KEY = CONFIG_PREFIX + "store";
     static final String AUTHORIZATION_MODEL_ID_CONFIG_KEY = CONFIG_PREFIX + "authorization-model-id";
     static final String CREDS_PREFIX = CONFIG_PREFIX + "credentials.";
-    static final String CREDS_METHOD_KEY = CREDS_PREFIX + "method";
     static final String CREDS_PRESHARED_PREFIX = CREDS_PREFIX + "preshared.";
     static final String CREDS_PRESHARED_KEY_KEY = CREDS_PRESHARED_PREFIX + "key";
     static final String CREDS_OIDC_PREFIX = CREDS_PREFIX + "oidc.";
@@ -76,226 +73,224 @@ public class DevServicesOpenFGAProcessor {
     static final String AUTHN_PREFIX = DEVSERVICES_PREFIX + "openfga.";
     static final String AUTHN_PRESHARED_PREFIX = AUTHN_PREFIX + "authn.preshared.";
     static final String AUTHN_PRESHARED_KEYS_KEY = AUTHN_PRESHARED_PREFIX + "keys";
-    static final ContainerLocator openFGAContainerLocator = new ContainerLocator(DEV_SERVICE_LABEL, OPEN_FGA_EXPOSED_HTTP_PORT);
-
-    private static volatile RunningDevService devService;
-    private static volatile DevServicesOpenFGAConfig capturedDevServicesConfiguration;
-    private static volatile boolean first = true;
+    static final String LOC_CLASSPATH_PREFIX = "classpath:";
+    static final String LOC_FILESYSTEM_PREFIX = "filesystem:";
+    static final String TEST_LAUNCH_MODE = CONFIG_PREFIX + "test-launch-mode";
+    static final ContainerLocator openFGAContainerLocator = ContainerLocator
+            .locateContainerWithLabels(OPEN_FGA_EXPOSED_HTTP_PORT, DEV_SERVICE_LABEL);
 
     @BuildStep(onlyIfNot = IsNormal.class, onlyIf = DevServicesConfig.Enabled.class)
-    public DevServicesResultBuildItem startContainers(OpenFGABuildTimeConfig config,
-            Optional<ConsoleInstalledBuildItem> consoleInstalledBuildItem,
-            LaunchModeBuildItem launchMode,
+    public void startContainers(OpenFGABuildTimeConfig config,
+            LaunchModeBuildItem launchModeBuildItem,
             DockerStatusBuildItem dockerStatusBuildItem,
             CuratedApplicationShutdownBuildItem closeBuildItem,
             LoggingSetupBuildItem loggingSetupBuildItem,
+            List<DevServicesSharedNetworkBuildItem> sharedNetworkBuildItem,
+            DevServicesComposeProjectBuildItem composeProjectBuildItem,
             DevServicesConfig devServicesConfig,
             BuildProducer<DevServicesResultBuildItem> devServicesResults) {
 
-        DevServicesOpenFGAConfig currentDevServicesConfiguration = config.devservices();
+        var launchMode = Optional.ofNullable(System.getProperty(TEST_LAUNCH_MODE))
+                .flatMap(mode -> Arrays.stream(LaunchMode.values())
+                        .filter(m -> m.getDefaultProfile().equals(mode)).findFirst())
+                .orElse(launchModeBuildItem.getLaunchMode());
 
-        // figure out if we need to shut down and restart any existing OpenFGA container
-        // if not, and the OpenFGA container has already started we just return
-        if (devService != null) {
-            boolean restartRequired = !currentDevServicesConfiguration.equals(capturedDevServicesConfiguration);
-            if (!restartRequired) {
-                return devService.toBuildItem();
-            }
-            try {
-                devService.close();
-            } catch (Throwable e) {
-                log.error("Failed to stop OpenFGA container", e);
-            }
-            devService = null;
-            capturedDevServicesConfiguration = null;
-        }
+        DevServicesOpenFGAConfig openFGADevServiceConfig = config.devservices();
 
-        capturedDevServicesConfiguration = currentDevServicesConfiguration;
-
-        StartupLogCompressor compressor = new StartupLogCompressor(
-                (launchMode.isTest() ? "(test) " : "") + "OpenFGA Dev Services Starting:", consoleInstalledBuildItem,
-                loggingSetupBuildItem);
-        try {
-            devService = startContainer(dockerStatusBuildItem, currentDevServicesConfiguration, launchMode,
-                    devServicesConfig.timeout());
-            if (devService != null) {
-
-                if (devService.isOwner()) {
-                    log.info("Dev Services for OpenFGA started.");
-                    log.infof("Other Quarkus applications in dev mode will find the "
-                            + "instance automatically. For Quarkus applications in production mode, you can connect to"
-                            + " this by starting your application with -D%s=%s",
-                            URL_CONFIG_KEY, devService.getConfig().get(URL_CONFIG_KEY));
-                }
-            } else {
-                return null;
-            }
-        } catch (Throwable t) {
-            compressor.closeAndDumpCaptured();
-            throw new RuntimeException(t);
-        } finally {
-            compressor.close();
-        }
-
-        if (first) {
-            first = false;
-            Runnable closeTask = () -> {
-                if (devService != null) {
-                    try {
-                        devService.close();
-                    } catch (Throwable t) {
-                        log.error("Failed to stop OpenFGA container", t);
-                    }
-                    devService = null;
-                    log.info("Dev Services for OpenFGA shut down.");
-                }
-                first = true;
-                capturedDevServicesConfiguration = null;
-            };
-            closeBuildItem.addCloseTask(closeTask, true);
-        }
-
-        return devService.toBuildItem();
-    }
-
-    private RunningDevService startContainer(DockerStatusBuildItem dockerStatusBuildItem, DevServicesOpenFGAConfig devConfig,
-            LaunchModeBuildItem launchMode, Optional<Duration> timeout) {
-
-        if (!devConfig.enabled().orElse(true)) {
+        if (!openFGADevServiceConfig.enabled().orElse(true)) {
             // explicitly disabled
             log.debug("Not starting devservices for OpenFGA as it has been disabled in the config");
-            return null;
+            return;
         }
+
+        var useSharedNetwork = DevServicesSharedNetworkBuildItem.isSharedNetworkRequired(devServicesConfig,
+                sharedNetworkBuildItem);
 
         boolean needToStart = !ConfigUtils.isPropertyNonEmpty(URL_CONFIG_KEY);
         if (!needToStart) {
             log.debug("Not starting devservices for default OpenFGA client as url has been provided");
-            return null;
+            return;
         }
 
         if (!dockerStatusBuildItem.isContainerRuntimeAvailable()) {
-            log.warn("Please configure " + URL_CONFIG_KEY + " or get a working docker instance");
-            return null;
+            log.warn("Requires configuration of '" + URL_CONFIG_KEY + "' or a working docker instance");
+            return;
         }
 
-        DockerImageName dockerImageName = DockerImageName.parse(devConfig.imageName().orElse(OPEN_FGA_IMAGE))
+        var dockerImageName = DockerImageName.parse(openFGADevServiceConfig.imageName().orElse(OPEN_FGA_IMAGE))
                 .asCompatibleSubstituteFor(OPEN_FGA_IMAGE);
 
-        final Supplier<RunningDevService> defaultOpenFGAInstanceSupplier = () -> {
+        var resolvedConfigProperties = new CompletableFuture<Map<String, String>>();
 
-            var container = (QuarkusOpenFGAContainer) new QuarkusOpenFGAContainer(dockerImageName, devConfig)
-                    .withNetwork(Network.SHARED);
+        var configPropertyResolvers = new HashMap<String, Function<StartableContainer<QuarkusOpenFGAContainer>, String>>();
+        addContainerConfigurationResolvers(openFGADevServiceConfig, resolvedConfigProperties, configPropertyResolvers::put);
+        addCredentialsConfiguration(openFGADevServiceConfig, (k, v) -> configPropertyResolvers.put(k, s -> v));
 
-            timeout.ifPresent(container::withStartupTimeout);
-
-            log.info("Starting OpenFGA...");
-
-            container.start();
-
-            var devServicesConfigProperties = new HashMap<String, String>();
-
-            withAPI(container.getHost(), container.getHttpPort(), devConfig,
-                    (instanceURL, api) -> {
-
-                        devServicesConfigProperties.put(URL_CONFIG_KEY, instanceURL.toExternalForm());
-
-                        String storeId;
-                        try {
-
-                            log.info("Initializing authorization store...");
-
-                            storeId = api.createStore(CreateStoreRequest.builder().name(devConfig.storeName()).build())
-                                    .await().atMost(devConfig.startupTimeout())
-                                    .id();
-
-                            devServicesConfigProperties.put(STORE_ID_CONFIG_KEY, storeId);
-
-                        } catch (Throwable e) {
-                            throw new RuntimeException("Store initialization failed", e);
-                        }
-
-                        loadAuthorizationModelDefinition(devConfig)
-                                .ifPresentOrElse(schema -> {
-
-                                    var authModelId = loadAuthorizationModel(api, storeId, schema, devConfig);
-
-                                    loadAuthorizationTuplesDefinition(devConfig)
-                                            .ifPresent(authTuples -> {
-
-                                                loadAuthorizationTuples(api, storeId, authModelId, authTuples, devConfig);
-                                            });
-                                }, () -> {
-                                    if (devConfig.authorizationTuples().isPresent()
-                                            || devConfig.authorizationTuplesLocation().isPresent()) {
-                                        log.warn("No authorization model configured, no tuples will not be initialized");
-                                    }
-                                });
-
-                        return null;
-                    });
-
-            devServicesConfigProperties.putAll(credentialsConfiguration(devConfig));
-
-            return new RunningDevService(FEATURE, container.getContainerId(), container::close, devServicesConfigProperties);
-        };
-
-        return openFGAContainerLocator
-                .locateContainer(devConfig.serviceName(), devConfig.shared(), launchMode.getLaunchMode())
-                .map(containerAddress -> {
-
-                    Map<String, String> devServicesConfigProperties = new HashMap<>();
-
-                    withAPI(containerAddress.getHost(), containerAddress.getPort(), devConfig,
-                            (instanceURL, api) -> {
-
-                                devServicesConfigProperties.put(URL_CONFIG_KEY, instanceURL.toExternalForm());
-
-                                String storeId = findStore(api, devConfig);
-                                devServicesConfigProperties.put(STORE_ID_CONFIG_KEY, storeId);
-
-                                loadAuthorizationModelDefinition(devConfig)
-                                        .ifPresent(store -> {
-
-                                            var authModelId = findAuthorizationModel(api, storeId, store, devConfig);
-                                            devServicesConfigProperties.put(AUTHORIZATION_MODEL_ID_CONFIG_KEY, authModelId);
-                                        });
-
-                                return null;
-                            });
-
-                    devServicesConfigProperties.putAll(credentialsConfiguration(devConfig));
-
-                    return new RunningDevService(FEATURE, containerAddress.getId(), null, devServicesConfigProperties);
+        final Supplier<DevServicesResultBuildItem> startSupplier = () -> DevServicesResultBuildItem.owned()
+                .name(FEATURE)
+                .serviceName(openFGADevServiceConfig.serviceName())
+                .serviceConfig(config)
+                .description("OpenFGA DevServices Instance")
+                .startable(() -> {
+                    var container = new QuarkusOpenFGAContainer(dockerImageName, openFGADevServiceConfig,
+                            composeProjectBuildItem.getDefaultNetworkId(), useSharedNetwork);
+                    if (openFGADevServiceConfig.shared()) {
+                        container = container.withSharedServiceLabel(launchMode, DEV_SERVICE_LABEL,
+                                openFGADevServiceConfig.serviceName());
+                    }
+                    return new StartableContainer<>(container);
                 })
-                .orElseGet(defaultOpenFGAInstanceSupplier);
+                .postStartHook(startable -> {
+
+                    try {
+
+                        var configProperties = new HashMap<String, String>();
+                        var container = startable.getContainer();
+
+                        withAPI(container.getHost(), container.getHttpPort(), openFGADevServiceConfig, (instanceURL, api) -> {
+
+                            configProperties.put(URL_CONFIG_KEY, instanceURL.toExternalForm());
+
+                            var storeId = createStore(api, openFGADevServiceConfig);
+                            configProperties.put(STORE_ID_CONFIG_KEY, storeId);
+
+                            loadAuthorizationModelDefinition(openFGADevServiceConfig)
+                                    .ifPresentOrElse(schema -> {
+
+                                        var authModelId = loadAuthorizationModel(api, storeId, schema, openFGADevServiceConfig);
+                                        configProperties.put(AUTHORIZATION_MODEL_ID_CONFIG_KEY, authModelId);
+
+                                        loadAuthorizationTuplesDefinition(openFGADevServiceConfig)
+                                                .ifPresent(authTuples -> {
+                                                    loadAuthorizationTuples(api, storeId, authModelId, authTuples,
+                                                            openFGADevServiceConfig);
+                                                });
+                                    }, () -> {
+                                        if (openFGADevServiceConfig.authorizationTuples().isPresent()
+                                                || openFGADevServiceConfig.authorizationTuplesLocation().isPresent()) {
+                                            log.warn(
+                                                    "No authorization model configured, no tuples will not be initialized");
+                                        }
+                                    });
+                        });
+
+                        resolvedConfigProperties.complete(configProperties);
+                    } catch (Throwable t) {
+                        resolvedConfigProperties.completeExceptionally(
+                                new ConfigurationException("Configuration not available, failed to initialize container"));
+                        throw t;
+                    }
+                })
+                .configProvider(configPropertyResolvers)
+                .build();
+
+        devServicesResults.produce(
+                openFGAContainerLocator
+                        .locateContainer(openFGADevServiceConfig.serviceName(), openFGADevServiceConfig.shared(), launchMode)
+                        .or(() -> ComposeLocator.locateContainer(composeProjectBuildItem,
+                                List.of(openFGADevServiceConfig.imageName().orElse(OPEN_FGA_IMAGE_NAME)),
+                                OPEN_FGA_EXPOSED_HTTP_PORT, launchMode, useSharedNetwork))
+                        .map(containerAddress -> {
+
+                            var devServicesConfigProperties = new HashMap<String, String>();
+                            resolveContainerConfiguration(openFGADevServiceConfig, containerAddress,
+                                    devServicesConfigProperties::put);
+                            addCredentialsConfiguration(openFGADevServiceConfig, devServicesConfigProperties::put);
+
+                            return DevServicesResultBuildItem.discovered()
+                                    .name(FEATURE)
+                                    .containerId(containerAddress.getId())
+                                    .description("OpenFGA DevServices Services")
+                                    .config(devServicesConfigProperties)
+                                    .build();
+                        })
+                        .orElseGet(startSupplier));
     }
 
-    private static Map<String, String> credentialsConfiguration(DevServicesOpenFGAConfig devConfig) {
-        switch (devConfig.authentication().method()) {
+    private static String getPropertyWhenResolved(String key, DevServicesOpenFGAConfig devConfig,
+            CompletableFuture<Map<String, String>> resolvedConfigProperties) {
+        try {
+            var configProperties = resolvedConfigProperties.get(devConfig.startupTimeout().toMillis(), TimeUnit.MILLISECONDS);
+            return configProperties.get(key);
+        } catch (Throwable e) {
+            Throwable cause = e;
+            if (cause instanceof ExecutionException) {
+                cause = cause.getCause();
+            }
+            if (cause instanceof RuntimeException) {
+                throw (RuntimeException) cause;
+            } else {
+                throw new RuntimeException(cause);
+            }
+        }
+    }
+
+    private static void addContainerConfigurationResolvers(DevServicesOpenFGAConfig devConfig,
+            CompletableFuture<Map<String, String>> resolvedConfigProperties,
+            BiConsumer<String, Function<StartableContainer<QuarkusOpenFGAContainer>, String>> add) {
+
+        add.accept(URL_CONFIG_KEY, s -> getPropertyWhenResolved(URL_CONFIG_KEY, devConfig, resolvedConfigProperties));
+        add.accept(STORE_ID_CONFIG_KEY, s -> getPropertyWhenResolved(STORE_ID_CONFIG_KEY, devConfig, resolvedConfigProperties));
+        loadAuthorizationModelDefinition(devConfig).ifPresent(schema -> add.accept(AUTHORIZATION_MODEL_ID_CONFIG_KEY,
+                s -> getPropertyWhenResolved(AUTHORIZATION_MODEL_ID_CONFIG_KEY, devConfig, resolvedConfigProperties)));
+    }
+
+    private static void resolveContainerConfiguration(DevServicesOpenFGAConfig devConfig,
+            ContainerAddress containerAddress, BiConsumer<String, String> add) {
+
+        withAPI(containerAddress.getHost(), containerAddress.getPort(), devConfig, (instanceURL, api) -> {
+
+            add.accept(URL_CONFIG_KEY, instanceURL.toExternalForm());
+
+            var storeId = findStore(api, devConfig);
+            add.accept(STORE_ID_CONFIG_KEY, storeId);
+
+            loadAuthorizationModelDefinition(devConfig)
+                    .ifPresent(schema -> {
+                        var authModelId = findAuthorizationModel(api, schema, devConfig);
+                        add.accept(AUTHORIZATION_MODEL_ID_CONFIG_KEY, authModelId);
+                    });
+        });
+    }
+
+    private static void addCredentialsConfiguration(DevServicesOpenFGAConfig devConfig, BiConsumer<String, String> add) {
+        var method = devConfig.authentication().method();
+        switch (method) {
             case NONE -> {
-                log.info("Configuring no credentials");
-                return Map.of();
             }
             case PRESHARED -> {
                 var presharedKey = devConfig.authentication().preshared()
                         .orElseThrow(() -> missingKeyError(AUTHN_PREFIX + "preshared"))
                         .keys().stream().findAny()
                         .orElseThrow(() -> configError("No pre-shared keys", AUTHN_PRESHARED_KEYS_KEY));
-                log.info("Configuring preshared credentials: key=%s".formatted(presharedKey));
-                return Map.of(CREDS_PRESHARED_KEY_KEY, presharedKey);
+                add.accept(CREDS_PRESHARED_KEY_KEY, presharedKey);
             }
             case OIDC -> {
                 var oidc = devConfig.authentication().oidc()
                         .orElseThrow(() -> missingKeyError(AUTHN_PREFIX + "oidc"));
-                log.info("Configuring oidc credentials: issuer=%s, audience=%s".formatted(oidc.issuer(), oidc.audience()));
-                return Map.of(CREDS_OIDC_ISSUER_KEY, oidc.issuer(),
-                        CREDS_OIDC_AUDIENCE_KEY, oidc.audience());
+                add.accept(CREDS_OIDC_ISSUER_KEY, oidc.issuer());
+                add.accept(CREDS_OIDC_AUDIENCE_KEY, oidc.audience());
             }
             default -> {
-                return Map.of();
+                log.warn("Unsupported credentials method: %s".formatted(devConfig.authentication().method()));
             }
         }
+    }
 
+    private static String createStore(API api, DevServicesOpenFGAConfig config) {
+        try {
+
+            log.info("Initializing store '%s'...".formatted(config.storeName()));
+
+            return api
+                    .createStore(CreateStoreRequest.builder().name(config.storeName())
+                            .build())
+                    .await().atMost(config.startupTimeout())
+                    .id();
+
+        } catch (Throwable e) {
+            throw new RuntimeException("Store initialization failed", e);
+        }
     }
 
     private static Optional<AuthorizationModelSchema> loadAuthorizationModelDefinition(
@@ -333,36 +328,33 @@ public class DevServicesOpenFGAProcessor {
 
         } catch (Throwable x) {
             throw new ConfigurationException(
-                    format("Could not find store '%s' in shared DevServices instance",
-                            config.storeName()));
+                    format("Could not find store '%s' in shared DevServices instance: %s", config.storeName(), x.getMessage()),
+                    x);
         }
     }
 
-    private static String findAuthorizationModel(API api, String storeId, AuthorizationModelSchema schema,
-            DevServicesOpenFGAConfig config) {
+    private static String findAuthorizationModel(API api, AuthorizationModelSchema schema, DevServicesOpenFGAConfig config) {
         try {
+            var storeId = findStore(api, config);
 
             var client = new AuthorizationModelsClient(api, Uni.createFrom().item(storeId));
 
             return client.listAll().await()
                     .atMost(config.startupTimeout())
-                    .stream()
-                    .filter(item -> item.getTypeDefinitions()
-                            .equals(schema.getTypeDefinitions()))
+                    .stream().filter(i -> i.getTypeDefinitions().equals(schema.getTypeDefinitions()))
                     .map(AuthorizationModel::getId)
                     .findFirst()
                     .orElseThrow();
 
         } catch (Throwable x) {
             throw new ConfigurationException(
-                    "Could not find authorization model in shared DevServices instance");
+                    format("Could not find authorization model in shared DevServices instance: %s", x.getMessage()), x);
         }
     }
 
     private static String loadAuthorizationModel(API api, String storeId, AuthorizationModelSchema schema,
             DevServicesOpenFGAConfig config) {
 
-        String authModelId;
         try {
             log.info("Initializing authorization model...");
 
@@ -371,12 +363,11 @@ public class DevServicesOpenFGAProcessor {
                     .typeDefinitions(schema.getTypeDefinitions())
                     .conditions(schema.getConditions())
                     .build();
-            authModelId = api.writeAuthorizationModel(storeId, request)
+
+            return api.writeAuthorizationModel(storeId, request)
                     .await()
                     .atMost(config.startupTimeout())
                     .authorizationModelId();
-
-            return authModelId;
 
         } catch (Exception e) {
             throw new RuntimeException("Model initialization failed", e);
@@ -423,8 +414,8 @@ public class DevServicesOpenFGAProcessor {
     }
 
     private static String readLocation(String location) throws IOException {
-        if (location.startsWith("filesystem:")) {
-            var path = Path.of(location.substring("filesystem:".length()));
+        if (location.startsWith(LOC_FILESYSTEM_PREFIX)) {
+            var path = Path.of(location.substring(LOC_FILESYSTEM_PREFIX.length()));
             return Files.readString(path);
         }
 
@@ -450,11 +441,9 @@ public class DevServicesOpenFGAProcessor {
 
     private static URL getLocationResource(String location) throws IOException {
 
-        // Strip any 'classpath:' protocol prefixes because they are assumed
-        // but not recognized by ClassLoader.getResources()
         String resourceLocation;
-        if (location.startsWith("classpath:")) {
-            resourceLocation = location.substring("classpath:".length());
+        if (location.startsWith(LOC_CLASSPATH_PREFIX)) {
+            resourceLocation = location.substring(LOC_CLASSPATH_PREFIX.length());
         } else {
             resourceLocation = location;
         }
@@ -470,36 +459,35 @@ public class DevServicesOpenFGAProcessor {
         return resourceURL;
     }
 
-    private static void withAPI(String host, Integer port, DevServicesOpenFGAConfig config,
-            BiFunction<URL, API, Void> apiConsumer) {
-        URL instanceURL;
+    private static URL getInstanceURL(String host, int port, DevServicesOpenFGAConfig config) {
         try {
-            instanceURL = new URL(config.tls().isPresent() ? "https" : "http", host, port, "");
+            return new URL(config.tls().isPresent() ? "https" : "http", host, port, "");
         } catch (MalformedURLException e) {
             // Should not happen
             throw new RuntimeException(e);
         }
+    }
 
-        var credentialsProvider = switch (config.authentication().method()) {
-            case NONE ->
-                new UnauthenticatedCredentialsProvider();
-            case PRESHARED ->
-                new PresharedKeyCredentialsProvider(
-                        config.authentication().preshared().orElseThrow(() -> missingKeyError(AUTHN_PREFIX + "preshared"))
-                                .keys().stream().findAny()
-                                .orElseThrow(() -> configError("No pre-shared keys", AUTHN_PRESHARED_KEYS_KEY)));
-            case OIDC ->
-                throw new ConfigurationException(
-                        "When using OIDC authentication, store, authorization model and tuples must be pre-configured");
+    private static void withAPI(String host, int port, DevServicesOpenFGAConfig devConfig,
+            BiConsumer<URL, API> apiConsumer) {
+
+        var instanceURL = getInstanceURL(host, port, devConfig);
+
+        var credentialsProvider = switch (devConfig.authentication().method()) {
+            case NONE -> UnauthenticatedCredentialsProvider.INSTANCE;
+            case PRESHARED -> new PresharedKeyCredentialsProvider(
+                    devConfig.authentication().preshared().orElseThrow(() -> missingKeyError(AUTHN_PREFIX + "preshared"))
+                            .keys().stream().findAny()
+                            .orElseThrow(() -> configError("No pre-shared keys", AUTHN_PRESHARED_KEYS_KEY)));
+            case OIDC -> throw new ConfigurationException(
+                    "When using OIDC authentication, store, authorization model and tuples must be pre-configured");
         };
 
-        Vertx vertx = Vertx.vertx();
+        var vertx = Vertx.vertx();
         try (var api = new API(VertxWebClientFactory.create(instanceURL, vertx), credentialsProvider)) {
-
-            apiConsumer.apply(instanceURL, api);
-
+            apiConsumer.accept(instanceURL, api);
         } finally {
-            vertx.close().await().atMost(config.startupTimeout());
+            vertx.close().await().atMost(devConfig.startupTimeout());
         }
     }
 
@@ -512,26 +500,42 @@ public class DevServicesOpenFGAProcessor {
     }
 
     private static class QuarkusOpenFGAContainer extends OpenFGAContainer {
+        String sharedHostName;
         OptionalInt fixedExposedHttpPort;
         OptionalInt fixedExposedGrpcPort;
         OptionalInt fixedExposedPlaygroundPort;
         boolean tlsEnabled;
+        boolean useSharedNetwork;
 
-        public QuarkusOpenFGAContainer(DockerImageName dockerImageName, DevServicesOpenFGAConfig config) {
+        public QuarkusOpenFGAContainer(DockerImageName dockerImageName, DevServicesOpenFGAConfig config,
+                String defaultNetworkId, boolean useSharedNetwork) {
             super(dockerImageName);
             this.fixedExposedHttpPort = config.httpPort();
             this.fixedExposedGrpcPort = config.grpcPort();
             this.fixedExposedPlaygroundPort = config.playgroundPort();
-            withNetwork(Network.SHARED);
-            withLabel(DEV_SERVICE_LABEL, config.serviceName());
+            this.useSharedNetwork = useSharedNetwork;
+            this.sharedHostName = ConfigureUtil.configureNetwork(this, defaultNetworkId, useSharedNetwork, "openfga");
+
+            withStartupTimeout(config.startupTimeout());
+            configureCommand(config);
+        }
+
+        QuarkusOpenFGAContainer withSharedServiceLabel(LaunchMode launchMode, String serviceLabel, String serviceName) {
+            return (QuarkusOpenFGAContainer) ConfigureUtil.configureSharedServiceLabel(this, launchMode, serviceLabel,
+                    serviceName);
+        }
+
+        private void configureCommand(DevServicesOpenFGAConfig config) {
             var command = new ArrayList<String>();
             command.add("run");
 
             switch (config.authentication().method()) {
                 case NONE -> {
+                    log.info("Using no authentication for OpenFGA");
                     command.add("--authn-method=none");
                 }
                 case PRESHARED -> {
+                    log.info("Using pre-shared authentication for OpenFGA");
                     command.add("--authn-method=preshared");
                     var preshared = config.authentication().preshared()
                             .orElseThrow(() -> new ConfigurationException("Missing pre-shared configuration",
@@ -539,6 +543,7 @@ public class DevServicesOpenFGAProcessor {
                     command.add("--authn-preshared-keys=" + String.join(",", preshared.keys()));
                 }
                 case OIDC -> {
+                    log.info("Using OIDC authentication for OpenFGA");
                     command.add("--authn-method=oidc");
                     config.authentication().oidc().ifPresent(oidc -> {
                         command.add("--authn-oidc-issuer=" + oidc.issuer());
@@ -570,12 +575,16 @@ public class DevServicesOpenFGAProcessor {
                 }
                 tlsEnabled = true;
             });
-            setCommand(String.join(" ", command));
+
+            setCommand(command.toArray(String[]::new));
         }
 
         @Override
         protected void configure() {
             super.configure();
+            if (useSharedNetwork) {
+                return;
+            }
 
             if (fixedExposedHttpPort.isPresent()) {
                 addFixedExposedPort(fixedExposedHttpPort.getAsInt(), OPEN_FGA_EXPOSED_HTTP_PORT);
@@ -596,7 +605,16 @@ public class DevServicesOpenFGAProcessor {
             }
         }
 
+        @Override
+        public String getHost() {
+            return useSharedNetwork ? sharedHostName : super.getHost();
+        }
+
         public int getHttpPort() {
+            if (useSharedNetwork) {
+                return OPEN_FGA_EXPOSED_HTTP_PORT;
+            }
+
             if (fixedExposedHttpPort.isPresent()) {
                 return fixedExposedHttpPort.getAsInt();
             }
