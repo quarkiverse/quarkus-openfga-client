@@ -12,6 +12,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -77,6 +78,7 @@ public class DevServicesOpenFGAProcessor {
     static final String TEST_LAUNCH_MODE = CONFIG_PREFIX + "test-launch-mode";
     static final ContainerLocator openFGAContainerLocator = ContainerLocator
             .locateContainerWithLabels(OPEN_FGA_EXPOSED_HTTP_PORT, DEV_SERVICE_LABEL);
+    static final AtomicReference<ClassLoader> resourceClassLoader = new AtomicReference<>();
 
     @BuildStep(onlyIf = { IsDevServicesSupportedByLaunchMode.class, DevServicesConfig.Enabled.class })
     public void startContainers(OpenFGABuildTimeConfig config,
@@ -86,6 +88,8 @@ public class DevServicesOpenFGAProcessor {
             DevServicesComposeProjectBuildItem composeProjectBuildItem,
             DevServicesConfig devServicesConfig,
             BuildProducer<DevServicesResultBuildItem> devServicesResults) {
+
+        resourceClassLoader.set(Thread.currentThread().getContextClassLoader());
 
         var launchMode = Optional.ofNullable(System.getProperty(TEST_LAUNCH_MODE))
                 .flatMap(mode -> Arrays.stream(LaunchMode.values())
@@ -445,9 +449,13 @@ public class DevServicesOpenFGAProcessor {
             resourceLocation = location;
         }
 
-        URL resourceURL = Thread.currentThread().getContextClassLoader().getResource(resourceLocation);
+        var resCL = resourceClassLoader.get();
+        URL resourceURL = resCL != null ? resCL.getResource(resourceLocation) : null;
         if (resourceURL == null) {
-            resourceURL = QuarkusClassLoader.getSystemResource(resourceLocation);
+            resourceURL = Thread.currentThread().getContextClassLoader().getResource(resourceLocation);
+            if (resourceURL == null) {
+                resourceURL = QuarkusClassLoader.getSystemResource(resourceLocation);
+            }
         }
 
         if (resourceURL == null) {
