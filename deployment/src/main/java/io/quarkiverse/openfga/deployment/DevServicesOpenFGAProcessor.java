@@ -52,7 +52,7 @@ public class DevServicesOpenFGAProcessor {
 
     private static final Logger log = Logger.getLogger(DevServicesOpenFGAProcessor.class);
 
-    public static final String OPEN_FGA_VERSION = "v1.10.0";
+    public static final String OPEN_FGA_VERSION = "v1.11.4";
     public static final String OPEN_FGA_IMAGE_NAME = "openfga/openfga";
     public static final String OPEN_FGA_IMAGE = OPEN_FGA_IMAGE_NAME + ":" + OPEN_FGA_VERSION;
     public static final String DEV_SERVICE_LABEL = "quarkus-dev-service-openfga";
