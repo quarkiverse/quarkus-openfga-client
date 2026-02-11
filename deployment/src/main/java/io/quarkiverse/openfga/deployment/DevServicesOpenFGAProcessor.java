@@ -75,7 +75,7 @@ public class DevServicesOpenFGAProcessor {
     static final String AUTHN_PRESHARED_KEYS_KEY = AUTHN_PRESHARED_PREFIX + "keys";
     static final String LOC_CLASSPATH_PREFIX = "classpath:";
     static final String LOC_FILESYSTEM_PREFIX = "filesystem:";
-    static final String TEST_LAUNCH_MODE = CONFIG_PREFIX + "test-launch-mode";
+    static final String TEST_LAUNCH_MODE = "io.quarkiverse.openfga.test-launch-mode";
     static final ContainerLocator openFGAContainerLocator = ContainerLocator
             .locateContainerWithLabels(OPEN_FGA_EXPOSED_HTTP_PORT, DEV_SERVICE_LABEL);
     static final AtomicReference<ClassLoader> resourceClassLoader = new AtomicReference<>();
@@ -128,7 +128,7 @@ public class DevServicesOpenFGAProcessor {
         addCredentialsConfiguration(openFGADevServiceConfig, (k, v) -> configPropertyResolvers.put(k, s -> v));
 
         final Supplier<DevServicesResultBuildItem> startSupplier = () -> DevServicesResultBuildItem.owned()
-                .name(FEATURE)
+                .feature(FEATURE)
                 .serviceName(openFGADevServiceConfig.serviceName())
                 .serviceConfig(config)
                 .description("OpenFGA DevServices Instance")
