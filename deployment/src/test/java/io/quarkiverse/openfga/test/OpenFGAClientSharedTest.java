@@ -44,7 +44,7 @@ public class OpenFGAClientSharedTest {
     private static List<String> createdStoreNames = List.of("dev", "testing1", "testing2");
 
     static void initSharedContainer() {
-        System.setProperty("quarkus.openfga.test-launch-mode", LaunchMode.DEV_PROFILE);
+        System.setProperty("io.quarkiverse.openfga.test-launch-mode", LaunchMode.DEV_PROFILE);
 
         sharedContainer.start();
 

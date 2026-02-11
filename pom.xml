@@ -29,6 +29,7 @@
     <quarkus.version>3.31.2</quarkus.version>
     <jandex-maven-plugin.version>3.5.0</jandex-maven-plugin.version>
     <assertj.version>3.27.6</assertj.version>
+    <argLine></argLine>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -61,11 +62,20 @@
           <configuration>
             <compilerArgs>
               <arg>-parameters</arg>
+              <arg>-implicit:class</arg>
             </compilerArgs>
           </configuration>
         </plugin>
       </plugins>
     </pluginManagement>
+    <plugins>
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <argLine>@{argLine} --add-opens=java.base/java.lang.invoke=ALL-UNNAMED -XX:+EnableDynamicAgentLoading</argLine>
+        </configuration>
+      </plugin>
+    </plugins>
   </build>
   <profiles>
     <profile>
