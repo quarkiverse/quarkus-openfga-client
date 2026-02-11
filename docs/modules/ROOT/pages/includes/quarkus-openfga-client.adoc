@@ -74,7 +74,7 @@ Environment variable: `+++QUARKUS_OPENFGA_ALWAYS_RESOLVE_STORE_ID+++`
 endif::add-copy-button-to-env-var[]
 --
 |boolean
-|false
+|`+++false+++`
 
 a| [[quarkus-openfga-client_quarkus-openfga-authorization-model-id]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-authorization-model-id[`quarkus.openfga.authorization-model-id`]##
 ifdef::add-copy-button-to-config-props[]
@@ -141,7 +141,7 @@ Environment variable: `+++QUARKUS_OPENFGA_CONNECT_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-openfga-client_quarkus-openfga[icon:question-circle[title=More information about the Duration format]]
-|5S
+|`+++5S+++`
 
 a| [[quarkus-openfga-client_quarkus-openfga-read-timeout]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-read-timeout[`quarkus.openfga.read-timeout`]##
 ifdef::add-copy-button-to-config-props[]
@@ -162,7 +162,7 @@ Environment variable: `+++QUARKUS_OPENFGA_READ_TIMEOUT+++`
 endif::add-copy-button-to-env-var[]
 --
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-openfga-client_quarkus-openfga[icon:question-circle[title=More information about the Duration format]]
-|5S
+|`+++5S+++`
 
 a| [[quarkus-openfga-client_quarkus-openfga-non-proxy-hosts]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-non-proxy-hosts[`quarkus.openfga.non-proxy-hosts`]##
 ifdef::add-copy-button-to-config-props[]
@@ -780,7 +780,7 @@ Environment variable: `+++QUARKUS_OPENFGA_CREDENTIALS_METHOD+++`
 endif::add-copy-button-to-env-var[]
 --
 a|`none`, `preshared`, `oidc`
-|none
+|`+++none+++`
 
 h|[[quarkus-openfga-client_section_quarkus-openfga-credentials-preshared]] [.section-name.section-level1]##link:#quarkus-openfga-client_section_quarkus-openfga-credentials-preshared[Pre-shared Authentication Key Credentials Configuration]##
 h|Type
