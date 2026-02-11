@@ -121,7 +121,7 @@ public class DevServicesOpenFGAProcessor {
         var dockerImageName = DockerImageName.parse(openFGADevServiceConfig.imageName().orElse(OPEN_FGA_IMAGE))
                 .asCompatibleSubstituteFor(OPEN_FGA_IMAGE);
 
-        var resolvedConfigProperties = new CompletableFuture<Map<String, String>>();
+        var resolvedConfigProperties = new AtomicReference<CompletableFuture<Map<String, String>>>();
 
         var configPropertyResolvers = new HashMap<String, Function<StartableContainer<QuarkusOpenFGAContainer>, String>>();
         addContainerConfigurationResolvers(openFGADevServiceConfig, resolvedConfigProperties, configPropertyResolvers::put);
@@ -140,47 +140,6 @@ public class DevServicesOpenFGAProcessor {
                                 openFGADevServiceConfig.serviceName());
                     }
                     return new StartableContainer<>(container);
-                })
-                .postStartHook(startable -> {
-
-                    try {
-
-                        var configProperties = new HashMap<String, String>();
-                        var container = startable.getContainer();
-
-                        withAPI(container.getHost(), container.getHttpPort(), openFGADevServiceConfig, (instanceURL, api) -> {
-
-                            configProperties.put(URL_CONFIG_KEY, instanceURL.toExternalForm());
-
-                            var storeId = createStore(api, openFGADevServiceConfig);
-                            configProperties.put(STORE_ID_CONFIG_KEY, storeId);
-
-                            loadAuthorizationModelDefinition(openFGADevServiceConfig)
-                                    .ifPresentOrElse(schema -> {
-
-                                        var authModelId = loadAuthorizationModel(api, storeId, schema, openFGADevServiceConfig);
-                                        configProperties.put(AUTHORIZATION_MODEL_ID_CONFIG_KEY, authModelId);
-
-                                        loadAuthorizationTuplesDefinition(openFGADevServiceConfig)
-                                                .ifPresent(authTuples -> {
-                                                    loadAuthorizationTuples(api, storeId, authModelId, authTuples,
-                                                            openFGADevServiceConfig);
-                                                });
-                                    }, () -> {
-                                        if (openFGADevServiceConfig.authorizationTuples().isPresent()
-                                                || openFGADevServiceConfig.authorizationTuplesLocation().isPresent()) {
-                                            log.warn(
-                                                    "No authorization model configured, no tuples will not be initialized");
-                                        }
-                                    });
-                        });
-
-                        resolvedConfigProperties.complete(configProperties);
-                    } catch (Throwable t) {
-                        resolvedConfigProperties.completeExceptionally(
-                                new ConfigurationException("Configuration not available, failed to initialize container"));
-                        throw t;
-                    }
                 })
                 .configProvider(configPropertyResolvers)
                 .build();
@@ -209,9 +168,23 @@ public class DevServicesOpenFGAProcessor {
     }
 
     private static String getPropertyWhenResolved(String key, DevServicesOpenFGAConfig devConfig,
-            CompletableFuture<Map<String, String>> resolvedConfigProperties) {
+            AtomicReference<CompletableFuture<Map<String, String>>> resolvedConfigProperties,
+            StartableContainer<QuarkusOpenFGAContainer> startable) {
+        var future = resolvedConfigProperties.get();
+        if (future == null) {
+            var created = new CompletableFuture<Map<String, String>>();
+            if (resolvedConfigProperties.compareAndSet(null, created)) {
+                try {
+                    created.complete(initializeContainerConfiguration(devConfig, startable));
+                } catch (Throwable t) {
+                    created.completeExceptionally(
+                            new ConfigurationException("Configuration not available, failed to initialize container", t));
+                }
+            }
+            future = resolvedConfigProperties.get();
+        }
         try {
-            var configProperties = resolvedConfigProperties.get(devConfig.startupTimeout().toMillis(), TimeUnit.MILLISECONDS);
+            var configProperties = future.get(devConfig.startupTimeout().toMillis(), TimeUnit.MILLISECONDS);
             return configProperties.get(key);
         } catch (Throwable e) {
             Throwable cause = e;
@@ -227,13 +200,48 @@ public class DevServicesOpenFGAProcessor {
     }
 
     private static void addContainerConfigurationResolvers(DevServicesOpenFGAConfig devConfig,
-            CompletableFuture<Map<String, String>> resolvedConfigProperties,
+            AtomicReference<CompletableFuture<Map<String, String>>> resolvedConfigProperties,
             BiConsumer<String, Function<StartableContainer<QuarkusOpenFGAContainer>, String>> add) {
 
-        add.accept(URL_CONFIG_KEY, s -> getPropertyWhenResolved(URL_CONFIG_KEY, devConfig, resolvedConfigProperties));
-        add.accept(STORE_ID_CONFIG_KEY, s -> getPropertyWhenResolved(STORE_ID_CONFIG_KEY, devConfig, resolvedConfigProperties));
+        add.accept(URL_CONFIG_KEY, s -> getPropertyWhenResolved(URL_CONFIG_KEY, devConfig, resolvedConfigProperties, s));
+        add.accept(STORE_ID_CONFIG_KEY,
+                s -> getPropertyWhenResolved(STORE_ID_CONFIG_KEY, devConfig, resolvedConfigProperties, s));
         loadAuthorizationModelDefinition(devConfig).ifPresent(schema -> add.accept(AUTHORIZATION_MODEL_ID_CONFIG_KEY,
-                s -> getPropertyWhenResolved(AUTHORIZATION_MODEL_ID_CONFIG_KEY, devConfig, resolvedConfigProperties)));
+                s -> getPropertyWhenResolved(AUTHORIZATION_MODEL_ID_CONFIG_KEY, devConfig, resolvedConfigProperties, s)));
+    }
+
+    private static Map<String, String> initializeContainerConfiguration(DevServicesOpenFGAConfig devConfig,
+            StartableContainer<QuarkusOpenFGAContainer> startable) {
+
+        var configProperties = new HashMap<String, String>();
+        var container = startable.getContainer();
+
+        withAPI(container.getHost(), container.getHttpPort(), devConfig, (instanceURL, api) -> {
+
+            configProperties.put(URL_CONFIG_KEY, instanceURL.toExternalForm());
+
+            var storeId = createStore(api, devConfig);
+            configProperties.put(STORE_ID_CONFIG_KEY, storeId);
+
+            loadAuthorizationModelDefinition(devConfig)
+                    .ifPresentOrElse(schema -> {
+
+                        var authModelId = loadAuthorizationModel(api, storeId, schema, devConfig);
+                        configProperties.put(AUTHORIZATION_MODEL_ID_CONFIG_KEY, authModelId);
+
+                        loadAuthorizationTuplesDefinition(devConfig)
+                                .ifPresent(authTuples -> {
+                                    loadAuthorizationTuples(api, storeId, authModelId, authTuples, devConfig);
+                                });
+                    }, () -> {
+                        if (devConfig.authorizationTuples().isPresent()
+                                || devConfig.authorizationTuplesLocation().isPresent()) {
+                            log.warn("No authorization model configured, no tuples will be initialized");
+                        }
+                    });
+        });
+
+        return configProperties;
     }
 
     private static void resolveContainerConfiguration(DevServicesOpenFGAConfig devConfig,
