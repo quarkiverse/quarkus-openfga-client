@@ -496,11 +496,17 @@ public class DevServicesOpenFGAProcessor {
                     "When using OIDC authentication, store, authorization model and tuples must be pre-configured");
         };
 
-        var vertx = Vertx.vertx();
-        try (var api = new API(VertxWebClientFactory.create(instanceURL, vertx), credentialsProvider)) {
-            apiConsumer.accept(instanceURL, api);
+        var previousCL = Thread.currentThread().getContextClassLoader();
+        try {
+            Thread.currentThread().setContextClassLoader(Uni.class.getClassLoader());
+            var vertx = Vertx.vertx();
+            try (var api = new API(VertxWebClientFactory.create(instanceURL, vertx), credentialsProvider)) {
+                apiConsumer.accept(instanceURL, api);
+            } finally {
+                vertx.close().await().atMost(devConfig.startupTimeout());
+            }
         } finally {
-            vertx.close().await().atMost(devConfig.startupTimeout());
+            Thread.currentThread().setContextClassLoader(previousCL);
         }
     }
 
