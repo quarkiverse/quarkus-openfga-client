@@ -496,7 +496,7 @@ public class DevServicesOpenFGAProcessor {
                     "When using OIDC authentication, store, authorization model and tuples must be pre-configured");
         };
 
-        var previousCL = Thread.currentThread().getContextClassLoader();
+        var previousClassLoader = Thread.currentThread().getContextClassLoader();
         try {
             Thread.currentThread().setContextClassLoader(Uni.class.getClassLoader());
             var vertx = Vertx.vertx();
@@ -506,7 +506,7 @@ public class DevServicesOpenFGAProcessor {
                 vertx.close().await().atMost(devConfig.startupTimeout());
             }
         } finally {
-            Thread.currentThread().setContextClassLoader(previousCL);
+            Thread.currentThread().setContextClassLoader(previousClassLoader);
         }
     }
 
