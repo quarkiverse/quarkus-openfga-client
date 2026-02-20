@@ -497,10 +497,21 @@ public class DevServicesOpenFGAProcessor {
         };
 
         var vertx = Vertx.vertx();
+        var originalCl = Thread.currentThread().getContextClassLoader();
+        var mutinyCl = io.smallrye.mutiny.infrastructure.Infrastructure.class.getClassLoader();
+        if (mutinyCl != null && mutinyCl != originalCl) {
+            Thread.currentThread().setContextClassLoader(mutinyCl);
+        }
         try (var api = new API(VertxWebClientFactory.create(instanceURL, vertx), credentialsProvider)) {
             apiConsumer.accept(instanceURL, api);
         } finally {
-            vertx.close().await().atMost(devConfig.startupTimeout());
+            try {
+                vertx.close().await().atMost(devConfig.startupTimeout());
+            } finally {
+                if (mutinyCl != null && mutinyCl != originalCl) {
+                    Thread.currentThread().setContextClassLoader(originalCl);
+                }
+            }
         }
     }
 
