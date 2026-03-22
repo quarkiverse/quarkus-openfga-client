@@ -8,10 +8,8 @@ import io.vertx.mutiny.uritemplate.Variables;
 
 public class Vars {
 
-    private static final Variables EMPTY_VARIABLES = variables();
-
     public static Variables vars() {
-        return EMPTY_VARIABLES;
+        return variables();
     }
 
     public static <V> Variables vars(String key1, @Nullable V value1) {
