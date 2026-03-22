@@ -7,7 +7,7 @@ h|[.header-title]##Configuration property##
 h|Type
 h|Default
 
-a| [[quarkus-openfga-client_quarkus-openfga-url]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-url[`quarkus.openfga.url`]##
+a| [[quarkus-openfga-client_quarkus-openfga-url]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-url[`+++quarkus.openfga.url+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.url+++[]
 endif::add-copy-button-to-config-props[]
@@ -30,7 +30,7 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/URL.html[URL]
 |required icon:exclamation-circle[title=Configuration property is required]
 
-a| [[quarkus-openfga-client_quarkus-openfga-store]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-store[`quarkus.openfga.store`]##
+a| [[quarkus-openfga-client_quarkus-openfga-store]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-store[`+++quarkus.openfga.store+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.store+++[]
 endif::add-copy-button-to-config-props[]
@@ -53,7 +53,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |required icon:exclamation-circle[title=Configuration property is required]
 
-a| [[quarkus-openfga-client_quarkus-openfga-always-resolve-store-id]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-always-resolve-store-id[`quarkus.openfga.always-resolve-store-id`]##
+a| [[quarkus-openfga-client_quarkus-openfga-always-resolve-store-id]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-always-resolve-store-id[`+++quarkus.openfga.always-resolve-store-id+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.always-resolve-store-id+++[]
 endif::add-copy-button-to-config-props[]
@@ -76,7 +76,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++false+++`
 
-a| [[quarkus-openfga-client_quarkus-openfga-authorization-model-id]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-authorization-model-id[`quarkus.openfga.authorization-model-id`]##
+a| [[quarkus-openfga-client_quarkus-openfga-authorization-model-id]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-authorization-model-id[`+++quarkus.openfga.authorization-model-id+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.authorization-model-id+++[]
 endif::add-copy-button-to-config-props[]
@@ -99,7 +99,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a| [[quarkus-openfga-client_quarkus-openfga-tls-configuration-name]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-tls-configuration-name[`quarkus.openfga.tls-configuration-name`]##
+a| [[quarkus-openfga-client_quarkus-openfga-tls-configuration-name]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-tls-configuration-name[`+++quarkus.openfga.tls-configuration-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.tls-configuration-name+++[]
 endif::add-copy-button-to-config-props[]
@@ -122,7 +122,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a| [[quarkus-openfga-client_quarkus-openfga-connect-timeout]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-connect-timeout[`quarkus.openfga.connect-timeout`]##
+a| [[quarkus-openfga-client_quarkus-openfga-connect-timeout]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-connect-timeout[`+++quarkus.openfga.connect-timeout+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.connect-timeout+++[]
 endif::add-copy-button-to-config-props[]
@@ -143,7 +143,7 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-openfga-client_quarkus-openfga[icon:question-circle[title=More information about the Duration format]]
 |`+++5S+++`
 
-a| [[quarkus-openfga-client_quarkus-openfga-read-timeout]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-read-timeout[`quarkus.openfga.read-timeout`]##
+a| [[quarkus-openfga-client_quarkus-openfga-read-timeout]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-read-timeout[`+++quarkus.openfga.read-timeout+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.read-timeout+++[]
 endif::add-copy-button-to-config-props[]
@@ -164,7 +164,7 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-openfga-client_quarkus-openfga[icon:question-circle[title=More information about the Duration format]]
 |`+++5S+++`
 
-a| [[quarkus-openfga-client_quarkus-openfga-non-proxy-hosts]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-non-proxy-hosts[`quarkus.openfga.non-proxy-hosts`]##
+a| [[quarkus-openfga-client_quarkus-openfga-non-proxy-hosts]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-non-proxy-hosts[`+++quarkus.openfga.non-proxy-hosts+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.non-proxy-hosts+++[]
 endif::add-copy-button-to-config-props[]
@@ -187,7 +187,7 @@ endif::add-copy-button-to-env-var[]
 |list of string
 |
 
-a| [[quarkus-openfga-client_quarkus-openfga-shared-key]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-shared-key[[.line-through]#`quarkus.openfga.shared-key`#]##
+a| [[quarkus-openfga-client_quarkus-openfga-shared-key]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-shared-key[[.line-through]#`+++quarkus.openfga.shared-key+++`#]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.shared-key+++[]
 endif::add-copy-button-to-config-props[]
@@ -216,7 +216,7 @@ h|[[quarkus-openfga-client_section_quarkus-openfga-health]] [.section-name.secti
 h|Type
 h|Default
 
-a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-health-enabled]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-health-enabled[`quarkus.openfga.health.enabled`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-health-enabled]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-health-enabled[`+++quarkus.openfga.health.enabled+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.health.enabled+++[]
 endif::add-copy-button-to-config-props[]
@@ -242,7 +242,7 @@ h|[[quarkus-openfga-client_section_quarkus-openfga-tracing]] [.section-name.sect
 h|Type
 h|Default
 
-a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-tracing-enabled]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-tracing-enabled[`quarkus.openfga.tracing.enabled`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-tracing-enabled]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-tracing-enabled[`+++quarkus.openfga.tracing.enabled+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.tracing.enabled+++[]
 endif::add-copy-button-to-config-props[]
@@ -268,7 +268,7 @@ h|[[quarkus-openfga-client_section_quarkus-openfga-devservices]] [.section-name.
 h|Type
 h|Default
 
-a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-enabled]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-enabled[`quarkus.openfga.devservices.enabled`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-enabled]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-enabled[`+++quarkus.openfga.devservices.enabled+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.devservices.enabled+++[]
 endif::add-copy-button-to-config-props[]
@@ -291,7 +291,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |
 
-a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-image-name]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-image-name[`quarkus.openfga.devservices.image-name`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-image-name]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-image-name[`+++quarkus.openfga.devservices.image-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.devservices.image-name+++[]
 endif::add-copy-button-to-config-props[]
@@ -312,7 +312,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-shared]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-shared[`quarkus.openfga.devservices.shared`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-shared]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-shared[`+++quarkus.openfga.devservices.shared+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.devservices.shared+++[]
 endif::add-copy-button-to-config-props[]
@@ -337,7 +337,7 @@ endif::add-copy-button-to-env-var[]
 |boolean
 |`+++true+++`
 
-a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-service-name]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-service-name[`quarkus.openfga.devservices.service-name`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-service-name]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-service-name[`+++quarkus.openfga.devservices.service-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.devservices.service-name+++[]
 endif::add-copy-button-to-config-props[]
@@ -360,7 +360,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++openfga+++`
 
-a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-http-port]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-http-port[`quarkus.openfga.devservices.http-port`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-http-port]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-http-port[`+++quarkus.openfga.devservices.http-port+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.devservices.http-port+++[]
 endif::add-copy-button-to-config-props[]
@@ -383,7 +383,7 @@ endif::add-copy-button-to-env-var[]
 |int
 |
 
-a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-grpc-port]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-grpc-port[`quarkus.openfga.devservices.grpc-port`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-grpc-port]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-grpc-port[`+++quarkus.openfga.devservices.grpc-port+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.devservices.grpc-port+++[]
 endif::add-copy-button-to-config-props[]
@@ -406,7 +406,7 @@ endif::add-copy-button-to-env-var[]
 |int
 |
 
-a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-playground-port]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-playground-port[`quarkus.openfga.devservices.playground-port`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-playground-port]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-playground-port[`+++quarkus.openfga.devservices.playground-port+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.devservices.playground-port+++[]
 endif::add-copy-button-to-config-props[]
@@ -429,7 +429,7 @@ endif::add-copy-button-to-env-var[]
 |int
 |
 
-a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-store-name]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-store-name[`quarkus.openfga.devservices.store-name`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-store-name]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-store-name[`+++quarkus.openfga.devservices.store-name+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.devservices.store-name+++[]
 endif::add-copy-button-to-config-props[]
@@ -452,7 +452,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |`+++dev+++`
 
-a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-authorization-model]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-authorization-model[`quarkus.openfga.devservices.authorization-model`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-authorization-model]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-authorization-model[`+++quarkus.openfga.devservices.authorization-model+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.devservices.authorization-model+++[]
 endif::add-copy-button-to-config-props[]
@@ -473,7 +473,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-authorization-model-location]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-authorization-model-location[`quarkus.openfga.devservices.authorization-model-location`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-authorization-model-location]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-authorization-model-location[`+++quarkus.openfga.devservices.authorization-model-location+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.devservices.authorization-model-location+++[]
 endif::add-copy-button-to-config-props[]
@@ -496,7 +496,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-authorization-tuples]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-authorization-tuples[`quarkus.openfga.devservices.authorization-tuples`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-authorization-tuples]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-authorization-tuples[`+++quarkus.openfga.devservices.authorization-tuples+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.devservices.authorization-tuples+++[]
 endif::add-copy-button-to-config-props[]
@@ -517,7 +517,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-authorization-tuples-location]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-authorization-tuples-location[`quarkus.openfga.devservices.authorization-tuples-location`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-authorization-tuples-location]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-authorization-tuples-location[`+++quarkus.openfga.devservices.authorization-tuples-location+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.devservices.authorization-tuples-location+++[]
 endif::add-copy-button-to-config-props[]
@@ -540,7 +540,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-authentication-method]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-authentication-method[`quarkus.openfga.devservices.authentication.method`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-authentication-method]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-authentication-method[`+++quarkus.openfga.devservices.authentication.method+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.devservices.authentication.method+++[]
 endif::add-copy-button-to-config-props[]
@@ -561,7 +561,7 @@ endif::add-copy-button-to-env-var[]
 a|`none`, `preshared`, `oidc`
 |`+++none+++`
 
-a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-authentication-preshared-keys]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-authentication-preshared-keys[`quarkus.openfga.devservices.authentication.preshared.keys`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-authentication-preshared-keys]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-authentication-preshared-keys[`+++quarkus.openfga.devservices.authentication.preshared.keys+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.devservices.authentication.preshared.keys+++[]
 endif::add-copy-button-to-config-props[]
@@ -584,7 +584,7 @@ endif::add-copy-button-to-env-var[]
 |list of string
 |required icon:exclamation-circle[title=Configuration property is required]
 
-a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-authentication-oidc-issuer]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-authentication-oidc-issuer[`quarkus.openfga.devservices.authentication.oidc.issuer`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-authentication-oidc-issuer]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-authentication-oidc-issuer[`+++quarkus.openfga.devservices.authentication.oidc.issuer+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.devservices.authentication.oidc.issuer+++[]
 endif::add-copy-button-to-config-props[]
@@ -605,7 +605,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |required icon:exclamation-circle[title=Configuration property is required]
 
-a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-authentication-oidc-audience]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-authentication-oidc-audience[`quarkus.openfga.devservices.authentication.oidc.audience`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-authentication-oidc-audience]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-authentication-oidc-audience[`+++quarkus.openfga.devservices.authentication.oidc.audience+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.devservices.authentication.oidc.audience+++[]
 endif::add-copy-button-to-config-props[]
@@ -626,7 +626,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |required icon:exclamation-circle[title=Configuration property is required]
 
-a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-authentication-oidc-issuer-aliases]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-authentication-oidc-issuer-aliases[`quarkus.openfga.devservices.authentication.oidc.issuer-aliases`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-authentication-oidc-issuer-aliases]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-authentication-oidc-issuer-aliases[`+++quarkus.openfga.devservices.authentication.oidc.issuer-aliases+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.devservices.authentication.oidc.issuer-aliases+++[]
 endif::add-copy-button-to-config-props[]
@@ -647,7 +647,7 @@ endif::add-copy-button-to-env-var[]
 |list of string
 |
 
-a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-authentication-oidc-subjects]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-authentication-oidc-subjects[`quarkus.openfga.devservices.authentication.oidc.subjects`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-authentication-oidc-subjects]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-authentication-oidc-subjects[`+++quarkus.openfga.devservices.authentication.oidc.subjects+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.devservices.authentication.oidc.subjects+++[]
 endif::add-copy-button-to-config-props[]
@@ -668,7 +668,7 @@ endif::add-copy-button-to-env-var[]
 |list of string
 |
 
-a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-authentication-oidc-client-id-claims]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-authentication-oidc-client-id-claims[`quarkus.openfga.devservices.authentication.oidc.client-id-claims`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-authentication-oidc-client-id-claims]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-authentication-oidc-client-id-claims[`+++quarkus.openfga.devservices.authentication.oidc.client-id-claims+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.devservices.authentication.oidc.client-id-claims+++[]
 endif::add-copy-button-to-config-props[]
@@ -689,7 +689,7 @@ endif::add-copy-button-to-env-var[]
 |list of string
 |
 
-a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-tls-pem-certificate-path]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-tls-pem-certificate-path[`quarkus.openfga.devservices.tls.pem-certificate-path`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-tls-pem-certificate-path]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-tls-pem-certificate-path[`+++quarkus.openfga.devservices.tls.pem-certificate-path+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.devservices.tls.pem-certificate-path+++[]
 endif::add-copy-button-to-config-props[]
@@ -710,7 +710,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |required icon:exclamation-circle[title=Configuration property is required]
 
-a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-tls-pem-key-path]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-tls-pem-key-path[`quarkus.openfga.devservices.tls.pem-key-path`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-tls-pem-key-path]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-tls-pem-key-path[`+++quarkus.openfga.devservices.tls.pem-key-path+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.devservices.tls.pem-key-path+++[]
 endif::add-copy-button-to-config-props[]
@@ -731,7 +731,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |required icon:exclamation-circle[title=Configuration property is required]
 
-a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-startup-timeout]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-startup-timeout[`quarkus.openfga.devservices.startup-timeout`]##
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-startup-timeout]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-startup-timeout[`+++quarkus.openfga.devservices.startup-timeout+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.devservices.startup-timeout+++[]
 endif::add-copy-button-to-config-props[]
@@ -757,7 +757,7 @@ h|[[quarkus-openfga-client_section_quarkus-openfga-credentials]] [.section-name.
 h|Type
 h|Default
 
-a| [[quarkus-openfga-client_quarkus-openfga-credentials-method]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-credentials-method[`quarkus.openfga.credentials.method`]##
+a| [[quarkus-openfga-client_quarkus-openfga-credentials-method]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-credentials-method[`+++quarkus.openfga.credentials.method+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.credentials.method+++[]
 endif::add-copy-button-to-config-props[]
@@ -786,7 +786,7 @@ h|[[quarkus-openfga-client_section_quarkus-openfga-credentials-preshared]] [.sec
 h|Type
 h|Default
 
-a| [[quarkus-openfga-client_quarkus-openfga-credentials-preshared-key]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-credentials-preshared-key[`quarkus.openfga.credentials.preshared.key`]##
+a| [[quarkus-openfga-client_quarkus-openfga-credentials-preshared-key]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-credentials-preshared-key[`+++quarkus.openfga.credentials.preshared.key+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.credentials.preshared.key+++[]
 endif::add-copy-button-to-config-props[]
@@ -814,7 +814,7 @@ h|[[quarkus-openfga-client_section_quarkus-openfga-credentials-oidc]] [.section-
 h|Type
 h|Default
 
-a| [[quarkus-openfga-client_quarkus-openfga-credentials-oidc-client-id]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-credentials-oidc-client-id[`quarkus.openfga.credentials.oidc.client-id`]##
+a| [[quarkus-openfga-client_quarkus-openfga-credentials-oidc-client-id]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-credentials-oidc-client-id[`+++quarkus.openfga.credentials.oidc.client-id+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.credentials.oidc.client-id+++[]
 endif::add-copy-button-to-config-props[]
@@ -837,7 +837,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |required icon:exclamation-circle[title=Configuration property is required]
 
-a| [[quarkus-openfga-client_quarkus-openfga-credentials-oidc-client-secret]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-credentials-oidc-client-secret[`quarkus.openfga.credentials.oidc.client-secret`]##
+a| [[quarkus-openfga-client_quarkus-openfga-credentials-oidc-client-secret]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-credentials-oidc-client-secret[`+++quarkus.openfga.credentials.oidc.client-secret+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.credentials.oidc.client-secret+++[]
 endif::add-copy-button-to-config-props[]
@@ -860,7 +860,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |required icon:exclamation-circle[title=Configuration property is required]
 
-a| [[quarkus-openfga-client_quarkus-openfga-credentials-oidc-audience]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-credentials-oidc-audience[`quarkus.openfga.credentials.oidc.audience`]##
+a| [[quarkus-openfga-client_quarkus-openfga-credentials-oidc-audience]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-credentials-oidc-audience[`+++quarkus.openfga.credentials.oidc.audience+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.credentials.oidc.audience+++[]
 endif::add-copy-button-to-config-props[]
@@ -883,7 +883,7 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/URI.html[URI]
 |required icon:exclamation-circle[title=Configuration property is required]
 
-a| [[quarkus-openfga-client_quarkus-openfga-credentials-oidc-scopes]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-credentials-oidc-scopes[`quarkus.openfga.credentials.oidc.scopes`]##
+a| [[quarkus-openfga-client_quarkus-openfga-credentials-oidc-scopes]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-credentials-oidc-scopes[`+++quarkus.openfga.credentials.oidc.scopes+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.credentials.oidc.scopes+++[]
 endif::add-copy-button-to-config-props[]
@@ -906,7 +906,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a| [[quarkus-openfga-client_quarkus-openfga-credentials-oidc-token-issuer]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-credentials-oidc-token-issuer[`quarkus.openfga.credentials.oidc.token-issuer`]##
+a| [[quarkus-openfga-client_quarkus-openfga-credentials-oidc-token-issuer]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-credentials-oidc-token-issuer[`+++quarkus.openfga.credentials.oidc.token-issuer+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.credentials.oidc.token-issuer+++[]
 endif::add-copy-button-to-config-props[]
@@ -929,7 +929,7 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/URI.html[URI]
 |required icon:exclamation-circle[title=Configuration property is required]
 
-a| [[quarkus-openfga-client_quarkus-openfga-credentials-oidc-token-issuer-path]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-credentials-oidc-token-issuer-path[`quarkus.openfga.credentials.oidc.token-issuer-path`]##
+a| [[quarkus-openfga-client_quarkus-openfga-credentials-oidc-token-issuer-path]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-credentials-oidc-token-issuer-path[`+++quarkus.openfga.credentials.oidc.token-issuer-path+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.credentials.oidc.token-issuer-path+++[]
 endif::add-copy-button-to-config-props[]
@@ -954,7 +954,7 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
-a| [[quarkus-openfga-client_quarkus-openfga-credentials-oidc-token-expiration-threshold]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-credentials-oidc-token-expiration-threshold[`quarkus.openfga.credentials.oidc.token-expiration-threshold`]##
+a| [[quarkus-openfga-client_quarkus-openfga-credentials-oidc-token-expiration-threshold]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-credentials-oidc-token-expiration-threshold[`+++quarkus.openfga.credentials.oidc.token-expiration-threshold+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.credentials.oidc.token-expiration-threshold+++[]
 endif::add-copy-button-to-config-props[]
@@ -979,7 +979,7 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-openfga-client_quarkus-openfga[icon:question-circle[title=More information about the Duration format]]
 |
 
-a| [[quarkus-openfga-client_quarkus-openfga-credentials-oidc-token-expiration-threshold-jitter]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-credentials-oidc-token-expiration-threshold-jitter[`quarkus.openfga.credentials.oidc.token-expiration-threshold-jitter`]##
+a| [[quarkus-openfga-client_quarkus-openfga-credentials-oidc-token-expiration-threshold-jitter]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-credentials-oidc-token-expiration-threshold-jitter[`+++quarkus.openfga.credentials.oidc.token-expiration-threshold-jitter+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.credentials.oidc.token-expiration-threshold-jitter+++[]
 endif::add-copy-button-to-config-props[]
