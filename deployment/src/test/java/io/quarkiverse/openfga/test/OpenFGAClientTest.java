@@ -13,7 +13,6 @@ import org.assertj.core.api.InstanceOfAssertFactories;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -98,7 +97,6 @@ public class OpenFGAClientTest {
 
     @Test
     @DisplayName("Can List Stores With Name")
-    @Disabled("Using the name filter causes a server error")
     public void canListStoresWithName() {
 
         var createdStores = Multi.createFrom().items("testing")
@@ -175,6 +173,51 @@ public class OpenFGAClientTest {
                 .hasSize(1)
                 .extracting("name")
                 .containsExactlyInAnyOrder("testing5");
+    }
+
+    @Test
+    @DisplayName("Can List Stores With Name After Pagination")
+    public void canListStoresWithNameAfterPagination() {
+
+        Multi.createFrom().items("testing1", "testing2", "testing3", "testing4", "testing5")
+                .onItem().transformToUniAndConcatenate(client::createStore)
+                .collect().asList()
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+
+        var page1 = client.listStores(Pagination.limitedTo(2))
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+        assertThat(page1)
+                .isNotNull()
+                .extracting(PaginatedList::getItems, as(InstanceOfAssertFactories.collection(Store.class)))
+                .hasSize(2);
+
+        var page2 = client.listStores(Pagination.limitedTo(2).andContinuingFrom(page1.getToken()))
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+        assertThat(page2)
+                .isNotNull()
+                .extracting(PaginatedList::getItems, as(InstanceOfAssertFactories.collection(Store.class)))
+                .hasSize(2);
+
+        var createdStore = client.createStore("testing")
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+
+        var filtered = client.listStores(ListStoresFilter.named("testing"))
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+
+        assertThat(filtered)
+                .isNotNull()
+                .extracting(PaginatedList::getItems, as(InstanceOfAssertFactories.collection(Store.class)))
+                .containsExactly(createdStore);
     }
 
     @Test
