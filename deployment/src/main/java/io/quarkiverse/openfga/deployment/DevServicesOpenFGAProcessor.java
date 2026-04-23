@@ -17,6 +17,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.eclipse.microprofile.config.ConfigProvider;
 import org.jboss.logging.Logger;
 import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -63,12 +64,22 @@ public class DevServicesOpenFGAProcessor {
     static final String URL_CONFIG_KEY = CONFIG_PREFIX + "url";
     static final String STORE_ID_CONFIG_KEY = CONFIG_PREFIX + "store";
     static final String AUTHORIZATION_MODEL_ID_CONFIG_KEY = CONFIG_PREFIX + "authorization-model-id";
+    static final String SHARED_KEY_CONFIG_KEY = CONFIG_PREFIX + "shared-key";
     static final String CREDS_PREFIX = CONFIG_PREFIX + "credentials.";
+    static final String CREDS_METHOD_KEY = CREDS_PREFIX + "method";
     static final String CREDS_PRESHARED_PREFIX = CREDS_PREFIX + "preshared.";
     static final String CREDS_PRESHARED_KEY_KEY = CREDS_PRESHARED_PREFIX + "key";
     static final String CREDS_OIDC_PREFIX = CREDS_PREFIX + "oidc.";
+    static final String CREDS_OIDC_CLIENT_ID_KEY = CREDS_OIDC_PREFIX + "client-id";
+    static final String CREDS_OIDC_CLIENT_SECRET_KEY = CREDS_OIDC_PREFIX + "client-secret";
     static final String CREDS_OIDC_ISSUER_KEY = CREDS_OIDC_PREFIX + "issuer";
     static final String CREDS_OIDC_AUDIENCE_KEY = CREDS_OIDC_PREFIX + "audience";
+    static final String CREDS_OIDC_SCOPES_KEY = CREDS_OIDC_PREFIX + "scopes";
+    static final String CREDS_OIDC_TOKEN_ISSUER_KEY = CREDS_OIDC_PREFIX + "token-issuer";
+    static final String CREDS_OIDC_TOKEN_ISSUER_PATH_KEY = CREDS_OIDC_PREFIX + "token-issuer-path";
+    static final String CREDS_OIDC_TOKEN_EXPIRATION_THRESHOLD_KEY = CREDS_OIDC_PREFIX + "token-expiration-threshold";
+    static final String CREDS_OIDC_TOKEN_EXPIRATION_THRESHOLD_JITTER_KEY = CREDS_OIDC_PREFIX
+            + "token-expiration-threshold-jitter";
     static final String DEVSERVICES_PREFIX = "quarkus.devservices.";
     static final String AUTHN_PREFIX = DEVSERVICES_PREFIX + "openfga.";
     static final String AUTHN_PRESHARED_PREFIX = AUTHN_PREFIX + "authn.preshared.";
@@ -120,6 +131,7 @@ public class DevServicesOpenFGAProcessor {
 
         var dockerImageName = DockerImageName.parse(openFGADevServiceConfig.imageName().orElse(OPEN_FGA_IMAGE))
                 .asCompatibleSubstituteFor(OPEN_FGA_IMAGE);
+        var serviceIdentity = buildServiceIdentity(openFGADevServiceConfig);
 
         var resolvedConfigProperties = new AtomicReference<CompletableFuture<Map<String, String>>>();
 
@@ -130,7 +142,7 @@ public class DevServicesOpenFGAProcessor {
         final Supplier<DevServicesResultBuildItem> startSupplier = () -> DevServicesResultBuildItem.owned()
                 .feature(FEATURE)
                 .serviceName(openFGADevServiceConfig.serviceName())
-                .serviceConfig(config)
+                .serviceConfig(serviceIdentity)
                 .description("OpenFGA DevServices Instance")
                 .startable(() -> {
                     var container = new QuarkusOpenFGAContainer(dockerImageName, openFGADevServiceConfig,
@@ -284,6 +296,73 @@ public class DevServicesOpenFGAProcessor {
                 log.warn("Unsupported credentials method: %s".formatted(devConfig.authentication().method()));
             }
         }
+    }
+
+    static ServiceIdentity buildServiceIdentity(DevServicesOpenFGAConfig devConfig) {
+        return buildServiceIdentity(devConfig,
+                runtimeClientCredentialsIdentity(key -> ConfigProvider.getConfig().getOptionalValue(key, String.class)));
+    }
+
+    static ServiceIdentity buildServiceIdentity(DevServicesOpenFGAConfig devConfig,
+            RuntimeClientCredentialsIdentity runtimeClientCredentialsIdentity) {
+        return new ServiceIdentity(
+                devConfig.imageName().orElse(OPEN_FGA_IMAGE),
+                devConfig.shared(),
+                devConfig.serviceName(),
+                devConfig.httpPort(),
+                devConfig.grpcPort(),
+                devConfig.playgroundPort(),
+                devConfig.storeName(),
+                devConfig.authentication().method(),
+                devConfig.authentication().preshared().map(DevServicesOpenFGAConfig.Authentication.Preshared::keys),
+                devConfig.authentication().oidc().map(oidc -> new OidcIdentity(
+                        oidc.issuer(),
+                        oidc.audience(),
+                        oidc.issuerAliases(),
+                        oidc.subjects(),
+                        oidc.clientIdClaims())),
+                devConfig.authorizationModel(),
+                devConfig.authorizationModelLocation(),
+                devConfig.authorizationTuples(),
+                devConfig.authorizationTuplesLocation(),
+                devConfig.tls().map(tls -> new TlsIdentity(tls.pemCertificatePath(), tls.pemKeyPath())),
+                runtimeClientCredentialsIdentity);
+    }
+
+    static RuntimeClientCredentialsIdentity runtimeClientCredentialsIdentity(
+            Function<String, Optional<String>> propertyResolver) {
+        var clientId = propertyResolver.apply(CREDS_OIDC_CLIENT_ID_KEY);
+        var clientSecret = propertyResolver.apply(CREDS_OIDC_CLIENT_SECRET_KEY);
+        var audience = propertyResolver.apply(CREDS_OIDC_AUDIENCE_KEY);
+        var scopes = propertyResolver.apply(CREDS_OIDC_SCOPES_KEY);
+        var tokenIssuer = propertyResolver.apply(CREDS_OIDC_TOKEN_ISSUER_KEY);
+        var tokenIssuerPath = propertyResolver.apply(CREDS_OIDC_TOKEN_ISSUER_PATH_KEY);
+        var tokenExpirationThreshold = propertyResolver.apply(CREDS_OIDC_TOKEN_EXPIRATION_THRESHOLD_KEY);
+        var tokenExpirationThresholdJitter = propertyResolver.apply(CREDS_OIDC_TOKEN_EXPIRATION_THRESHOLD_JITTER_KEY);
+        var runtimeOidcIdentity = Optional.<RuntimeOidcIdentity> empty();
+        if (clientId.isPresent()
+                || clientSecret.isPresent()
+                || audience.isPresent()
+                || scopes.isPresent()
+                || tokenIssuer.isPresent()
+                || tokenIssuerPath.isPresent()
+                || tokenExpirationThreshold.isPresent()
+                || tokenExpirationThresholdJitter.isPresent()) {
+            runtimeOidcIdentity = Optional.of(new RuntimeOidcIdentity(
+                    clientId,
+                    clientSecret,
+                    audience,
+                    scopes,
+                    tokenIssuer,
+                    tokenIssuerPath,
+                    tokenExpirationThreshold,
+                    tokenExpirationThresholdJitter));
+        }
+        return new RuntimeClientCredentialsIdentity(
+                propertyResolver.apply(SHARED_KEY_CONFIG_KEY),
+                propertyResolver.apply(CREDS_METHOD_KEY),
+                propertyResolver.apply(CREDS_PRESHARED_KEY_KEY),
+                runtimeOidcIdentity);
     }
 
     private static String createStore(API api, DevServicesOpenFGAConfig config) {
@@ -521,6 +600,50 @@ public class DevServicesOpenFGAProcessor {
 
     private static ConfigurationException configError(String message, String key) {
         return new ConfigurationException(message, Set.of(CONFIG_PREFIX + key));
+    }
+
+    static record ServiceIdentity(String imageName,
+            boolean shared,
+            String serviceName,
+            OptionalInt httpPort,
+            OptionalInt grpcPort,
+            OptionalInt playgroundPort,
+            String storeName,
+            DevServicesOpenFGAConfig.Authentication.Method authenticationMethod,
+            Optional<List<String>> presharedKeys,
+            Optional<OidcIdentity> oidc,
+            Optional<String> authorizationModel,
+            Optional<String> authorizationModelLocation,
+            Optional<String> authorizationTuples,
+            Optional<String> authorizationTuplesLocation,
+            Optional<TlsIdentity> tls,
+            RuntimeClientCredentialsIdentity runtimeClientCredentials) {
+    }
+
+    static record OidcIdentity(String issuer,
+            String audience,
+            Optional<List<String>> issuerAliases,
+            Optional<List<String>> subjects,
+            Optional<List<String>> clientIdClaims) {
+    }
+
+    static record RuntimeClientCredentialsIdentity(Optional<String> deprecatedSharedKey,
+            Optional<String> method,
+            Optional<String> presharedKey,
+            Optional<RuntimeOidcIdentity> oidc) {
+    }
+
+    static record RuntimeOidcIdentity(Optional<String> clientId,
+            Optional<String> clientSecret,
+            Optional<String> audience,
+            Optional<String> scopes,
+            Optional<String> tokenIssuer,
+            Optional<String> tokenIssuerPath,
+            Optional<String> tokenExpirationThreshold,
+            Optional<String> tokenExpirationThresholdJitter) {
+    }
+
+    static record TlsIdentity(String pemCertificatePath, String pemKeyPath) {
     }
 
     private static class QuarkusOpenFGAContainer extends OpenFGAContainer {
