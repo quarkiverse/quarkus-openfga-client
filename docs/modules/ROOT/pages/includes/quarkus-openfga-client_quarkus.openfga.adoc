@@ -312,6 +312,50 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-container-env-environment-variable-name]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-container-env-environment-variable-name[`+++quarkus.openfga.devservices.container-env."environment-variable-name"+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.devservices.container-env."environment-variable-name"+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Environment variables that are passed to the container.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_DEVSERVICES_CONTAINER_ENV__ENVIRONMENT_VARIABLE_NAME_+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_DEVSERVICES_CONTAINER_ENV__ENVIRONMENT_VARIABLE_NAME_+++`
+endif::add-copy-button-to-env-var[]
+--
+|Map<String,String>
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-reuse]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-reuse[`+++quarkus.openfga.devservices.reuse+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.devservices.reuse+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Indicates whether the OpenFGA container managed by Dev Services is reusable.
+
+If enabled, the container is marked for reuse by Testcontainers and may be reused across runs.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_DEVSERVICES_REUSE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_DEVSERVICES_REUSE+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++false+++`
+
 a|icon:lock[title=Fixed at build time] [[quarkus-openfga-client_quarkus-openfga-devservices-shared]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-devservices-shared[`+++quarkus.openfga.devservices.shared+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.devservices.shared+++[]

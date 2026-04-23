@@ -133,6 +133,26 @@ quarkus.openfga.devservices.authorization-tuples-location=auth-tuples.json # <2>
 NOTE: The authorization model and tuples JSON files are loaded from the classpath by default, but can be loaded from a
 filesystem path by prefixing the location with `filesystem:`. As in, `filesystem:/path/to/auth-model.json`.
 
+==== Container Options
+
+DevServices supports passing environment variables to the OpenFGA container and enabling Testcontainers reuse.
+
+[source,properties]
+----
+quarkus.openfga.devservices.container-env.OPENFGA_LOG_LEVEL=debug
+quarkus.openfga.devservices.reuse=true
+----
+
+==== Shared Container Initialization Drift
+
+When `quarkus.openfga.devservices.shared=true` in `dev` mode, the extension may discover and reuse an existing shared
+container instead of creating a new one.
+
+If initialization arguments differ from what is already loaded in that discovered container (for example, requested
+authorization tuples are not present), a warning is logged and the container is still reused. Discovered containers
+are not re-initialized automatically.
+
+Missing required store/model configuration for a discovered shared container still fails startup.
 
 ===== Authentication
 

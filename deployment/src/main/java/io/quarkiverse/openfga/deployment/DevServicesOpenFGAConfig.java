@@ -2,9 +2,11 @@ package io.quarkiverse.openfga.deployment;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
 
+import io.quarkus.runtime.annotations.ConfigDocMapKey;
 import io.smallrye.config.WithDefault;
 
 public interface DevServicesOpenFGAConfig {
@@ -112,6 +114,20 @@ public interface DevServicesOpenFGAConfig {
      * The container image name to use, for container based DevServices providers.
      */
     Optional<String> imageName();
+
+    /**
+     * Environment variables that are passed to the container.
+     */
+    @ConfigDocMapKey("environment-variable-name")
+    Map<String, String> containerEnv();
+
+    /**
+     * Indicates whether the OpenFGA container managed by Dev Services is reusable.
+     * <p>
+     * If enabled, the container is marked for reuse by Testcontainers and may be reused across runs.
+     */
+    @WithDefault("false")
+    boolean reuse();
 
     /**
      * Indicates if the OpenFGA instance managed by Quarkus DevServices is shared.

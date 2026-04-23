@@ -18,6 +18,12 @@ Find Grained Authorization for Quarkus applications.
 The documentation for this extension can be found
 [here](https://quarkiverse.github.io/quarkiverse-docs/quarkus-openfga-client/dev/index.html).
 
+## Maintainer Note
+
+The Dev Services implementation follows Quarkus's newer Dev Services lifecycle model (`owned()` / `discovered()` with
+central lifecycle management). In shared-container discovery mode, initialization drift (for example tuple seed mismatch)
+is warned and not auto-repaired; required store/model resolution remains strict.
+
 ## Installation
 
 ### Dependency

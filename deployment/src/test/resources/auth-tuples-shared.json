@@ -1,0 +1,7 @@
+[
+  {
+    "user": "user:alice",
+    "relation": "owner",
+    "object": "thing:1"
+  }
+]
