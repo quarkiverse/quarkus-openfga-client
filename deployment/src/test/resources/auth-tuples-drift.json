@@ -1,0 +1,12 @@
+[
+  {
+    "user": "user:alice",
+    "relation": "owner",
+    "object": "thing:1"
+  },
+  {
+    "user": "user:bob",
+    "relation": "reader",
+    "object": "thing:2"
+  }
+]
