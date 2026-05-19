@@ -7,6 +7,8 @@ import static org.assertj.core.api.Assertions.within;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
+import java.time.Duration;
+
 import jakarta.inject.Inject;
 
 import org.assertj.core.api.InstanceOfAssertFactories;
@@ -286,6 +288,109 @@ public class OpenFGAClientTest {
                 .getItem();
         assertThat(healthzResponse.status())
                 .isEqualTo("SERVING");
+    }
+
+    @Test
+    @DisplayName("storeIdResolver: caches successful resolution across subscriptions")
+    public void storeIdResolverCachesSuccess() {
+
+        var store = client.createStore("resolve-success")
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+
+        var resolver = OpenFGAClient.storeIdResolver(api, "resolve-success", false);
+
+        var firstId = resolver
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+        var secondId = resolver
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+
+        assertThat(firstId).isEqualTo(store.getId());
+        assertThat(secondId).isEqualTo(store.getId());
+    }
+
+    @Test
+    @DisplayName("storeIdResolver: re-tries after a not-found failure (does not cache the failure)")
+    public void storeIdResolverRetriesAfterFailure() {
+
+        // Same resolver Uni gets reused across all calls — this is what
+        // the recorder does at app start, capturing one Uni into the
+        // StoreClient bean for the process lifetime. Before the
+        // cache-success-only fix this Uni would memoize the
+        // IllegalStateException forever, wedging the service if the
+        // store was provisioned after app start.
+        var resolver = OpenFGAClient.storeIdResolver(api, "resolve-late", false);
+
+        resolver
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitFailure()
+                .assertFailedWith(IllegalStateException.class, "No store with name 'resolve-late'");
+
+        var store = client.createStore("resolve-late")
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+
+        var id = resolver
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+        assertThat(id).isEqualTo(store.getId());
+    }
+
+    @Test
+    @DisplayName("storeIdResolver: re-resolves after the success TTL expires")
+    public void storeIdResolverRespectsCacheTtl() throws InterruptedException {
+
+        // Use the tunable overload with a short TTL so we don't have to
+        // sleep for the production-default minute. The contract we're
+        // verifying: after the TTL elapses, a subsequent subscription
+        // re-pages through listStores instead of replaying the
+        // previously cached id — so an out-of-band store recreation is
+        // observable within bounded time.
+        var ttl = Duration.ofMillis(100);
+        var resolver = OpenFGAClient.storeIdResolver(api, "resolve-ttl", false, ttl);
+
+        var firstStore = client.createStore("resolve-ttl")
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+        var firstId = resolver
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+        assertThat(firstId).isEqualTo(firstStore.getId());
+
+        // Delete + recreate with the same name to get a new store id.
+        client.store(firstStore.getId()).delete()
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .assertCompleted();
+        var secondStore = client.createStore("resolve-ttl")
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+        assertThat(secondStore.getId()).isNotEqualTo(firstStore.getId());
+
+        // Within the TTL the resolver still returns the (now stale) id.
+        var stillCachedId = resolver
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+        assertThat(stillCachedId).isEqualTo(firstStore.getId());
+
+        // Cross the TTL; the next subscription must re-resolve.
+        Thread.sleep(ttl.toMillis() + 50);
+        var refreshedId = resolver
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+        assertThat(refreshedId).isEqualTo(secondStore.getId());
     }
 
 }
