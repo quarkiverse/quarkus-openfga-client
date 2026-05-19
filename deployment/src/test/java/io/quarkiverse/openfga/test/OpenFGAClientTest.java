@@ -347,12 +347,12 @@ public class OpenFGAClientTest {
     @DisplayName("storeIdResolver: re-resolves after the success TTL expires")
     public void storeIdResolverRespectsCacheTtl() throws InterruptedException {
 
-        // Use the package-private overload with a short TTL so we don't
-        // have to sleep for the production-default minute. The contract
-        // we're verifying: after the TTL elapses, a subsequent
-        // subscription re-pages through listStores instead of replaying
-        // the previously cached id — so an out-of-band store recreation
-        // is observable within bounded time.
+        // Use the tunable overload with a short TTL so we don't have to
+        // sleep for the production-default minute. The contract we're
+        // verifying: after the TTL elapses, a subsequent subscription
+        // re-pages through listStores instead of replaying the
+        // previously cached id — so an out-of-band store recreation is
+        // observable within bounded time.
         var ttl = Duration.ofMillis(100);
         var resolver = OpenFGAClient.storeIdResolver(api, "resolve-ttl", false, ttl);
 
