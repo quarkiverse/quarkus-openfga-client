@@ -1052,6 +1052,11 @@ public interface Schema {
         public static DirectUserset instance() {
             return INSTANCE;
         }
+
+        @JsonValue
+        public Map<String, Object> value() {
+            return Map.of();
+        }
     }
 
     static ObjectRelation objectRelation(String object, String relation) {
