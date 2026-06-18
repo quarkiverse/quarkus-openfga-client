@@ -27,6 +27,13 @@ public class AuthorizationModelSchemaTest {
     }
 
     @Test
+    void testUsersetWithThisWrite() {
+        assertThatNoException()
+                .isThrownBy(() -> assertThat(mapper.writeValueAsString(thisUserset()))
+                        .isEqualTo("{\"this\":{}}"));
+    }
+
+    @Test
     void testUsersetWithComputedUsersetRead() {
         var json = "{\"computedUserset\": {\"object\": \"doc:123\", \"relation\": \"admin\"}}";
 
