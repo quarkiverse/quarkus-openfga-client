@@ -141,6 +141,7 @@ public interface OpenFGAConfig {
     String PREFIX = "quarkus.openfga";
     String DEFAULT_CONNECT_TIMEOUT = "5S";
     String DEFAULT_READ_TIMEOUT = "5S";
+    String DEFAULT_MAX_CONNECTIONS = "5";
 
     /**
      * OpenFGA server URL.
@@ -218,6 +219,16 @@ public interface OpenFGAConfig {
      */
     @WithDefault(DEFAULT_READ_TIMEOUT)
     Duration readTimeout();
+
+    /**
+     * Maximum number of connections in the pool used to communicate with OpenFGA.
+     * <p>
+     * Controls the size of the HTTP connection pool the client maintains for the
+     * OpenFGA endpoint. Increase this to allow more concurrent in-flight requests
+     * to the server.
+     */
+    @WithDefault(DEFAULT_MAX_CONNECTIONS)
+    int maxConnections();
 
     /**
      * List of remote hosts that are not proxied when the client is configured to use a proxy. This

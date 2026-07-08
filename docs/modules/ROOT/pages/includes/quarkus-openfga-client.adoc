@@ -164,6 +164,29 @@ endif::add-copy-button-to-env-var[]
 |link:https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/Duration.html[Duration] link:#duration-note-anchor-quarkus-openfga-client_quarkus-openfga[icon:question-circle[title=More information about the Duration format]]
 |`+++5S+++`
 
+a| [[quarkus-openfga-client_quarkus-openfga-max-connections]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-max-connections[`+++quarkus.openfga.max-connections+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.openfga.max-connections+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Maximum number of connections in the pool used to communicate with OpenFGA.
+
+Controls the size of the HTTP connection pool the client maintains for the OpenFGA endpoint. Increase this to allow more concurrent in-flight requests to the server.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_OPENFGA_MAX_CONNECTIONS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_OPENFGA_MAX_CONNECTIONS+++`
+endif::add-copy-button-to-env-var[]
+--
+|int
+|`+++5+++`
+
 a| [[quarkus-openfga-client_quarkus-openfga-non-proxy-hosts]] [.property-path]##link:#quarkus-openfga-client_quarkus-openfga-non-proxy-hosts[`+++quarkus.openfga.non-proxy-hosts+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.openfga.non-proxy-hosts+++[]
