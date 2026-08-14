@@ -51,7 +51,6 @@ public final class Assertion {
     }
 
     @JsonProperty("contextual_tuples")
-    @JsonSerialize(typing = JsonSerialize.Typing.STATIC)
     @Nullable
     public Collection<RelTupleKeyed> getContextualTuples() {
         return contextualTuples;
@@ -68,12 +67,13 @@ public final class Assertion {
             return false;
         return Objects.equals(this.tupleKey, that.tupleKey) &&
                 this.expectation == that.expectation &&
-                Objects.equals(this.contextualTuples, that.contextualTuples);
+                Objects.equals(this.contextualTuples, that.contextualTuples) &&
+                Objects.equals(this.context, that.context);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(tupleKey, expectation, contextualTuples);
+        return Objects.hash(tupleKey, expectation, contextualTuples, context);
     }
 
     @Override
@@ -81,7 +81,8 @@ public final class Assertion {
         return "Assertion[" +
                 "tupleKey=" + tupleKey + ", " +
                 "expectation=" + expectation + ", " +
-                "contextualTuples=" + contextualTuples + ']';
+                "contextualTuples=" + contextualTuples + ", " +
+                "context=" + context + ']';
     }
 
 }

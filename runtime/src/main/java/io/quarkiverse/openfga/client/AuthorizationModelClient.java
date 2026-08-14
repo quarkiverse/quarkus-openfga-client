@@ -15,6 +15,7 @@ import io.quarkiverse.openfga.client.model.dto.*;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 import io.quarkiverse.openfga.client.utils.PaginatedList;
 import io.quarkiverse.openfga.client.utils.Pagination;
+import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 
 public class AuthorizationModelClient {
@@ -79,18 +80,43 @@ public class AuthorizationModelClient {
     }
 
     public Uni<Boolean> check(RelTupleKeyed relKey, CheckOptions options) {
+        return checkResponse(relKey, options, null).map(CheckResponse::allowed);
+    }
+
+    /**
+     * Checks a relationship and requests resolution details from OpenFGA.
+     *
+     * @param relKey relationship to check
+     * @return detailed check response
+     */
+    public Uni<CheckResponse> checkDetailed(RelTupleKeyed relKey) {
+        return checkDetailed(relKey, CheckOptions.DEFAULT);
+    }
+
+    /**
+     * Checks a relationship and requests resolution details from OpenFGA.
+     *
+     * @param relKey relationship to check
+     * @param options check options
+     * @return detailed check response
+     */
+    public Uni<CheckResponse> checkDetailed(RelTupleKeyed relKey, CheckOptions options) {
+        return checkResponse(relKey, options, true);
+    }
+
+    private Uni<CheckResponse> checkResponse(RelTupleKeyed relKey, CheckOptions options, @Nullable Boolean trace) {
         return config
                 .flatMap(config -> {
                     var request = CheckRequest.builder()
                             .authorizationModelId(config.getAuthorizationModelId())
                             .tupleKey(relKey)
                             .contextualTuples(options.contextualTuples.map(RelTupleKeys::of).orElse(null))
+                            .trace(trace)
                             .context(options.context.orElse(null))
                             .consistency(options.consistency.orElse(null))
                             .build();
                     return api.check(config.getStoreId(), request);
-                })
-                .map(CheckResponse::allowed);
+                });
     }
 
     public record BatchCheckOptions(Optional<ConsistencyPreference> consistency) {
@@ -142,6 +168,14 @@ public class AuthorizationModelClient {
             return withContextualTuples(List.of(contextualTuples));
         }
 
+        /**
+         * Retains an expand context for source compatibility. OpenFGA does not accept it on the wire.
+         *
+         * @param context ignored context
+         * @return expand options
+         * @deprecated OpenFGA Expand does not accept evaluation context
+         */
+        @Deprecated(since = "3.15", forRemoval = true)
         public static ExpandOptions withContext(@Nullable Map<String, Object> context) {
             return new ExpandOptions(Optional.empty(), Optional.ofNullable(context), Optional.empty());
         }
@@ -158,6 +192,14 @@ public class AuthorizationModelClient {
             return contextualTuples(List.of(contextualTuples));
         }
 
+        /**
+         * Retains an expand context for source compatibility. OpenFGA does not accept it on the wire.
+         *
+         * @param context ignored context
+         * @return updated expand options
+         * @deprecated OpenFGA Expand does not accept evaluation context
+         */
+        @Deprecated(since = "3.15", forRemoval = true)
         public ExpandOptions context(@Nullable Map<String, Object> context) {
             return new ExpandOptions(contextualTuples, Optional.ofNullable(context), consistency);
         }
@@ -177,7 +219,6 @@ public class AuthorizationModelClient {
                     .authorizationModelId(config.getAuthorizationModelId())
                     .tupleKey(tupleKey)
                     .contextualTuples(options.contextualTuples.map(RelTupleKeys::of).orElse(null))
-                    .context(options.context.orElse(null))
                     .consistency(options.consistency.orElse(null))
                     .build();
             return api.expand(config.getStoreId(), request);
@@ -285,22 +326,51 @@ public class AuthorizationModelClient {
     }
 
     public Uni<Collection<RelObject>> listObjects(ListObjectsFilter filter, ListOptions options) {
+        return config.flatMap(config -> {
+            var request = listObjectsRequest(config, filter, options);
+            return api.listObjects(config.getStoreId(), request);
+        }).map(ListObjectsResponse::objects);
+    }
+
+    /**
+     * Streams objects matching the supplied filter.
+     *
+     * @param filter list objects filter
+     * @return matching objects as OpenFGA produces them
+     */
+    public Multi<RelObject> streamObjects(ListObjectsFilter filter) {
+        return streamObjects(filter, ListOptions.DEFAULT);
+    }
+
+    /**
+     * Streams objects matching the supplied filter and options.
+     *
+     * @param filter list objects filter
+     * @param options list objects options
+     * @return matching objects as OpenFGA produces them
+     */
+    public Multi<RelObject> streamObjects(ListObjectsFilter filter, ListOptions options) {
+        return config.toMulti()
+                .onItem().transformToMultiAndConcatenate(config -> api.streamedListObjects(config.getStoreId(),
+                        listObjectsRequest(config, filter, options)))
+                .map(StreamedListObjectsResponse::object);
+    }
+
+    private static ListObjectsRequest listObjectsRequest(ClientConfig config, ListObjectsFilter filter,
+            ListOptions options) {
         Preconditions.parameterNonNull(filter, "filter");
         var type = Preconditions.parameterNonNull(filter.type, "filter.type");
         var relation = Preconditions.parameterNonNull(filter.relation, "filter.relation");
         var user = Preconditions.parameterNonNull(filter.user, "filter.user");
-        return config.flatMap(config -> {
-            var request = ListObjectsRequest.builder()
-                    .authorizationModelId(config.getAuthorizationModelId())
-                    .type(type)
-                    .relation(relation)
-                    .user(user.asUser())
-                    .contextualTuples(options.contextualTuples.orElse(null))
-                    .context(options.context.orElse(null))
-                    .consistency(options.consistency.orElse(null))
-                    .build();
-            return api.listObjects(config.getStoreId(), request);
-        }).map(ListObjectsResponse::objects);
+        return ListObjectsRequest.builder()
+                .authorizationModelId(config.getAuthorizationModelId())
+                .type(type)
+                .relation(relation)
+                .user(user.asUser())
+                .contextualTuples(options.contextualTuples.orElse(null))
+                .context(options.context.orElse(null))
+                .consistency(options.consistency.orElse(null))
+                .build();
     }
 
     /**
@@ -400,6 +470,15 @@ public class AuthorizationModelClient {
         }).map(ListUsersResponse::asRel);
     }
 
+    /**
+     * Compatibility filter for the store-scoped Read API.
+     *
+     * @param typeOrObject optional object type or concrete object
+     * @param relation optional relation
+     * @param user optional user
+     * @deprecated use {@link StoreClient.ReadTuplesFilter}
+     */
+    @Deprecated(since = "3.15", forRemoval = true)
     public record ReadFilter(Optional<RelTyped> typeOrObject, Optional<String> relation, Optional<RelEntity> user) {
 
         public static final ReadFilter ALL = new ReadFilter();
@@ -465,22 +544,53 @@ public class AuthorizationModelClient {
         }
     }
 
+    /**
+     * Reads tuples from the store containing this model.
+     *
+     * @return a page of tuples
+     * @deprecated use {@link StoreClient#readTuples()}
+     */
+    @Deprecated(since = "3.15", forRemoval = true)
     public Uni<PaginatedList<RelTuple>> read() {
         return read(ReadFilter.ALL, Pagination.DEFAULT);
     }
 
+    /**
+     * Reads filtered tuples from the store containing this model.
+     *
+     * @param filter tuple filter
+     * @return a page of tuples
+     * @deprecated use {@link StoreClient#readTuples(StoreClient.ReadTuplesFilter)}
+     */
+    @Deprecated(since = "3.15", forRemoval = true)
     public Uni<PaginatedList<RelTuple>> read(ReadFilter filter) {
         return read(filter, Pagination.DEFAULT);
     }
 
+    /**
+     * Reads tuples from the store containing this model.
+     *
+     * @param options pagination request
+     * @return a page of tuples
+     * @deprecated use {@link StoreClient#readTuples(Pagination)}
+     */
+    @Deprecated(since = "3.15", forRemoval = true)
     public Uni<PaginatedList<RelTuple>> read(Pagination options) {
         return read(ReadFilter.ALL, options);
     }
 
+    /**
+     * Reads filtered tuples from the store containing this model.
+     *
+     * @param filter tuple filter
+     * @param options pagination request
+     * @return a page of tuples
+     * @deprecated use {@link StoreClient#readTuples(StoreClient.ReadTuplesFilter, Pagination)}
+     */
+    @Deprecated(since = "3.15", forRemoval = true)
     public Uni<PaginatedList<RelTuple>> read(ReadFilter filter, Pagination options) {
         return config.flatMap(config -> {
             var request = ReadRequest.builder()
-                    .authorizationModelId(config.getAuthorizationModelId())
                     .tupleKey(ReadRequest.TupleKeyFilter.builder()
                             .typeOrObject(filter.typeOrObject.orElse(null))
                             .relation(filter.relation.orElse(null))
@@ -493,16 +603,99 @@ public class AuthorizationModelClient {
         }).map(res -> new PaginatedList<>(res.tuples(), res.continuationToken()));
     }
 
+    /**
+     * Reads all tuples from the store containing this model.
+     *
+     * @return all tuples
+     * @deprecated use {@link StoreClient#readAllTuples()}
+     */
+    @Deprecated(since = "3.15", forRemoval = true)
     public Uni<List<RelTuple>> readAll() {
         return readAll(ReadFilter.ALL, Pagination.MAX.pageSize());
     }
 
+    /**
+     * Reads all filtered tuples from the store containing this model.
+     *
+     * @param filter tuple filter
+     * @return all matching tuples
+     * @deprecated use {@link StoreClient#readAllTuples(StoreClient.ReadTuplesFilter)}
+     */
+    @Deprecated(since = "3.15", forRemoval = true)
     public Uni<List<RelTuple>> readAll(ReadFilter filter) {
         return readAll(filter, Pagination.MAX.pageSize());
     }
 
+    /**
+     * Reads all filtered tuples from the store containing this model.
+     *
+     * @param filter tuple filter
+     * @param pageSize page size
+     * @return all matching tuples
+     * @deprecated use {@link StoreClient#readAllTuples(StoreClient.ReadTuplesFilter, Integer,
+     *             StoreClient.ReadTuplesOptions)}
+     */
+    @Deprecated(since = "3.15", forRemoval = true)
     public Uni<List<RelTuple>> readAll(ReadFilter filter, @Nullable Integer pageSize) {
         return collectAllPages(pageSize, (pagination) -> this.read(filter, pagination));
+    }
+
+    /**
+     * Options controlling how OpenFGA handles tuple write conflicts.
+     *
+     * @param onDuplicate behavior when a written tuple already exists
+     * @param onMissing behavior when a deleted tuple does not exist
+     */
+    public record WriteOptions(Optional<WriteConflictBehavior> onDuplicate,
+            Optional<WriteConflictBehavior> onMissing) {
+
+        /** Uses OpenFGA's default conflict behavior. */
+        public static final WriteOptions DEFAULT = new WriteOptions();
+
+        /** Creates options using OpenFGA's default conflict behavior. */
+        public WriteOptions() {
+            this(Optional.empty(), Optional.empty());
+        }
+
+        /**
+         * Creates options for duplicate tuple writes.
+         *
+         * @param onDuplicate duplicate handling behavior
+         * @return write options
+         */
+        public static WriteOptions withOnDuplicate(@Nullable WriteConflictBehavior onDuplicate) {
+            return new WriteOptions(Optional.ofNullable(onDuplicate), Optional.empty());
+        }
+
+        /**
+         * Creates options for missing tuple deletes.
+         *
+         * @param onMissing missing tuple handling behavior
+         * @return write options
+         */
+        public static WriteOptions withOnMissing(@Nullable WriteConflictBehavior onMissing) {
+            return new WriteOptions(Optional.empty(), Optional.ofNullable(onMissing));
+        }
+
+        /**
+         * Sets duplicate tuple handling.
+         *
+         * @param onDuplicate duplicate handling behavior
+         * @return updated write options
+         */
+        public WriteOptions onDuplicate(@Nullable WriteConflictBehavior onDuplicate) {
+            return new WriteOptions(Optional.ofNullable(onDuplicate), onMissing);
+        }
+
+        /**
+         * Sets missing tuple handling.
+         *
+         * @param onMissing missing tuple handling behavior
+         * @return updated write options
+         */
+        public WriteOptions onMissing(@Nullable WriteConflictBehavior onMissing) {
+            return new WriteOptions(onDuplicate, Optional.ofNullable(onMissing));
+        }
     }
 
     public Uni<Map<String, Object>> write(RelTupleDefinition... tupleDefs) {
@@ -513,6 +706,17 @@ public class AuthorizationModelClient {
         return write(writes, List.of());
     }
 
+    /**
+     * Writes tuples using the supplied conflict options.
+     *
+     * @param writes tuples to write
+     * @param options write options
+     * @return OpenFGA write response values
+     */
+    public Uni<Map<String, Object>> write(Collection<RelTupleDefinition> writes, WriteOptions options) {
+        return write(writes, List.of(), options);
+    }
+
     public Uni<Map<String, Object>> delete(RelTupleDefinition... tupleDefs) {
         return delete(List.of(tupleDefs));
     }
@@ -521,11 +725,37 @@ public class AuthorizationModelClient {
         return write(List.of(), deletes);
     }
 
+    /**
+     * Deletes tuples using the supplied conflict options.
+     *
+     * @param deletes tuples to delete
+     * @param options write options
+     * @return OpenFGA write response values
+     */
+    public Uni<Map<String, Object>> delete(Collection<RelTupleDefinition> deletes, WriteOptions options) {
+        return write(List.of(), deletes, options);
+    }
+
     public Uni<Map<String, Object>> write(@Nullable Collection<RelTupleDefinition> writes,
             @Nullable Collection<? extends RelTupleKeyed> deletes) {
+        return write(writes, deletes, WriteOptions.DEFAULT);
+    }
+
+    /**
+     * Writes and deletes tuples using the supplied conflict options.
+     *
+     * @param writes tuples to write
+     * @param deletes tuples to delete
+     * @param options write options
+     * @return OpenFGA write response values
+     */
+    public Uni<Map<String, Object>> write(@Nullable Collection<RelTupleDefinition> writes,
+            @Nullable Collection<? extends RelTupleKeyed> deletes, WriteOptions options) {
         return config.flatMap(config -> {
             var request = WriteRequest.builder()
-                    .authorizationModelId(config.getAuthorizationModelId());
+                    .authorizationModelId(config.getAuthorizationModelId())
+                    .onDuplicate(options.onDuplicate.orElse(null))
+                    .onMissing(options.onMissing.orElse(null));
             if (writes != null && !writes.isEmpty()) {
                 request.writes(new WriteRequest.Writes(writes));
             }

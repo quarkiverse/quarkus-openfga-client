@@ -1,38 +1,27 @@
 package io.quarkiverse.openfga.client.api;
 
 import io.quarkiverse.openfga.client.model.*;
+import io.quarkiverse.openfga.client.model.utils.ModelMapper;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
 
 class Errors {
 
     static Throwable convert(HttpResponse<?> response) {
-        return switch (response.statusCode()) {
-            case 400 -> convertToValidationException(response);
-            case 401, 403 -> convertToAuthException(response);
-            case 404 -> convertToNotFoundException(response);
-            case 422 -> convertToUnprocessableContentException(response);
-            case 409, 500 -> convertToInternalException(response);
-            default -> new FGAUnknownException();
-        };
+        return convert(response.statusCode(), response.bodyAsString());
     }
 
-    private static FGAAuthException convertToAuthException(HttpResponse<?> response) {
-        return response.bodyAsJson(FGAAuthException.class);
-    }
-
-    private static FGAValidationException convertToValidationException(HttpResponse<?> response) {
-        return response.bodyAsJson(FGAValidationException.class);
-    }
-
-    private static FGANotFoundException convertToNotFoundException(HttpResponse<?> response) {
-        return response.bodyAsJson(FGANotFoundException.class);
-    }
-
-    private static FGAInternalException convertToInternalException(HttpResponse<?> response) {
-        return response.bodyAsJson(FGAInternalException.class);
-    }
-
-    private static FGAUnprocessableContentException convertToUnprocessableContentException(HttpResponse<?> response) {
-        return response.bodyAsJson(FGAUnprocessableContentException.class);
+    static Throwable convert(int statusCode, String body) {
+        try {
+            return switch (statusCode) {
+                case 400 -> ModelMapper.mapper.readValue(body, FGAValidationException.class);
+                case 401, 403 -> ModelMapper.mapper.readValue(body, FGAAuthException.class);
+                case 404 -> ModelMapper.mapper.readValue(body, FGANotFoundException.class);
+                case 422 -> ModelMapper.mapper.readValue(body, FGAUnprocessableContentException.class);
+                case 409, 500 -> ModelMapper.mapper.readValue(body, FGAInternalException.class);
+                default -> new FGAUnknownException();
+            };
+        } catch (Throwable ignored) {
+            return new FGAUnknownException();
+        }
     }
 }

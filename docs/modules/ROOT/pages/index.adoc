@@ -194,6 +194,41 @@ The extension provides three injectable clients for accessing the configured ins
 `AuthorizationModelsClient`:: Manage (list, create, delete) authorization models and create `AuthorizationModelClient` instances for accessing a specific model.
 `AuthorizationModelClient`:: Access authorization model configured via `quarkus.openfga.authoriztion-model-id` or the default model if none is configured.
 
+=== OpenFGA API alignment in 3.15
+
+Tuple reads are store-scoped in OpenFGA. Use `StoreClient.readTuples(...)` or
+`StoreClient.readAllTuples(...)` for new code. The existing `AuthorizationModelClient.read(...)` and `readAll(...)`
+methods remain functional in 3.15 for source and binary compatibility, but are deprecated for removal in 4.0.
+
+[source,java]
+----
+var tuples = storeClient.readAllTuples(
+        StoreClient.ReadTuplesFilter.byObject("document:roadmap"));
+----
+
+`AuthorizationModelClient` also exposes the OpenFGA operations and options added since the client's previous API
+snapshot:
+
+* `checkDetailed(...)` returns the complete `CheckResponse`, including resolution details requested from OpenFGA.
+* `streamObjects(...)` returns a back-pressure-aware Mutiny `Multi<RelObject>` from Streamed List Objects.
+* `WriteOptions` configures `on_duplicate` and `on_missing` behavior for idempotent tuple writes and deletes.
+
+[source,java]
+----
+var objects = authorizationModelClient.streamObjects(
+        AuthorizationModelClient.ListObjectsFilter.byObjectType("document")
+                .relation("viewer")
+                .user("user:anne"));
+
+var writeOptions = AuthorizationModelClient.WriteOptions
+        .withOnDuplicate(WriteConflictBehavior.IGNORE)
+        .onMissing(WriteConflictBehavior.IGNORE);
+----
+
+OpenFGA does not define `authorization_model_id` in Read request bodies or `context` in Expand request bodies.
+The corresponding compatibility properties remain available in 3.15 but are no longer serialized. Assertion model
+IDs continue to be passed in the assertion endpoint path and are not included in the request body.
+
 == Examples
 
 === Write a Relationship Tuple

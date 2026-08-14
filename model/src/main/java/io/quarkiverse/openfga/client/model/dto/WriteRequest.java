@@ -11,10 +11,14 @@ import javax.annotation.Nullable;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import io.quarkiverse.openfga.client.model.RelTupleKeyed;
+import io.quarkiverse.openfga.client.model.WriteConflictBehavior;
+import io.quarkiverse.openfga.client.model.json.WriteRequestSerializer;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
+@JsonSerialize(using = WriteRequestSerializer.class)
 public final class WriteRequest {
 
     public record Writes(
@@ -50,6 +54,8 @@ public final class WriteRequest {
         private @Nullable String authorizationModelId;
         private @Nullable Writes writes;
         private @Nullable Deletes deletes;
+        private @Nullable WriteConflictBehavior onDuplicate;
+        private @Nullable WriteConflictBehavior onMissing;
 
         private Builder() {
         }
@@ -69,8 +75,30 @@ public final class WriteRequest {
             return this;
         }
 
+        /**
+         * Sets the behavior when a written tuple already exists.
+         *
+         * @param onDuplicate duplicate handling behavior
+         * @return this builder
+         */
+        public Builder onDuplicate(@Nullable WriteConflictBehavior onDuplicate) {
+            this.onDuplicate = onDuplicate;
+            return this;
+        }
+
+        /**
+         * Sets the behavior when a deleted tuple does not exist.
+         *
+         * @param onMissing missing tuple handling behavior
+         * @return this builder
+         */
+        public Builder onMissing(@Nullable WriteConflictBehavior onMissing) {
+            this.onMissing = onMissing;
+            return this;
+        }
+
         public WriteRequest build() {
-            return new WriteRequest(writes, deletes, authorizationModelId);
+            return new WriteRequest(writes, deletes, authorizationModelId, onDuplicate, onMissing);
         }
     }
 
@@ -84,13 +112,21 @@ public final class WriteRequest {
     private final Deletes deletes;
     @Nullable
     private final String authorizationModelId;
+    @Nullable
+    private final WriteConflictBehavior onDuplicate;
+    @Nullable
+    private final WriteConflictBehavior onMissing;
 
     @JsonCreator(mode = PROPERTIES)
     WriteRequest(@Nullable Writes writes, @Nullable Deletes deletes,
-            @JsonProperty("authorization_model_id") @Nullable String authorizationModelId) {
+            @JsonProperty("authorization_model_id") @Nullable String authorizationModelId,
+            @JsonProperty("on_duplicate") @Nullable WriteConflictBehavior onDuplicate,
+            @JsonProperty("on_missing") @Nullable WriteConflictBehavior onMissing) {
         this.writes = writes;
         this.deletes = deletes;
         this.authorizationModelId = authorizationModelId;
+        this.onDuplicate = onDuplicate;
+        this.onMissing = onMissing;
     }
 
     @Nullable
@@ -109,18 +145,40 @@ public final class WriteRequest {
         return authorizationModelId;
     }
 
+    /**
+     * Returns the duplicate handling behavior.
+     *
+     * @return duplicate handling behavior, or {@code null} for the server default
+     */
+    @Nullable
+    public WriteConflictBehavior getOnDuplicate() {
+        return onDuplicate;
+    }
+
+    /**
+     * Returns the missing tuple handling behavior.
+     *
+     * @return missing tuple handling behavior, or {@code null} for the server default
+     */
+    @Nullable
+    public WriteConflictBehavior getOnMissing() {
+        return onMissing;
+    }
+
     @Override
     public boolean equals(@Nullable Object obj) {
         if (!(obj instanceof WriteRequest that))
             return false;
         return Objects.equals(this.writes, that.writes) &&
                 Objects.equals(this.deletes, that.deletes) &&
-                Objects.equals(this.authorizationModelId, that.authorizationModelId);
+                Objects.equals(this.authorizationModelId, that.authorizationModelId) &&
+                Objects.equals(this.onDuplicate, that.onDuplicate) &&
+                Objects.equals(this.onMissing, that.onMissing);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(writes, deletes, authorizationModelId);
+        return Objects.hash(writes, deletes, authorizationModelId, onDuplicate, onMissing);
     }
 
     @Override
@@ -128,7 +186,9 @@ public final class WriteRequest {
         return "WriteBody[" +
                 "writes=" + writes + ", " +
                 "deletes=" + deletes + ", " +
-                "authorizationModelId=" + authorizationModelId + ']';
+                "authorizationModelId=" + authorizationModelId + ", " +
+                "onDuplicate=" + onDuplicate + ", " +
+                "onMissing=" + onMissing + ']';
     }
 
 }

@@ -8,6 +8,7 @@ import java.util.Objects;
 import javax.annotation.Nullable;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.quarkiverse.openfga.client.model.Assertion;
@@ -25,6 +26,14 @@ public final class WriteAssertionsRequest {
         private Builder() {
         }
 
+        /**
+         * Sets the authorization model ID used by the compatibility API overload as a path parameter.
+         *
+         * @param authorizationModelId authorization model ID
+         * @return this builder
+         * @deprecated pass the authorization model ID separately to the API operation
+         */
+        @Deprecated(since = "3.15", forRemoval = true)
         public Builder authorizationModelId(@Nullable String authorizationModelId) {
             this.authorizationModelId = authorizationModelId;
             return this;
@@ -37,7 +46,7 @@ public final class WriteAssertionsRequest {
 
         public WriteAssertionsRequest build() {
             return new WriteAssertionsRequest(
-                    Preconditions.parameterNonBlank(authorizationModelId, "authorizationModelId"),
+                    authorizationModelId,
                     Preconditions.parameterNonNull(assertions, "assertions"));
         }
     }
@@ -46,16 +55,26 @@ public final class WriteAssertionsRequest {
         return new Builder();
     }
 
+    @Nullable
     private final String authorizationModelId;
     private final List<Assertion> assertions;
 
     @JsonCreator(mode = PROPERTIES)
-    WriteAssertionsRequest(@JsonProperty("authorization_model_id") String authorizationModelId, List<Assertion> assertions) {
+    WriteAssertionsRequest(@JsonProperty("authorization_model_id") @Nullable String authorizationModelId,
+            List<Assertion> assertions) {
         this.authorizationModelId = authorizationModelId;
         this.assertions = assertions;
     }
 
-    @JsonProperty("authorization_model_id")
+    /**
+     * Returns the authorization model ID used by the compatibility API overload.
+     *
+     * @return authorization model ID
+     * @deprecated the value is a path parameter and is not part of the request body
+     */
+    @JsonIgnore
+    @Deprecated(since = "3.15", forRemoval = true)
+    @Nullable
     public String getAuthorizationModelId() {
         return authorizationModelId;
     }

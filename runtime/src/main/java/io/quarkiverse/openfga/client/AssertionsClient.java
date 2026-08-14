@@ -26,10 +26,9 @@ public class AssertionsClient {
     public Uni<Void> update(List<Assertion> assertions) {
         return config.flatMap(config -> {
             var request = WriteAssertionsRequest.builder()
-                    .authorizationModelId(config.getAuthorizationModelId())
                     .assertions(assertions)
                     .build();
-            return api.writeAssertions(config.getStoreId(), request);
+            return api.writeAssertions(config.getStoreId(), config.getAuthorizationModelId(), request);
         });
     }
 
