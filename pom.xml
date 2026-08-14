@@ -29,7 +29,7 @@
     <quarkus.version>3.38.1</quarkus.version>
     <jandex-maven-plugin.version>3.6.0</jandex-maven-plugin.version>
     <assertj.version>3.27.7</assertj.version>
-    <japicmp.version>0.24.2</japicmp.version>
+    <japicmp.version>0.26.1</japicmp.version>
     <argLine />
   </properties>
   <dependencyManagement>
