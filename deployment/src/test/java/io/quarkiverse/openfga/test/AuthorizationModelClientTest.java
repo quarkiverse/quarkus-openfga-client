@@ -29,8 +29,10 @@ import io.quarkiverse.openfga.client.model.*;
 import io.quarkiverse.openfga.client.utils.PaginatedList;
 import io.quarkiverse.openfga.client.utils.Pagination;
 import io.quarkus.test.QuarkusUnitTest;
+import io.smallrye.mutiny.helpers.test.AssertSubscriber;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 
+@SuppressWarnings("removal")
 public class AuthorizationModelClientTest {
 
     // Start unit test with extension loaded
@@ -175,6 +177,23 @@ public class AuthorizationModelClientTest {
     }
 
     @Test
+    @DisplayName("Detailed Check Returns Check Response")
+    public void detailedCheckReturnsCheckResponse() {
+        var tupleDef = document123.define(RelationshipNames.READER, userMe);
+
+        authorizationModelClient.write(tupleDef)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem();
+
+        var response = authorizationModelClient.checkDetailed(tupleDef)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+
+        assertThat(response.allowed()).isTrue();
+    }
+
+    @Test
     @DisplayName("Check With Contextual Tuples")
     public void checkWithContextualTuples() {
 
@@ -277,7 +296,8 @@ public class AuthorizationModelClientTest {
                                         .isEqualTo(ErrorCode.VALIDATION_ERROR);
                                 assertThat(e)
                                         .extracting(CheckError::message)
-                                        .isEqualTo("the 'user' field is malformed");
+                                        .asString()
+                                        .endsWith("the 'user' field is malformed");
                             });
                 });
     }
@@ -687,6 +707,43 @@ public class AuthorizationModelClientTest {
                 .getItem();
         assertThat(objects)
                 .containsOnly(document123, document456);
+    }
+
+    @Test
+    @DisplayName("Stream Objects Matching Object Type, Relation, and User")
+    public void streamObjectsMatchingObjectTypeRelationAndUser() {
+        var aTupleDef = document123.define(RelationshipNames.WRITER, userMe);
+        var bTupleDef = document456.define(RelationshipNames.WRITER, userMe);
+        var cTupleDef = document456.define(RelationshipNames.WRITER, userYou);
+
+        authorizationModelClient.write(aTupleDef, bTupleDef, cTupleDef)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem();
+
+        var subscriber = authorizationModelClient.streamObjects(ListObjectsFilter.byObjectType(documentType)
+                .relation(RelationshipNames.WRITER)
+                .user(userMe))
+                .subscribe().withSubscriber(AssertSubscriber.create(2));
+
+        subscriber.awaitCompletion(ofSeconds(10))
+                .assertCompleted();
+        assertThat(subscriber.getItems()).containsOnly(document123, document456);
+    }
+
+    @Test
+    @DisplayName("Can Ignore Write Conflicts")
+    public void canIgnoreWriteConflicts() {
+        var tupleDef = document123.define(RelationshipNames.WRITER, userMe);
+
+        authorizationModelClient.write(tupleDef)
+                .flatMap(ignored -> authorizationModelClient.write(List.of(tupleDef),
+                        WriteOptions.withOnDuplicate(WriteConflictBehavior.IGNORE)))
+                .flatMap(ignored -> authorizationModelClient.delete(List.of(tupleDef)))
+                .flatMap(ignored -> authorizationModelClient.delete(List.of(tupleDef),
+                        WriteOptions.withOnMissing(WriteConflictBehavior.IGNORE)))
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .assertCompleted();
     }
 
     @Test

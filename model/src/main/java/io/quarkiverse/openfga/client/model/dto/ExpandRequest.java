@@ -8,6 +8,7 @@ import java.util.Objects;
 import javax.annotation.Nullable;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
@@ -49,6 +50,14 @@ public final class ExpandRequest {
             return this;
         }
 
+        /**
+         * Sets compatibility-only context that is retained locally but is not sent to OpenFGA.
+         *
+         * @param context ignored request context
+         * @return this builder
+         * @deprecated the OpenFGA Expand API does not accept request context
+         */
+        @Deprecated(since = "3.15", forRemoval = true)
         public Builder context(@Nullable Map<String, Object> context) {
             this.context = context;
             return this;
@@ -113,6 +122,14 @@ public final class ExpandRequest {
         return contextualTuples;
     }
 
+    /**
+     * Returns compatibility-only context that is not serialized.
+     *
+     * @return ignored request context
+     * @deprecated the OpenFGA Expand API does not accept request context
+     */
+    @JsonIgnore
+    @Deprecated(since = "3.15", forRemoval = true)
     @Nullable
     public Map<String, Object> getContext() {
         return context;
@@ -129,12 +146,14 @@ public final class ExpandRequest {
             return false;
         return Objects.equals(this.tupleKey, that.tupleKey) &&
                 Objects.equals(this.authorizationModelId, that.authorizationModelId) &&
+                Objects.equals(this.contextualTuples, that.contextualTuples) &&
+                Objects.equals(this.context, that.context) &&
                 Objects.equals(this.consistency, that.consistency);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(tupleKey, authorizationModelId, consistency);
+        return Objects.hash(tupleKey, authorizationModelId, contextualTuples, context, consistency);
     }
 
     @Override
@@ -142,6 +161,8 @@ public final class ExpandRequest {
         return "ExpandRequest[" +
                 "tupleKey=" + tupleKey + ", " +
                 "authorizationModelId=" + authorizationModelId + ", " +
+                "contextualTuples=" + contextualTuples + ", " +
+                "context=" + context + ", " +
                 "consistency=" + consistency + ']';
     }
 

@@ -24,6 +24,7 @@ import io.quarkiverse.openfga.client.AuthorizationModelClient;
 import io.quarkiverse.openfga.client.OpenFGAClient;
 import io.quarkiverse.openfga.client.StoreClient;
 import io.quarkiverse.openfga.client.StoreClient.ReadChangesFilter;
+import io.quarkiverse.openfga.client.StoreClient.ReadTuplesFilter;
 import io.quarkiverse.openfga.client.model.*;
 import io.quarkiverse.openfga.client.utils.Pagination;
 import io.quarkiverse.openfga.test.SchemaFixtures.RelationshipNames;
@@ -280,6 +281,27 @@ public class StoreClientTest {
                         tuple(docTuple4.conditional(), TupleOperation.WRITE),
                         tuple(docTuple5.conditional(), TupleOperation.WRITE),
                         tuple(docTuple6.conditional(), TupleOperation.WRITE));
+    }
+
+    @Test
+    @DisplayName("Can Read Filtered Tuples From Store")
+    public void canReadFilteredTuplesFromStore() {
+        var authorizationModelClient = initializeAuthorizationModel();
+        var matchingTuple = document123.define(RelationshipNames.READER, userMe);
+        var otherTuple = document456.define(RelationshipNames.READER, userYou);
+
+        authorizationModelClient.write(matchingTuple, otherTuple)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem();
+
+        var tuples = storeClient.readAllTuples(ReadTuplesFilter.byObject(document123))
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem()
+                .getItem();
+
+        assertThat(tuples)
+                .extracting(RelTuple::getKey)
+                .containsExactly(matchingTuple.conditional());
     }
 
     @Test

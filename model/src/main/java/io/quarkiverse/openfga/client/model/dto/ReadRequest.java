@@ -5,6 +5,7 @@ import java.util.Objects;
 import javax.annotation.Nullable;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.quarkiverse.openfga.client.model.*;
@@ -126,6 +127,8 @@ public final class ReadRequest {
         private Integer pageSize;
         @Nullable
         private String continuationToken;
+        @Nullable
+        private ConsistencyPreference consistency;
 
         private Builder() {
         }
@@ -139,6 +142,14 @@ public final class ReadRequest {
             return this;
         }
 
+        /**
+         * Sets an authorization model ID that is retained for source compatibility but is not sent to OpenFGA.
+         *
+         * @param authorizationModelId ignored authorization model ID
+         * @return this builder
+         * @deprecated the OpenFGA Read API is store-scoped and does not accept an authorization model ID
+         */
+        @Deprecated(since = "3.15", forRemoval = true)
         public Builder authorizationModelId(@Nullable String authorizationModelId) {
             this.authorizationModelId = authorizationModelId;
             return this;
@@ -154,8 +165,19 @@ public final class ReadRequest {
             return this;
         }
 
+        /**
+         * Sets the consistency preference for the read.
+         *
+         * @param consistency consistency preference
+         * @return this builder
+         */
+        public Builder consistency(@Nullable ConsistencyPreference consistency) {
+            this.consistency = consistency;
+            return this;
+        }
+
         public ReadRequest build() {
-            return new ReadRequest(tupleKey, authorizationModelId, pageSize, continuationToken);
+            return new ReadRequest(tupleKey, authorizationModelId, pageSize, continuationToken, consistency);
         }
     }
 
@@ -171,16 +193,20 @@ public final class ReadRequest {
     private final Integer pageSize;
     @Nullable
     private final String continuationToken;
+    @Nullable
+    private final ConsistencyPreference consistency;
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     ReadRequest(@JsonProperty("tuple_key") @Nullable TupleKeyFilter tupleKey,
             @JsonProperty("authorization_model_id") @Nullable String authorizationModelId,
             @JsonProperty("page_size") @Nullable Integer pageSize,
-            @JsonProperty("continuation_token") @Nullable String continuationToken) {
+            @JsonProperty("continuation_token") @Nullable String continuationToken,
+            @Nullable ConsistencyPreference consistency) {
         this.tupleKey = tupleKey;
         this.authorizationModelId = authorizationModelId;
         this.pageSize = pageSize;
         this.continuationToken = continuationToken;
+        this.consistency = consistency;
     }
 
     @JsonProperty("tuple_key")
@@ -189,7 +215,14 @@ public final class ReadRequest {
         return tupleKey;
     }
 
-    @JsonProperty("authorization_model_id")
+    /**
+     * Returns the compatibility-only authorization model ID, which is not serialized.
+     *
+     * @return ignored authorization model ID
+     * @deprecated the OpenFGA Read API is store-scoped and does not accept an authorization model ID
+     */
+    @JsonIgnore
+    @Deprecated(since = "3.15", forRemoval = true)
     @Nullable
     public String getAuthorizationModelId() {
         return authorizationModelId;
@@ -207,18 +240,30 @@ public final class ReadRequest {
         return continuationToken;
     }
 
+    /**
+     * Returns the consistency preference for the read.
+     *
+     * @return consistency preference, or {@code null} for the server default
+     */
+    @Nullable
+    public ConsistencyPreference getConsistency() {
+        return consistency;
+    }
+
     @Override
     public boolean equals(@Nullable Object obj) {
         if (!(obj instanceof ReadRequest that))
             return false;
         return Objects.equals(tupleKey, that.tupleKey)
                 && Objects.equals(authorizationModelId, that.authorizationModelId)
-                && Objects.equals(pageSize, that.pageSize) && Objects.equals(continuationToken, that.continuationToken);
+                && Objects.equals(pageSize, that.pageSize)
+                && Objects.equals(continuationToken, that.continuationToken)
+                && Objects.equals(consistency, that.consistency);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(tupleKey, authorizationModelId, pageSize, continuationToken);
+        return Objects.hash(tupleKey, authorizationModelId, pageSize, continuationToken, consistency);
     }
 
     @Override
@@ -227,6 +272,7 @@ public final class ReadRequest {
                 "tupleKey=" + tupleKey + ", " +
                 "authorizationModelId=" + authorizationModelId + ", " +
                 "pageSize=" + pageSize + ", " +
-                "continuationToken=" + continuationToken + ']';
+                "continuationToken=" + continuationToken + ", " +
+                "consistency=" + consistency + ']';
     }
 }

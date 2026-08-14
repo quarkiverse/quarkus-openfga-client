@@ -5,6 +5,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
 
@@ -19,7 +20,7 @@ import io.quarkiverse.openfga.client.model.utils.Preconditions;
  * The additional context is used to provide additional data to the check, and is used to resolve
  * the parameters of the check.
  */
-public record Check(@JsonProperty("tuple_key") RelTupleKeyed tupleKey,
+public record Check(@JsonProperty("tuple_key") @JsonSerialize(typing = JsonSerialize.Typing.STATIC) RelTupleKeyed tupleKey,
         @JsonProperty("contextual_tuples") @Nullable RelTupleKeys contextualTuples,
         @Nullable Map<String, Object> context,
         @JsonProperty("correlation_id") String correlationId) {

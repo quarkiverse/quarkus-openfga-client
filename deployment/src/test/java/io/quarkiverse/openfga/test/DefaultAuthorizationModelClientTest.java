@@ -30,6 +30,7 @@ import io.quarkiverse.openfga.client.utils.PaginatedList;
 import io.quarkus.test.QuarkusUnitTest;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 
+@SuppressWarnings("removal")
 public class DefaultAuthorizationModelClientTest {
 
     // Start unit test with extension loaded

@@ -10,8 +10,10 @@ import static java.lang.String.format;
 import java.io.Closeable;
 import java.security.SecureRandom;
 import java.time.Clock;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.Nullable;
 
@@ -26,6 +28,7 @@ import io.quarkiverse.openfga.client.model.utils.ModelMapper;
 import io.quarkiverse.openfga.runtime.config.OpenFGAConfig;
 import io.quarkus.runtime.configuration.ConfigurationException;
 import io.quarkus.tls.TlsConfigurationRegistry;
+import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
@@ -33,6 +36,8 @@ import io.vertx.core.http.RequestOptions;
 import io.vertx.core.impl.NoStackTraceThrowable;
 import io.vertx.mutiny.core.Vertx;
 import io.vertx.mutiny.core.buffer.Buffer;
+import io.vertx.mutiny.core.parsetools.JsonEvent;
+import io.vertx.mutiny.core.parsetools.JsonParser;
 import io.vertx.mutiny.ext.web.client.HttpRequest;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
 import io.vertx.mutiny.ext.web.client.WebClient;
@@ -264,6 +269,41 @@ public class API implements Closeable {
                 ListObjectsResponse.class);
     }
 
+    /**
+     * Streams objects matching a List Objects request as OpenFGA produces them.
+     *
+     * @param storeId store identifier
+     * @param request list objects request
+     * @return streamed object responses
+     */
+    public Multi<StreamedListObjectsResponse> streamedListObjects(String storeId, ListObjectsRequest request) {
+        return Multi.createFrom().deferred(() -> {
+            var errorBody = new AtomicReference<String>();
+            var parser = JsonParser.newParser().objectValueMode();
+            var streamedResponses = parser.toMulti()
+                    .onItem().transformToMultiAndConcatenate(event -> decodeStreamedListObjects(event, errorBody));
+            var completedRequest = serialize(request)
+                    .onItem().transformToUni(body -> prepare(request("Streamed List Objects",
+                            POST,
+                            STREAMED_LIST_OBJECTS_URI,
+                            vars(STORE_ID_PARAM, storeId)).as(BodyCodec.jsonStream(parser)))
+                            .flatMap(preparedRequest -> preparedRequest
+                                    .putHeader(ACCEPT.toString(), APPLICATION_JSON)
+                                    .putHeader(CONTENT_TYPE.toString(), APPLICATION_JSON)
+                                    .sendBuffer(body)))
+                    .onItem().transformToMulti(response -> {
+                        try {
+                            checkStatus(response, ExpectedStatus.OK, errorBody.get());
+                            checkJSON(response);
+                            return Multi.createFrom().<StreamedListObjectsResponse> empty();
+                        } catch (Throwable error) {
+                            return Multi.createFrom().failure(error);
+                        }
+                    });
+            return Multi.createBy().merging().streams(streamedResponses, completedRequest);
+        });
+    }
+
     public Uni<ListUsersResponse> listUsers(String storeId, ListUsersRequest request) {
         return execute(
                 request("List Users",
@@ -285,14 +325,36 @@ public class API implements Closeable {
                 ReadAssertionsResponse.class);
     }
 
-    public Uni<Void> writeAssertions(String storeId, WriteAssertionsRequest request) {
+    /**
+     * Writes assertions for an authorization model.
+     *
+     * @param storeId store identifier
+     * @param authorizationModelId authorization model identifier
+     * @param request assertions request
+     * @return completion signal
+     */
+    public Uni<Void> writeAssertions(String storeId, String authorizationModelId, WriteAssertionsRequest request) {
         return execute(
                 request("Write Assertions",
                         PUT,
                         ASSERTIONS_URI,
-                        vars(STORE_ID_PARAM, storeId, AUTH_MODEL_ID_PARAM, request.getAuthorizationModelId())),
+                        vars(STORE_ID_PARAM, storeId, AUTH_MODEL_ID_PARAM, authorizationModelId)),
                 request,
                 ExpectedStatus.NO_CONTENT);
+    }
+
+    /**
+     * Writes assertions using the authorization model ID retained in the compatibility request shape.
+     *
+     * @param storeId store identifier
+     * @param request assertions request
+     * @return completion signal
+     * @deprecated use {@link #writeAssertions(String, String, WriteAssertionsRequest)}
+     */
+    @Deprecated(since = "3.15", forRemoval = true)
+    @SuppressWarnings("removal")
+    public Uni<Void> writeAssertions(String storeId, WriteAssertionsRequest request) {
+        return writeAssertions(storeId, request.getAuthorizationModelId(), request);
     }
 
     public Uni<HealthzResponse> health() {
@@ -395,18 +457,49 @@ public class API implements Closeable {
         return webClient.request(method, options);
     }
 
-    private static void checkJSONResponse(HttpResponse<Buffer> response, ExpectedStatus expectedStatus) throws Throwable {
+    private static Multi<StreamedListObjectsResponse> decodeStreamedListObjects(JsonEvent event,
+            AtomicReference<String> errorBody) {
+        try {
+            var value = event.objectValue();
+            if (value.containsKey("result")) {
+                var response = ModelMapper.mapper.readValue(value.getJsonObject("result").encode(),
+                        StreamedListObjectsResponse.class);
+                return Multi.createFrom().item(response);
+            }
+            if (value.containsKey("error")) {
+                var error = value.getJsonObject("error");
+                var details = error.getJsonArray("details");
+                List<Map<String, Object>> mappedDetails = details == null ? List.of()
+                        : details.stream().map(detail -> ((io.vertx.core.json.JsonObject) detail).getMap()).toList();
+                return Multi.createFrom().failure(new io.quarkiverse.openfga.client.model.FGAStreamException(
+                        error.getInteger("code"), error.getString("message"), mappedDetails));
+            }
+            errorBody.set(value.encode());
+            return Multi.createFrom().empty();
+        } catch (Throwable error) {
+            return Multi.createFrom().failure(error);
+        }
+    }
+
+    private static void checkJSONResponse(HttpResponse<?> response, ExpectedStatus expectedStatus) throws Throwable {
         checkStatus(response, expectedStatus);
         checkJSON(response);
     }
 
-    private static void checkStatus(HttpResponse<Buffer> response, ExpectedStatus expectedStatus) throws Throwable {
+    private static void checkStatus(HttpResponse<?> response, ExpectedStatus expectedStatus) throws Throwable {
         if (response.statusCode() != expectedStatus.statusCode) {
             throw Errors.convert(response);
         }
     }
 
-    private static void checkJSON(HttpResponse<Buffer> response) throws Throwable {
+    private static void checkStatus(HttpResponse<?> response, ExpectedStatus expectedStatus, @Nullable String body)
+            throws Throwable {
+        if (response.statusCode() != expectedStatus.statusCode) {
+            throw Errors.convert(response.statusCode(), body);
+        }
+    }
+
+    private static void checkJSON(HttpResponse<?> response) throws Throwable {
         String contentType = response.headers().get(HttpHeaders.CONTENT_TYPE);
         if (contentType == null) {
             throw new NoStackTraceThrowable("Missing response content type");
@@ -444,6 +537,8 @@ public class API implements Closeable {
     private static final UriTemplate BATCH_CHECK_URI = UriTemplate.of("/stores/{store_id}/batch-check");
     private static final UriTemplate EXPAND_URI = UriTemplate.of("/stores/{store_id}/expand");
     private static final UriTemplate LIST_OBJECTS_URI = UriTemplate.of("/stores/{store_id}/list-objects");
+    private static final UriTemplate STREAMED_LIST_OBJECTS_URI = UriTemplate
+            .of("/stores/{store_id}/streamed-list-objects");
     private static final UriTemplate LIST_USERS_URI = UriTemplate.of("/stores/{store_id}/list-users");
     private static final UriTemplate READ_URI = UriTemplate.of("/stores/{store_id}/read");
     private static final UriTemplate WRITE_URI = UriTemplate.of("/stores/{store_id}/write");
