@@ -21,6 +21,11 @@ public class VertxWebClientFactory {
 
     public static WebClient create(OpenFGAConfig config, boolean tracingEnabled, Vertx vertx,
             TlsConfigurationRegistry tlsRegistry) {
+        return WebClient.create(vertx, createOptions(config, tracingEnabled, tlsRegistry));
+    }
+
+    static WebClientOptions createOptions(OpenFGAConfig config, boolean tracingEnabled,
+            TlsConfigurationRegistry tlsRegistry) {
 
         var url = config.url();
 
@@ -30,6 +35,7 @@ public class VertxWebClientFactory {
                 .setDefaultPort(url.getPort() != -1 ? url.getPort() : url.getDefaultPort())
                 .setConnectTimeout((int) config.connectTimeout().toMillis())
                 .setIdleTimeout((int) config.readTimeout().getSeconds() * 2)
+                .setMaxPoolSize(config.maxConnections())
                 .setTracingPolicy(tracingEnabled ? TracingPolicy.PROPAGATE : TracingPolicy.IGNORE);
 
         config.nonProxyHosts().ifPresent(options::setNonProxyHosts);
@@ -62,7 +68,7 @@ public class VertxWebClientFactory {
                     }
                 });
 
-        return WebClient.create(vertx, options);
+        return options;
     }
 
     public static WebClient create(URL url, Vertx vertx) {
