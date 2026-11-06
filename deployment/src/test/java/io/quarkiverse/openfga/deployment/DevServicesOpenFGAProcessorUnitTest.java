@@ -17,7 +17,6 @@ import org.testcontainers.utility.DockerImageName;
 
 import io.quarkiverse.openfga.client.model.AuthorizationModelSchema;
 import io.quarkiverse.openfga.client.model.RelTupleKeys;
-import io.quarkus.deployment.builditem.DevServicesResultBuildItem;
 
 class DevServicesOpenFGAProcessorUnitTest {
 
@@ -146,7 +145,7 @@ class DevServicesOpenFGAProcessorUnitTest {
     void closeCachedDevServiceStateClosesAndClearsCachedState() {
         boolean[] closed = new boolean[1];
         var serviceIdentity = baseServiceIdentity();
-        var runningDevService = new DevServicesResultBuildItem.RunningDevService(
+        var runningDevService = new RunningDevService(
                 "openfga",
                 "OpenFGA DevServices Instance",
                 "container-1",
@@ -165,7 +164,7 @@ class DevServicesOpenFGAProcessorUnitTest {
     void closeCachedDevServiceStateClearsCachedStateWhenCloseFails() {
         boolean[] closeAttempted = new boolean[1];
         var serviceIdentity = baseServiceIdentity();
-        var runningDevService = new DevServicesResultBuildItem.RunningDevService(
+        var runningDevService = new RunningDevService(
                 "openfga",
                 "OpenFGA DevServices Instance",
                 "container-2",

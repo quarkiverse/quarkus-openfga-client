@@ -13,14 +13,14 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.quarkiverse.openfga.client.OpenFGAClient;
 import io.quarkiverse.openfga.client.model.AuthorizationModel;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 
 public class OpenFGAClientModelLoadLocationTest {
 
     // Start unit test with extension loaded
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addAsResource("application-with-model-location.properties", "application.properties"));
 

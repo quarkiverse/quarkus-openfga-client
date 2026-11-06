@@ -28,7 +28,7 @@ import io.quarkiverse.openfga.client.utils.PaginatedList;
 import io.quarkiverse.openfga.deployment.DevServicesOpenFGAConfig;
 import io.quarkiverse.openfga.deployment.DevServicesOpenFGAProcessor;
 import io.quarkus.runtime.LaunchMode;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import io.vertx.mutiny.core.Vertx;
@@ -75,7 +75,7 @@ public class OpenFGAClientSharedTest {
 
     // Start unit test with extension loaded
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setBeforeAllCustomizer(OpenFGAClientSharedTest::initSharedContainer)
             .overrideConfigKey("quarkus.profile", "dev")
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class));

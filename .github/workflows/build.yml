@@ -67,8 +67,5 @@ jobs:
           mvn -B -pl deployment test -Dno-format
           -Dquarkus.openfga.devservices.image-name=openfga/openfga:v1.11.6
 
-      - name: Check 3.14 binary compatibility
-        run: mvn -B -pl model,runtime -am verify -Pbinary-compatibility -Dno-format -DskipTests
-
       - name: Build with Maven (Native)
         run: mvn -B install -Dnative -Dquarkus.native.container-build -Dnative.surefire.skip

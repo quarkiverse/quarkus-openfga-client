@@ -8,14 +8,13 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
 import io.quarkiverse.openfga.client.model.dto.BatchCheckRequest;
 import io.quarkiverse.openfga.client.model.dto.ExpandRequest;
 import io.quarkiverse.openfga.client.model.dto.ReadRequest;
 import io.quarkiverse.openfga.client.model.dto.StreamedListObjectsResponse;
 import io.quarkiverse.openfga.client.model.dto.WriteAssertionsRequest;
 import io.quarkiverse.openfga.client.model.dto.WriteRequest;
+import tools.jackson.databind.JsonNode;
 
 /**
  * Verifies request shapes against openfga/api commit 6981fff8d33bee21dd9a2001608e6d6c5f553977.

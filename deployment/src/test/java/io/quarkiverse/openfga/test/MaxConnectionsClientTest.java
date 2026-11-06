@@ -16,7 +16,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import io.quarkiverse.openfga.client.OpenFGAClient;
 import io.quarkiverse.openfga.client.model.Store;
 import io.quarkiverse.openfga.runtime.config.OpenFGAConfig;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.smallrye.mutiny.Uni;
 
 public class MaxConnectionsClientTest {
@@ -25,7 +25,7 @@ public class MaxConnectionsClientTest {
     static final int CONFIGURED_MAX_CONNECTIONS = 20;
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addAsResource("application-with-max-connections.properties", "application.properties"));
 

@@ -27,7 +27,7 @@ import io.quarkiverse.openfga.client.StoreClient;
 import io.quarkiverse.openfga.client.model.RelTuple;
 import io.quarkiverse.openfga.client.model.Store;
 import io.quarkiverse.openfga.client.utils.PaginatedList;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 
 @SuppressWarnings("removal")
@@ -35,7 +35,7 @@ public class DefaultAuthorizationModelClientTest {
 
     // Start unit test with extension loaded
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClass(SchemaFixtures.class));
 

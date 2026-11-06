@@ -15,13 +15,12 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.databind.json.JsonMapper;
-
 import io.quarkiverse.openfga.client.model.Assertion;
 import io.quarkiverse.openfga.client.model.RelObject;
 import io.quarkiverse.openfga.client.model.RelTupleKey;
 import io.quarkus.test.common.http.TestHTTPResource;
 import io.quarkus.test.junit.QuarkusTest;
+import tools.jackson.databind.json.JsonMapper;
 
 @QuarkusTest
 public class SharedTest {

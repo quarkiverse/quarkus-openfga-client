@@ -5,9 +5,9 @@ import java.util.Objects;
 import javax.annotation.Nullable;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
+import tools.jackson.databind.annotation.JsonDeserialize;
 
 /**
  * A partial tuple key that defines only a relationship to an object, without a specific user.

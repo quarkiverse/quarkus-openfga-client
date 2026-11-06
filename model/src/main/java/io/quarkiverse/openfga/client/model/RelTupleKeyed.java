@@ -1,8 +1,7 @@
 package io.quarkiverse.openfga.client.model;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-
 import io.quarkiverse.openfga.client.model.json.RelTupleKeyedDeserializer;
+import tools.jackson.databind.annotation.JsonDeserialize;
 
 /**
  * Any object that provides the elements a relationship key in the OpenFGA system, consisting of an

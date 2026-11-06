@@ -1,10 +1,9 @@
 package io.quarkiverse.openfga.client.model;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-
 import io.quarkiverse.openfga.client.model.json.RelEntityDeserializer;
 import io.quarkiverse.openfga.client.model.json.RelEntitySerializer;
+import tools.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.databind.annotation.JsonSerialize;
 
 /**
  * Represents an entity (object or user) of a relationship.

@@ -12,11 +12,11 @@ import io.quarkiverse.openfga.client.model.dto.auth.CredentialsFlowResponse;
 import io.quarkiverse.openfga.client.model.utils.ModelMapper;
 import io.quarkiverse.openfga.runtime.config.OpenFGAConfig.Credentials.OIDC;
 import io.smallrye.mutiny.Uni;
+import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.RequestOptions;
 import io.vertx.ext.auth.authentication.TokenCredentials;
 import io.vertx.ext.web.handler.HttpException;
-import io.vertx.mutiny.core.MultiMap;
 import io.vertx.mutiny.ext.web.client.WebClient;
 
 public class OAuthCredentialsProvider implements CredentialsProvider {
