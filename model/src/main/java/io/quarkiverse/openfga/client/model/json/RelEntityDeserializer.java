@@ -1,17 +1,13 @@
 package io.quarkiverse.openfga.client.model.json;
 
-import java.io.IOException;
-
-import com.fasterxml.jackson.core.JacksonException;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import io.quarkiverse.openfga.client.model.RelEntity;
 import io.quarkiverse.openfga.client.model.RelObject;
 import io.quarkiverse.openfga.client.model.RelUser;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.JsonToken;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.deser.std.StdDeserializer;
+import tools.jackson.databind.node.ObjectNode;
 
 public class RelEntityDeserializer extends StdDeserializer<RelEntity> {
 
@@ -20,16 +16,16 @@ public class RelEntityDeserializer extends StdDeserializer<RelEntity> {
     }
 
     @Override
-    public RelEntity deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException {
+    public RelEntity deserialize(JsonParser p, DeserializationContext ctxt) {
         var currentToken = p.currentToken();
         if (currentToken == JsonToken.VALUE_STRING) {
-            if (p.getText().contains("#")) {
-                return RelUser.valueOf(p.getText());
+            if (p.getString().contains("#")) {
+                return RelUser.valueOf(p.getString());
             } else {
-                return RelObject.valueOf(p.getText());
+                return RelObject.valueOf(p.getString());
             }
         } else if (currentToken == JsonToken.START_OBJECT) {
-            var object = p.getCodec().readValue(p, ObjectNode.class);
+            var object = (ObjectNode) ctxt.readTree(p);
             if (object.has("relation")) {
                 return ctxt.readTreeAsValue(object, RelUser.class);
             } else {

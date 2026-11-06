@@ -98,7 +98,8 @@ public class MaxConnectionsExhaustionTest {
 
     Uni<List<Void>> fireConcurrentRequests(int maxConnections) {
         var options = VertxWebClientFactory.createOptions(config(maxConnections), false, NO_TLS);
-        var client = WebClient.create(vertx, options);
+        var client = WebClient.create(vertx, options,
+                VertxWebClientFactory.createPoolOptions(config(maxConnections)));
 
         List<Uni<Void>> calls = new ArrayList<>();
         for (var i = 0; i < CONCURRENT_REQUESTS; i++) {

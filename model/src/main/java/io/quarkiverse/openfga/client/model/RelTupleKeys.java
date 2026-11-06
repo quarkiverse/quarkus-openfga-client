@@ -12,11 +12,11 @@ import javax.annotation.Nullable;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import io.quarkiverse.openfga.client.model.utils.ModelMapper;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.annotation.JsonSerialize;
 
 public final class RelTupleKeys {
 

@@ -5,9 +5,9 @@ import java.util.Objects;
 import javax.annotation.Nullable;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
+import tools.jackson.databind.annotation.JsonDeserialize;
 
 /**
  * A tuple definition including key elements and a condition.

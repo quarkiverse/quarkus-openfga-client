@@ -34,7 +34,7 @@ import io.quarkiverse.openfga.client.model.dto.WriteRequest;
 import io.quarkiverse.openfga.deployment.DevServicesOpenFGAConfig;
 import io.quarkiverse.openfga.deployment.DevServicesOpenFGAProcessor;
 import io.quarkus.runtime.LaunchMode;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import io.vertx.mutiny.core.Vertx;
 
@@ -101,7 +101,7 @@ public class OpenFGAClientSharedDriftWarningTest {
     }
 
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setBeforeAllCustomizer(OpenFGAClientSharedDriftWarningTest::initSharedContainer)
             .overrideConfigKey("quarkus.profile", "dev")
             .overrideConfigKey("quarkus.openfga.devservices.authorization-model-location", "classpath:auth-model.json")

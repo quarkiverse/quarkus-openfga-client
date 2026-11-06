@@ -2,9 +2,9 @@ package io.quarkiverse.openfga.client.api;
 
 import static io.quarkiverse.openfga.client.api.Queries.query;
 import static io.quarkiverse.openfga.client.api.Vars.vars;
+import static io.vertx.core.http.HttpHeaders.ACCEPT;
+import static io.vertx.core.http.HttpHeaders.CONTENT_TYPE;
 import static io.vertx.core.http.HttpMethod.*;
-import static io.vertx.mutiny.core.http.HttpHeaders.ACCEPT;
-import static io.vertx.mutiny.core.http.HttpHeaders.CONTENT_TYPE;
 import static java.lang.String.format;
 
 import java.io.Closeable;
@@ -30,13 +30,13 @@ import io.quarkus.runtime.configuration.ConfigurationException;
 import io.quarkus.tls.TlsConfigurationRegistry;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.RequestOptions;
 import io.vertx.core.impl.NoStackTraceThrowable;
+import io.vertx.core.parsetools.JsonEvent;
 import io.vertx.mutiny.core.Vertx;
-import io.vertx.mutiny.core.buffer.Buffer;
-import io.vertx.mutiny.core.parsetools.JsonEvent;
 import io.vertx.mutiny.core.parsetools.JsonParser;
 import io.vertx.mutiny.ext.web.client.HttpRequest;
 import io.vertx.mutiny.ext.web.client.HttpResponse;

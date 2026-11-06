@@ -28,14 +28,14 @@ import io.quarkiverse.openfga.client.StoreClient.ReadTuplesFilter;
 import io.quarkiverse.openfga.client.model.*;
 import io.quarkiverse.openfga.client.utils.Pagination;
 import io.quarkiverse.openfga.test.SchemaFixtures.RelationshipNames;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.QuarkusExtensionTest;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 
 public class StoreClientTest {
 
     // Start unit test with extension loaded
     @RegisterExtension
-    static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
+    static final QuarkusExtensionTest unitTest = new QuarkusExtensionTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClass(SchemaFixtures.class)
                     .addAsResource("auth-model.json"));

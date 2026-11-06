@@ -4,9 +4,9 @@ import java.net.URI;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.type.TypeReference;
 
 import io.quarkiverse.openfga.client.model.utils.ModelMapper;
+import tools.jackson.core.type.TypeReference;
 
 public record CredentialsFlowRequest(
         @JsonProperty("client_id") String clientId,

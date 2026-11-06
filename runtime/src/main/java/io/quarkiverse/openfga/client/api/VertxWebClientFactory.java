@@ -9,6 +9,7 @@ import org.jboss.logging.Logger;
 import io.quarkiverse.openfga.runtime.config.OpenFGAConfig;
 import io.quarkus.tls.TlsConfiguration;
 import io.quarkus.tls.TlsConfigurationRegistry;
+import io.vertx.core.http.PoolOptions;
 import io.vertx.core.net.PemTrustOptions;
 import io.vertx.core.tracing.TracingPolicy;
 import io.vertx.ext.web.client.WebClientOptions;
@@ -21,7 +22,11 @@ public class VertxWebClientFactory {
 
     public static WebClient create(OpenFGAConfig config, boolean tracingEnabled, Vertx vertx,
             TlsConfigurationRegistry tlsRegistry) {
-        return WebClient.create(vertx, createOptions(config, tracingEnabled, tlsRegistry));
+        return WebClient.create(vertx, createOptions(config, tracingEnabled, tlsRegistry), createPoolOptions(config));
+    }
+
+    static PoolOptions createPoolOptions(OpenFGAConfig config) {
+        return new PoolOptions().setHttp1MaxSize(config.maxConnections());
     }
 
     static WebClientOptions createOptions(OpenFGAConfig config, boolean tracingEnabled,
@@ -35,7 +40,6 @@ public class VertxWebClientFactory {
                 .setDefaultPort(url.getPort() != -1 ? url.getPort() : url.getDefaultPort())
                 .setConnectTimeout((int) config.connectTimeout().toMillis())
                 .setIdleTimeout((int) config.readTimeout().getSeconds() * 2)
-                .setMaxPoolSize(config.maxConnections())
                 .setTracingPolicy(tracingEnabled ? TracingPolicy.PROPAGATE : TracingPolicy.IGNORE);
 
         config.nonProxyHosts().ifPresent(options::setNonProxyHosts);
@@ -53,7 +57,7 @@ public class VertxWebClientFactory {
                     // mutual TLS
                     options.setKeyCertOptions(tlsConfig.getKeyStoreOptions());
 
-                    var sslOptions = tlsConfig.getSSLOptions();
+                    var sslOptions = tlsConfig.getClientSSLOptions();
                     if (sslOptions != null) {
                         options.setSslHandshakeTimeout(sslOptions.getSslHandshakeTimeout());
                         options.setSslHandshakeTimeoutUnit(sslOptions.getSslHandshakeTimeoutUnit());

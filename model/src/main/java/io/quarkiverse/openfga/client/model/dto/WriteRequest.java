@@ -11,12 +11,12 @@ import javax.annotation.Nullable;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import io.quarkiverse.openfga.client.model.RelTupleKeyed;
 import io.quarkiverse.openfga.client.model.WriteConflictBehavior;
 import io.quarkiverse.openfga.client.model.json.WriteRequestSerializer;
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
+import tools.jackson.databind.annotation.JsonSerialize;
 
 @JsonSerialize(using = WriteRequestSerializer.class)
 public final class WriteRequest {

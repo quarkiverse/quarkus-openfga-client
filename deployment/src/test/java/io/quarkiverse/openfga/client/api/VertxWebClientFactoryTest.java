@@ -51,15 +51,15 @@ public class VertxWebClientFactoryTest {
     @Test
     @DisplayName("Defaults the connection pool to 5 when max-connections is not set")
     public void defaultsToFiveConnections() {
-        var options = VertxWebClientFactory.createOptions(configWith(Map.of()), false, NO_TLS);
-        assertThat(options.getMaxPoolSize()).isEqualTo(5);
+        var options = VertxWebClientFactory.createPoolOptions(configWith(Map.of()));
+        assertThat(options.getHttp1MaxSize()).isEqualTo(5);
     }
 
     @Test
     @DisplayName("Applies the configured max-connections to the web client pool size")
     public void usesConfiguredMaxConnections() {
-        var options = VertxWebClientFactory.createOptions(
-                configWith(Map.of("quarkus.openfga.max-connections", "42")), false, NO_TLS);
-        assertThat(options.getMaxPoolSize()).isEqualTo(42);
+        var options = VertxWebClientFactory.createPoolOptions(
+                configWith(Map.of("quarkus.openfga.max-connections", "42")));
+        assertThat(options.getHttp1MaxSize()).isEqualTo(42);
     }
 }

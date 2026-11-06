@@ -9,9 +9,9 @@ import javax.annotation.Nullable;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import io.quarkiverse.openfga.client.model.utils.Preconditions;
+import tools.jackson.databind.annotation.JsonSerialize;
 
 public final class Assertion {
 
