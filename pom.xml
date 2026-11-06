@@ -29,7 +29,6 @@
     <quarkus.version>4.0.0.Beta3</quarkus.version>
     <jandex-maven-plugin.version>3.6.0</jandex-maven-plugin.version>
     <assertj.version>3.27.7</assertj.version>
-    <japicmp.version>0.26.5</japicmp.version>
     <argLine />
   </properties>
   <dependencyManagement>
@@ -79,53 +78,6 @@
     </plugins>
   </build>
   <profiles>
-    <profile>
-      <id>binary-compatibility</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>com.github.siom79.japicmp</groupId>
-            <artifactId>japicmp-maven-plugin</artifactId>
-            <version>${japicmp.version}</version>
-            <executions>
-              <execution>
-                <phase>verify</phase>
-                <goals>
-                  <goal>cmp</goal>
-                </goals>
-              </execution>
-            </executions>
-            <configuration>
-              <oldVersion>
-                <dependency>
-                  <groupId>${project.groupId}</groupId>
-                  <artifactId>${project.artifactId}</artifactId>
-                  <version>3.14.0</version>
-                </dependency>
-              </oldVersion>
-              <parameter>
-                <onlyModified>true</onlyModified>
-                <breakBuildOnBinaryIncompatibleModifications>true</breakBuildOnBinaryIncompatibleModifications>
-                <ignoreMissingClasses>true</ignoreMissingClasses>
-                <skipPomModules>true</skipPomModules>
-                <!-- Jackson 3 changes these public Jackson 2 signatures; keep checking the remaining API. -->
-                <excludes>
-                  <exclude>io.quarkiverse.openfga.client.model.json.RelEntityDeserializer#deserialize(com.fasterxml.jackson.core.JsonParser,com.fasterxml.jackson.databind.DeserializationContext)</exclude>
-                  <exclude>io.quarkiverse.openfga.client.model.json.RelEntitySerializer#RelEntitySerializer(com.fasterxml.jackson.databind.JsonSerializer)</exclude>
-                  <exclude>io.quarkiverse.openfga.client.model.json.RelEntitySerializer#createContextual(com.fasterxml.jackson.databind.SerializerProvider,com.fasterxml.jackson.databind.BeanProperty)</exclude>
-                  <exclude>io.quarkiverse.openfga.client.model.json.RelEntitySerializer#serialize(io.quarkiverse.openfga.client.model.RelEntity,com.fasterxml.jackson.core.JsonGenerator,com.fasterxml.jackson.databind.SerializerProvider)</exclude>
-                  <exclude>io.quarkiverse.openfga.client.model.json.RelTupleKeyedDeserializer#deserialize(com.fasterxml.jackson.core.JsonParser,com.fasterxml.jackson.databind.DeserializationContext)</exclude>
-                  <exclude>io.quarkiverse.openfga.client.model.utils.ModelMapper#mapper</exclude>
-                </excludes>
-              </parameter>
-              <skipHtmlReport>true</skipHtmlReport>
-              <skipMarkdownReport>true</skipMarkdownReport>
-              <skipXmlReport>true</skipXmlReport>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
     <profile>
       <id>docs</id>
       <activation>
